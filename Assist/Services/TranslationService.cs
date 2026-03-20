@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 using System.Text.Json;
 
 namespace Assist.Services;
@@ -7,7 +7,7 @@ namespace Assist.Services;
 /// Translation service using Azure Translator API with MyMemory fallback.
 /// Configure via ASSIST_TRANSLATOR_KEY and ASSIST_TRANSLATOR_REGION environment variables.
 /// </summary>
-public static class TranslationService
+internal static class TranslationService
 {
     private const string DefaultEndpoint = "https://api.cognitive.microsofttranslator.com";
     private const string MyMemoryEndpoint = "https://api.mymemory.translated.net/get";

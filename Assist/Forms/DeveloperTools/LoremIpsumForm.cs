@@ -1,11 +1,11 @@
-using System.Text;
+﻿using System.Text;
 
-namespace Assist;
+namespace Assist.Forms.DeveloperTools;
 
 /// <summary>
 /// Lorem Ipsum dummy text generator with customizable paragraphs and words.
 /// </summary>
-public sealed class LoremIpsumForm : Form
+internal sealed class LoremIpsumForm : Form
 {
     private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
 

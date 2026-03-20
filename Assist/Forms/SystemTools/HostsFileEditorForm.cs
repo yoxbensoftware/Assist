@@ -1,9 +1,9 @@
-namespace Assist;
+﻿namespace Assist.Forms.SystemTools;
 
 /// <summary>
 /// Editor for the Windows hosts file with syntax highlighting.
 /// </summary>
-public sealed class HostsFileEditorForm : Form
+internal sealed class HostsFileEditorForm : Form
 {
     private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
     private static readonly string HostsPath = Path.Combine(

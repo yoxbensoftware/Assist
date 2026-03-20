@@ -1,8 +1,8 @@
-using Assist.Services;
+﻿using Assist.Services;
 
-namespace Assist;
+namespace Assist.Forms.ClipboardTools;
 
-public sealed class ClipboardSettingsForm : Form
+internal sealed class ClipboardSettingsForm : Form
 {
         private NumericUpDown numCapacity = null!;
         private NumericUpDown numInterval = null!;

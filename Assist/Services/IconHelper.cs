@@ -1,6 +1,6 @@
-namespace Assist.Services;
+﻿namespace Assist.Services;
 
-public static class IconHelper
+internal static class IconHelper
 {
     public static Bitmap GetBitmap(string name)
     {

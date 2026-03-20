@@ -1,12 +1,12 @@
-using System.Xml;
+﻿using System.Xml;
 using System.Xml.Linq;
 
-namespace Assist;
+namespace Assist.Forms.DeveloperTools;
 
 /// <summary>
 /// XML formatter and validator with pretty print support.
 /// </summary>
-public sealed class XmlFormatterForm : Form
+internal sealed class XmlFormatterForm : Form
 {
     private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
 

@@ -1,9 +1,9 @@
-namespace Assist.Models;
+﻿namespace Assist.Models;
 
 /// <summary>
 /// Represents a public holiday entry for sprint risk analysis.
 /// </summary>
-public sealed class HolidayEntry
+internal sealed class HolidayEntry
 {
     public required DateTime Date { get; init; }
     public required string Country { get; init; }
@@ -16,7 +16,7 @@ public sealed class HolidayEntry
 /// <summary>
 /// Analyzed holiday with calculated impact level.
 /// </summary>
-public sealed class AnalyzedHoliday
+internal sealed class AnalyzedHoliday
 {
     public required HolidayEntry Holiday { get; init; }
     public required ImpactLevel Impact { get; init; }
@@ -46,7 +46,7 @@ public enum RiskLevel
 /// <summary>
 /// Summary of sprint holiday risk analysis.
 /// </summary>
-public sealed class SprintAnalysisResult
+internal sealed class SprintAnalysisResult
 {
     public required List<AnalyzedHoliday> Holidays { get; init; }
     public required int TotalHolidayCount { get; init; }

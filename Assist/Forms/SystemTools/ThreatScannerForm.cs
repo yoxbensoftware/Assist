@@ -3,9 +3,9 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Assist.Services;
 
-namespace Assist;
+namespace Assist.Forms.SystemTools;
 
-public sealed partial class ThreatScannerForm : Form
+internal sealed partial class ThreatScannerForm : Form
 {
     private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
 
@@ -75,7 +75,7 @@ public sealed partial class ThreatScannerForm : Form
         Controls.Add(_resultsPanel);
         Controls.Add(topPanel);
 
-        Load += async (_, _) => await ScanAsync();
+        Shown += async (_, _) => await ScanAsync();
     }
 
     [GeneratedRegex(@"\s+TCP\s+\S+:(\d+)\s+(\S+)\s+(LISTENING|ESTABLISHED)\s+(\d+)")]

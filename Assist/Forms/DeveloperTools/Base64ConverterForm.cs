@@ -1,11 +1,11 @@
-using System.Text;
+﻿using System.Text;
 
-namespace Assist;
+namespace Assist.Forms.DeveloperTools;
 
 /// <summary>
 /// Base64 encoder / decoder — text, file, and image preview support.
 /// </summary>
-public sealed class Base64ConverterForm : Form
+internal sealed class Base64ConverterForm : Form
 {
     private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
 

@@ -1,10 +1,10 @@
-using System.Net.Http.Json;
+﻿using System.Net.Http.Json;
 using System.Text.Json;
 using Assist.Services;
 
-namespace Assist;
+namespace Assist.Forms.Online;
 
-public sealed class EarthquakeForm : Form
+internal sealed class EarthquakeForm : Form
 {
     private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
     private static readonly HttpClient Http = new();

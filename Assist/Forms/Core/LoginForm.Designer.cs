@@ -1,4 +1,4 @@
-namespace Assist
+﻿namespace Assist.Forms.Core
 {
     partial class LoginForm
     {

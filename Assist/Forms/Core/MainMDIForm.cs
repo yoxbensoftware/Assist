@@ -1,12 +1,18 @@
 using System.Diagnostics;
+using System.Net.NetworkInformation;
 using System.Text;
+using Assist.Forms.ClipboardTools;
+using Assist.Forms.DeveloperTools;
+using Assist.Forms.Games;
+using Assist.Forms.Online;
+using Assist.Forms.Passwords;
 using Assist.Forms.SystemTools;
 using Assist.Models;
 using Assist.Services;
 
 namespace Assist;
 
-public partial class MainMDIForm : Form
+internal partial class MainMDIForm : Form
 {
     private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
 
@@ -28,6 +34,14 @@ public partial class MainMDIForm : Form
     private System.Windows.Forms.Timer? _fastTimer;   // 1s — clock, CPU/RAM
     private System.Windows.Forms.Timer? _mediumTimer;  // 30s — disk, battery, uptime, ping, app stats
     private System.Windows.Forms.Timer? _slowTimer;    // 5min — weather, currency, crypto, IP
+
+    // Current-process monitor
+    private readonly Process _selfProcess = Process.GetCurrentProcess();
+    private TimeSpan _lastCpuTime   = TimeSpan.Zero;
+    private DateTime _lastCpuCheck  = DateTime.MinValue;
+    private long     _lastNetRx;
+    private long     _lastNetTx;
+    private Label?   _lblProcBar;
 
     public MainMDIForm()
     {
@@ -462,19 +476,39 @@ public partial class MainMDIForm : Form
     {
         _dashboardPanel = new Panel
         {
-            Height = 120,
-            Dock = DockStyle.Bottom,
-            BackColor = Color.FromArgb(8, 8, 8),
+            Height      = 148,
+            Dock        = DockStyle.Bottom,
+            BackColor   = Color.FromArgb(8, 8, 8),
             BorderStyle = BorderStyle.None
         };
 
         var topBorder = new Panel
         {
-            Dock = DockStyle.Top,
-            Height = 1,
+            Dock      = DockStyle.Top,
+            Height    = 1,
             BackColor = Color.FromArgb(0, 80, 0)
         };
         _dashboardPanel.Controls.Add(topBorder);
+
+        // ── Process monitor bar ──
+        var procBarPanel = new Panel
+        {
+            Dock      = DockStyle.Top,
+            Height    = 24,
+            BackColor = Color.FromArgb(6, 6, 18)
+        };
+        _lblProcBar = new Label
+        {
+            Dock      = DockStyle.Fill,
+            Text      = "  \u25ba ASSIST  |  Monitoring...",
+            Font      = new Font("Consolas", 8, FontStyle.Regular),
+            ForeColor = Color.FromArgb(80, 180, 255),
+            BackColor = Color.Transparent,
+            TextAlign = ContentAlignment.MiddleLeft
+        };
+        procBarPanel.Controls.Add(_lblProcBar);
+        procBarPanel.Controls.Add(new Panel { Dock = DockStyle.Bottom, Height = 1, BackColor = Color.FromArgb(0, 40, 90) });
+        _dashboardPanel.Controls.Add(procBarPanel);
 
         var table = new TableLayoutPanel
         {
@@ -591,6 +625,50 @@ public partial class MainMDIForm : Form
 
         if (_lblCpuRam is not null)
             _lblCpuRam.Text = DashboardService.GetCpuRam();
+
+        RefreshProcessBar();
+    }
+
+    private void RefreshProcessBar()
+    {
+        if (_lblProcBar is null) return;
+        try
+        {
+            _selfProcess.Refresh();
+            var ram = _selfProcess.WorkingSet64 / 1024 / 1024;
+
+            var now = DateTime.UtcNow;
+            double cpu = 0;
+            if (_lastCpuCheck != DateTime.MinValue)
+            {
+                var cpuDelta = (_selfProcess.TotalProcessorTime - _lastCpuTime).TotalSeconds;
+                var elapsed  = (now - _lastCpuCheck).TotalSeconds;
+                cpu = elapsed > 0 ? cpuDelta / (elapsed * Environment.ProcessorCount) * 100.0 : 0;
+            }
+            _lastCpuTime  = _selfProcess.TotalProcessorTime;
+            _lastCpuCheck = now;
+
+            // System-wide network delta (KB/s)
+            long rx = 0, tx = 0;
+            foreach (var ni in NetworkInterface.GetAllNetworkInterfaces())
+            {
+                if (ni.OperationalStatus != OperationalStatus.Up) continue;
+                var stats = ni.GetIPv4Statistics();
+                rx += stats.BytesReceived;
+                tx += stats.BytesSent;
+            }
+            var rxKb = _lastNetRx > 0 ? (rx - _lastNetRx) / 1024.0 : 0;
+            var txKb = _lastNetTx > 0 ? (tx - _lastNetTx) / 1024.0 : 0;
+            _lastNetRx = rx;
+            _lastNetTx = tx;
+
+            _lblProcBar.Text =
+                $"  \u25ba ASSIST  |  \uD83D\uDCBE RAM: {ram} MB" +
+                $"  |  \uD83D\uDDA5 CPU: {cpu:F1}%" +
+                $"  |  \uD83D\uDD00 Threads: {_selfProcess.Threads.Count}" +
+                $"  |  \uD83C\uDF10 \u2193 {rxKb:F0} KB/s  \u2191 {txKb:F0} KB/s";
+        }
+        catch { }
     }
 
     /// <summary>Disk, battery, uptime, ping, app stats — every 30 seconds.</summary>

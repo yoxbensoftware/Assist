@@ -1,11 +1,11 @@
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 
-namespace Assist;
+namespace Assist.Forms.DeveloperTools;
 
 /// <summary>
 /// Regular expression tester with pattern matching and capture groups display.
 /// </summary>
-public sealed class RegexTesterForm : Form
+internal sealed class RegexTesterForm : Form
 {
     private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
 

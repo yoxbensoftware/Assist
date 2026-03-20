@@ -1,12 +1,12 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Net;
 
-namespace Assist;
+namespace Assist.Forms.SystemTools;
 
 /// <summary>
 /// Detects common hardware/system issues and provides per-issue fix buttons.
 /// </summary>
-public sealed class HardwareDiagnosticsForm : Form
+internal sealed class HardwareDiagnosticsForm : Form
 {
     private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
     private static readonly Color WarningColor = Color.FromArgb(255, 165, 0);

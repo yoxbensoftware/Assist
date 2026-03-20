@@ -1,11 +1,11 @@
-using System.Net.Http.Json;
+﻿using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 using Assist.Services;
 
-namespace Assist;
+namespace Assist.Forms.Online;
 
-public sealed class IpDomainQueryForm : Form
+internal sealed class IpDomainQueryForm : Form
 {
     private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
     private static readonly HttpClient Http = new();

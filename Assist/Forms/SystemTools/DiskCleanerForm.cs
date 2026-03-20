@@ -1,12 +1,12 @@
-using Assist.Services;
+﻿using Assist.Services;
 
-namespace Assist;
+namespace Assist.Forms.SystemTools;
 
 /// <summary>
 /// Safe disk cleaner — only targets temp and log files.
 /// Skips active browser/app directories.
 /// </summary>
-public sealed class DiskCleanerForm : Form
+internal sealed class DiskCleanerForm : Form
 {
     private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
 

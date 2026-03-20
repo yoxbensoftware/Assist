@@ -3,7 +3,7 @@ namespace Assist;
 /// <summary>
 /// Application-wide constants and configuration values.
 /// </summary>
-public static class AppConstants
+internal static class AppConstants
 {
     // Data grid column names
     public const string ColumnTitle = "Title";
@@ -27,11 +27,8 @@ public static class AppConstants
     public const string IconEdit = "✏️";
     public const string IconDelete = "🗑️";
 
-    // Default credentials
-    public const string DefaultUsername = "admin";
-
     // Build version
-    public const string BuildVersion = "v.0015";
+    public const string BuildVersion = "v.0017";
 
     // Window titles
     public const string AppTitle = "🔒 Assist";

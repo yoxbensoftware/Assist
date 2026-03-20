@@ -1,4 +1,4 @@
-namespace Assist
+﻿namespace Assist.Forms.SystemTools
 {
     partial class SystemInfoForm
     {

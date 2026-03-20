@@ -1,9 +1,6 @@
-using System;
-using System.Windows.Forms;
+namespace Assist.Forms.Core;
 
-namespace Assist;
-
-public partial class LoginForm : Form
+internal partial class LoginForm : Form
 {
     public bool IsAuthenticated { get; private set; }
 

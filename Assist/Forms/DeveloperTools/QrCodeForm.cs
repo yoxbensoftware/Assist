@@ -1,11 +1,11 @@
-using System.Drawing.Imaging;
+﻿using System.Drawing.Imaging;
 
-namespace Assist;
+namespace Assist.Forms.DeveloperTools;
 
 /// <summary>
 /// QR Code generator using Google Charts API and simple decoder.
 /// </summary>
-public sealed class QrCodeForm : Form
+internal sealed class QrCodeForm : Form
 {
     private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
     private static readonly HttpClient HttpClient = new();

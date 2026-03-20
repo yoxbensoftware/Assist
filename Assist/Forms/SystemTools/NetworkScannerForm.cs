@@ -1,10 +1,10 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Text.RegularExpressions;
 using Assist.Services;
 
-namespace Assist;
+namespace Assist.Forms.SystemTools;
 
-public sealed partial class NetworkScannerForm : Form
+internal sealed partial class NetworkScannerForm : Form
 {
     private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
 

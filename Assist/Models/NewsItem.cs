@@ -1,9 +1,9 @@
-namespace Assist.Models;
+﻿namespace Assist.Models;
 
 /// <summary>
 /// Represents a news article from RSS feed.
 /// </summary>
-public sealed class NewsItem
+internal sealed class NewsItem
 {
     public string Title { get; set; } = string.Empty;
     public string? Summary { get; set; }

@@ -1,4 +1,4 @@
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Assist.Models;
@@ -8,7 +8,7 @@ namespace Assist;
 /// <summary>
 /// Manages password storage with DPAPI encryption.
 /// </summary>
-public static class PasswordStore
+internal static class PasswordStore
 {
     private static List<PasswordEntry> _entries = [];
 

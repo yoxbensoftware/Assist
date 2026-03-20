@@ -1,11 +1,11 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 
-namespace Assist;
+namespace Assist.Forms.DeveloperTools;
 
 /// <summary>
 /// JSON formatter and validator tool.
 /// </summary>
-public sealed class JsonFormatterForm : Form
+internal sealed class JsonFormatterForm : Form
 {
     private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
 

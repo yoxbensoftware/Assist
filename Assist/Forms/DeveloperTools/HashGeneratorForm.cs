@@ -1,12 +1,12 @@
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
 
-namespace Assist;
+namespace Assist.Forms.DeveloperTools;
 
 /// <summary>
 /// Hash generator — MD5, SHA-1, SHA-256, SHA-512 for text and files.
 /// </summary>
-public sealed class HashGeneratorForm : Form
+internal sealed class HashGeneratorForm : Form
 {
     private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
 

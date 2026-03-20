@@ -1,4 +1,4 @@
-using Assist.Models;
+﻿using Assist.Models;
 
 namespace Assist.Services;
 
@@ -6,7 +6,7 @@ namespace Assist.Services;
 /// Provides public holiday data and sprint risk analysis.
 /// Holidays are hardcoded for 2026 (Turkey + Germany).
 /// </summary>
-public sealed class HolidayAnalyzerService
+internal sealed class HolidayAnalyzerService
 {
     private static readonly List<HolidayEntry> Holidays2026 =
     [

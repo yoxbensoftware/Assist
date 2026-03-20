@@ -1,10 +1,10 @@
-namespace Assist.Services;
+﻿namespace Assist.Services;
 
 /// <summary>
 /// Thread-safe clipboard history service that stores last N text entries.
 /// Uses polling to detect clipboard changes and filters sensitive content.
 /// </summary>
-public sealed class ClipboardHistoryService : IDisposable
+internal sealed class ClipboardHistoryService : IDisposable
 {
     private const int SensitiveMinLength = 6;
     private const int SensitiveMaxLength = 128;

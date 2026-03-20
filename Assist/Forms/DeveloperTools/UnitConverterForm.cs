@@ -1,6 +1,6 @@
-namespace Assist;
+﻿namespace Assist.Forms.DeveloperTools;
 
-public sealed class UnitConverterForm : Form
+internal sealed class UnitConverterForm : Form
 {
     private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
 

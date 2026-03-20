@@ -1,4 +1,4 @@
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
 
 namespace Assist.Models;
@@ -6,7 +6,7 @@ namespace Assist.Models;
 /// <summary>
 /// Represents a password entry with encrypted password storage.
 /// </summary>
-public sealed class PasswordEntry
+internal sealed class PasswordEntry
 {
     public string Title { get; set; } = string.Empty;
     public string Username { get; set; } = string.Empty;

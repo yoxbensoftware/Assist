@@ -1,9 +1,9 @@
-namespace Assist;
+﻿namespace Assist.Forms.DeveloperTools;
 
 /// <summary>
 /// UUID/GUID generator with multiple versions and formats.
 /// </summary>
-public sealed class UuidGeneratorForm : Form
+internal sealed class UuidGeneratorForm : Form
 {
     private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
 

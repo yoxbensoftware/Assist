@@ -1,11 +1,11 @@
-using Microsoft.Win32;
+﻿using Microsoft.Win32;
 
-namespace Assist;
+namespace Assist.Forms.SystemTools;
 
 /// <summary>
 /// Manages Windows startup programs — list, enable, disable.
 /// </summary>
-public sealed class StartupManagerForm : Form
+internal sealed class StartupManagerForm : Form
 {
     private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
 

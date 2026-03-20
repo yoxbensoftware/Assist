@@ -1,8 +1,8 @@
-using Assist.Services;
+﻿using Assist.Services;
 
-namespace Assist;
+namespace Assist.Forms.ClipboardTools;
 
-public sealed class ClipboardHistoryForm : Form
+internal sealed class ClipboardHistoryForm : Form
 {
     private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
 

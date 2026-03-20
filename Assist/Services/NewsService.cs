@@ -1,4 +1,4 @@
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Assist.Models;
 
@@ -7,7 +7,7 @@ namespace Assist.Services;
 /// <summary>
 /// Fetches news from Google News RSS feeds.
 /// </summary>
-public sealed partial class NewsService
+internal sealed partial class NewsService
 {
     private const string GoogleNewsTrUrl = "https://news.google.com/rss?hl=tr&gl=TR&ceid=TR:tr";
     private const string GoogleNewsGlobalUrl = "https://news.google.com/rss?hl=en-US&gl=US&ceid=US:en";

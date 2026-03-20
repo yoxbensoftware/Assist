@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Net.NetworkInformation;
 using System.Text.Json;
 
@@ -8,7 +8,7 @@ namespace Assist.Services;
 /// Fetches and caches all dashboard data: weather, currency, crypto, IP,
 /// system stats, battery, connectivity, uptime.
 /// </summary>
-public static class DashboardService
+internal static class DashboardService
 {
     private static readonly HttpClient SharedHttpClient = new()
     {

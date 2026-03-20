@@ -1,12 +1,12 @@
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
 
-namespace Assist;
+namespace Assist.Forms.Passwords;
 
 /// <summary>
 /// Complex password generator with strength indicator.
 /// </summary>
-public sealed class PasswordGeneratorForm : Form
+internal sealed class PasswordGeneratorForm : Form
 {
     private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
     private static readonly string UpperCase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";

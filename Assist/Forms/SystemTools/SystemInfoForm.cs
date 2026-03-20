@@ -1,6 +1,6 @@
-namespace Assist;
+﻿namespace Assist.Forms.SystemTools;
 
-public partial class SystemInfoForm : Form
+internal partial class SystemInfoForm : Form
 {
         public SystemInfoForm()
         {

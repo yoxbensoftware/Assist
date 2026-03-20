@@ -1,13 +1,13 @@
-using System.Text;
+﻿using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 
-namespace Assist;
+namespace Assist.Forms.DeveloperTools;
 
 /// <summary>
 /// Pretty XML — format, minify, validate XML. Supports raw XML and Base64-encoded XML input.
 /// </summary>
-public sealed class PrettyXmlForm : Form
+internal sealed class PrettyXmlForm : Form
 {
     private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
 

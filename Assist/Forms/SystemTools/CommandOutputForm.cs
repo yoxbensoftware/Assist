@@ -1,9 +1,9 @@
-namespace Assist;
+﻿namespace Assist.Forms.SystemTools;
 
 /// <summary>
 /// Form to display command output text.
 /// </summary>
-public sealed class CommandOutputForm : Form
+internal sealed class CommandOutputForm : Form
 {
     private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
 

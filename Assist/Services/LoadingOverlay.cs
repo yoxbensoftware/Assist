@@ -1,9 +1,9 @@
-namespace Assist.Services;
+﻿namespace Assist.Services;
 
 /// <summary>
 /// Old school ASCII spinner loading overlay.
 /// </summary>
-public sealed class LoadingOverlay : IDisposable
+internal sealed class LoadingOverlay : IDisposable
 {
     private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
     private static readonly string[] SpinnerFrames = ["|", "/", "—", "\\"];
@@ -158,7 +158,7 @@ public sealed class LoadingOverlay : IDisposable
 /// <summary>
 /// Static helper for showing loading state on any form.
 /// </summary>
-public static class Loading
+internal static class Loading
 {
     public static async Task<T> RunAsync<T>(Form form, Func<Task<T>> action, string message = "Yükleniyor...")
     {

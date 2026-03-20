@@ -1,14 +1,14 @@
-using System.Text;
+﻿using System.Text;
 using Assist.Models;
 using Assist.Services;
 
-namespace Assist;
+namespace Assist.Forms.DeveloperTools;
 
 /// <summary>
 /// Sprint Holiday Risk Analyzer — analyzes sprint date ranges against
 /// Turkey + Germany public holidays and calculates capacity loss risk.
 /// </summary>
-public sealed class SprintHolidayAnalyzerForm : Form
+internal sealed class SprintHolidayAnalyzerForm : Form
 {
     private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
     private static readonly Color HighColor = Color.FromArgb(220, 50, 50);

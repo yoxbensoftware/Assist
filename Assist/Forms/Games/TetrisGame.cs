@@ -1,11 +1,11 @@
-using System.Drawing.Drawing2D;
+﻿using System.Drawing.Drawing2D;
 
-namespace Assist;
+namespace Assist.Forms.Games;
 
 /// <summary>
 /// Classic Tetris game with terminal green aesthetic.
 /// </summary>
-public sealed class TetrisGame : Form
+internal sealed class TetrisGame : Form
 {
     private const int CellSize = 28;
     private const int BoardWidth = 10;

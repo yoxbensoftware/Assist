@@ -1,9 +1,9 @@
-using Assist.Models;
+﻿using Assist.Models;
 using Assist.Services;
 
-namespace Assist;
+namespace Assist.Forms.Passwords;
 
-public partial class PasswordListForm : Form
+internal partial class PasswordListForm : Form
 {
     private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
 

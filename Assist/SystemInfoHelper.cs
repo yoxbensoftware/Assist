@@ -1,4 +1,4 @@
-using System.Management;
+﻿using System.Management;
 using System.Runtime.InteropServices;
 
 namespace Assist;
@@ -6,9 +6,9 @@ namespace Assist;
 /// <summary>
 /// Collects detailed system information — AIDA64-style.
 /// </summary>
-public static class SystemInfoHelper
+internal static class SystemInfoHelper
 {
-    public sealed class SystemInfo
+    internal sealed class SystemInfo
     {
         public string? OperatingSystem { get; set; }
         public string? OSVersion { get; set; }

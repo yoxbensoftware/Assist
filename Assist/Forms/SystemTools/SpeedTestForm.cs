@@ -1,11 +1,11 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 
-namespace Assist;
+namespace Assist.Forms.SystemTools;
 
 /// <summary>
 /// Internet speed test tool.
 /// </summary>
-public sealed class SpeedTestForm : Form
+internal sealed class SpeedTestForm : Form
 {
     private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
     private static readonly HttpClient HttpClient = new();

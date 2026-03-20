@@ -1,13 +1,10 @@
-using System.Drawing;
-using System.Windows.Forms;
-
 namespace Assist.Services;
 
 /// <summary>
 /// Centralized dark theme helper for UI controls.
 /// Old school green-on-black terminal style.
 /// </summary>
-public static class UITheme
+internal static class UITheme
 {
     private static readonly Color BackgroundDark = Color.FromArgb(0, 0, 0);
     private static readonly Color BackgroundMedium = Color.FromArgb(10, 10, 10);

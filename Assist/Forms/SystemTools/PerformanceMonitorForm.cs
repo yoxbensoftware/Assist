@@ -1,11 +1,11 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 
-namespace Assist;
+namespace Assist.Forms.SystemTools;
 
 /// <summary>
 /// Real-time performance monitor showing CPU, RAM, and Disk usage.
 /// </summary>
-public sealed class PerformanceMonitorForm : Form
+internal sealed class PerformanceMonitorForm : Form
 {
     private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
 

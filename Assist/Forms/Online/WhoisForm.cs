@@ -1,14 +1,22 @@
-using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 using Assist.Services;
 
-namespace Assist;
+namespace Assist.Forms.Online;
 
-public sealed class WhoisForm : Form
+internal sealed class WhoisForm : Form
 {
     private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
-    private static readonly HttpClient Http = new();
+    private static readonly HttpClient Http = CreateHttpClient();
+    private static readonly Dictionary<string, string> _rdapCache = new(StringComparer.OrdinalIgnoreCase);
+
+    private static HttpClient CreateHttpClient()
+    {
+        var client = new HttpClient { Timeout = TimeSpan.FromSeconds(20) };
+        client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) Assist/1.0");
+        client.DefaultRequestHeaders.Accept.ParseAdd("application/rdap+json");
+        return client;
+    }
 
     private readonly TextBox _txtDomain;
     private readonly Button _btnQuery;
@@ -85,12 +93,21 @@ public sealed class WhoisForm : Form
             domain = new Uri(domain).Host;
         domain = domain.TrimEnd('/');
 
+        // Strip www. prefix — RDAP queries use the registered domain
+        if (domain.StartsWith("www.", StringComparison.OrdinalIgnoreCase))
+            domain = domain[4..];
+
         await Loading.RunAsync(this, async () =>
         {
             try
             {
-                var url = $"https://rdap.org/domain/{Uri.EscapeDataString(domain)}";
-                var json = await Http.GetFromJsonAsync<JsonElement>(url);
+                var tld = domain.Contains('.') ? domain.Split('.').Last() : domain;
+                var rdapBase = await GetRdapServerAsync(tld);
+                var url = $"{rdapBase.TrimEnd('/')}domain/{Uri.EscapeDataString(domain)}";
+                var response = await Http.GetAsync(url);
+                response.EnsureSuccessStatusCode();
+                var content = await response.Content.ReadAsStringAsync();
+                var json = JsonSerializer.Deserialize<JsonElement>(content);
 
                 var sb = new StringBuilder();
                 sb.AppendLine("══════════════════════════════════════════════");
@@ -194,10 +211,43 @@ public sealed class WhoisForm : Form
 
                 _rtbResult.Text = sb.ToString();
             }
-            catch (HttpRequestException ex)
+            catch (Exception ex)
             {
                 _rtbResult.Text = $"RDAP sorgu hatası: {ex.Message}\n\nDomain bulunamadı veya RDAP servisi erişilemez.";
             }
         }, "WHOIS sorgulanıyor...");
+    }
+
+    private static async Task<string> GetRdapServerAsync(string tld)
+    {
+        if (_rdapCache.TryGetValue(tld, out var cached))
+            return cached;
+
+        try
+        {
+            var response = await Http.GetAsync("https://data.iana.org/rdap/dns.json");
+            response.EnsureSuccessStatusCode();
+            var content = await response.Content.ReadAsStringAsync();
+            var bootstrap = JsonSerializer.Deserialize<JsonElement>(content);
+
+            if (bootstrap.TryGetProperty("services", out var services))
+            {
+                foreach (var service in services.EnumerateArray())
+                {
+                    var urlsArr = service[1];
+                    if (urlsArr.GetArrayLength() == 0) continue;
+                    var serverUrl = urlsArr[urlsArr.GetArrayLength() - 1].GetString() ?? "";
+                    foreach (var t in service[0].EnumerateArray())
+                    {
+                        var tldVal = t.GetString() ?? "";
+                        if (!string.IsNullOrEmpty(tldVal))
+                            _rdapCache.TryAdd(tldVal, serverUrl);
+                    }
+                }
+            }
+        }
+        catch { }
+
+        return _rdapCache.TryGetValue(tld, out var found) ? found : "https://rdap.org/";
     }
 }

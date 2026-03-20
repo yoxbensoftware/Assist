@@ -1,4 +1,4 @@
-namespace Assist
+﻿namespace Assist.Forms.Passwords
 {
     partial class PasswordEntryForm
     {

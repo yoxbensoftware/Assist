@@ -1,13 +1,13 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Text.Json;
 
-namespace Assist;
+namespace Assist.Forms.SystemTools;
 
 /// <summary>
 /// EV Charging Station Finder - Finds electric vehicle charging stations across Turkey
 /// Uses Google Places API to locate EV chargers
 /// </summary>
-public sealed class EvChargerFinderForm : Form
+internal sealed class EvChargerFinderForm : Form
 {
     #region Constants
     private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
@@ -72,7 +72,7 @@ public sealed class EvChargerFinderForm : Form
     #endregion
 
     #region Nested Types
-    public class ChargingStation
+    private class ChargingStation
     {
         public string Name { get; set; } = string.Empty;
         public string Address { get; set; } = string.Empty;

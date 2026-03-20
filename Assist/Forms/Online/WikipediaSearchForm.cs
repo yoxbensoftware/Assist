@@ -1,12 +1,12 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Assist.Services;
 
-namespace Assist;
+namespace Assist.Forms.Online;
 
-public sealed partial class WikipediaSearchForm : Form
+internal sealed partial class WikipediaSearchForm : Form
 {
     private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
     private static readonly HttpClient Http = new();

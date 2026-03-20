@@ -1,6 +1,6 @@
-namespace Assist;
+﻿namespace Assist.Forms.Passwords;
 
-public partial class PasswordEditForm : Form
+internal partial class PasswordEditForm : Form
 {
     private readonly string _originalTitle;
 

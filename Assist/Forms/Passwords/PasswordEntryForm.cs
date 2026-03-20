@@ -1,8 +1,8 @@
-using Assist.Models;
+﻿using Assist.Models;
 
-namespace Assist;
+namespace Assist.Forms.Passwords;
 
-public partial class PasswordEntryForm : Form
+internal partial class PasswordEntryForm : Form
 {
     public PasswordEntryForm()
     {

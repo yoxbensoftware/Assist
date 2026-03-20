@@ -1,13 +1,13 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using Assist.Models;
 using Assist.Services;
 
-namespace Assist;
+namespace Assist.Forms.Online;
 
 /// <summary>
 /// Form to display and translate news articles.
 /// </summary>
-public sealed class NewsForm : Form
+internal sealed class NewsForm : Form
 {
     private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
 

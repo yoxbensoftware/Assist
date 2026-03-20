@@ -1,11 +1,11 @@
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 
-namespace Assist;
+namespace Assist.Forms.DeveloperTools;
 
 /// <summary>
 /// Color picker tool to capture colors from screen with hex and RGB values.
 /// </summary>
-public sealed class ColorPickerForm : Form
+internal sealed class ColorPickerForm : Form
 {
     private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
 
