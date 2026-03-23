@@ -189,6 +189,7 @@ internal partial class MainMDIForm : Form
         menu.DropDownItems.Add(CreateMenuItem("WHOIS / Alan Adı", () => ShowMdiChild(new WhoisForm())));
         menu.DropDownItems.Add(CreateMenuItem("Deprem Takibi", () => ShowMdiChild(new EarthquakeForm())));
         menu.DropDownItems.Add(CreateMenuItem("Döviz Çevirici", () => ShowMdiChild(new CurrencyConverterForm())));
+        menu.DropDownItems.Add(CreateMenuItem("📊 Piyasa 20", () => ShowMdiChild(new ExchangeRatesForm())));
 
         return menu;
     }

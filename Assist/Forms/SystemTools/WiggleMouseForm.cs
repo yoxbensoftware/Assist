@@ -84,7 +84,7 @@ internal sealed class WiggleMouseForm : Form
         _statusLabel.Location = new Point(20, 255);
 
         _countdownTimer.Interval = 1000;
-        _wiggleTimer.Interval    = 300;  // 300ms per step — clearly visible movement
+        _wiggleTimer.Interval    = 180;  // shorter steps = more reliable idle reset
 
         Controls.AddRange([lblTitle, _countdownLabel, lblH, lblM, lblS, _nudHours, _nudMinutes, _nudSeconds, _btnSet, _btnStartStop, _statusLabel]);
     }
@@ -143,15 +143,17 @@ internal sealed class WiggleMouseForm : Form
             return;
 
         _isRunning = true;
-        _countdownTimer.Start();
         SetInputsEnabled(false);
 
         _btnStartStop.Text = "■  Durdur";
         _btnStartStop.BackColor = Color.FromArgb(80, 20, 20);
         _btnStartStop.FlatAppearance.BorderColor = Color.OrangeRed;
 
-        _statusLabel.Text = "● Geri sayım...";
+        _statusLabel.Text = "● Hareket gönderiliyor...";
         _statusLabel.ForeColor = Color.Yellow;
+
+        // İlk inputu hemen gönder; aksi halde uzun bekleme süresinde Teams AFK/offline görünebilir.
+        PerformWiggleCycle();
     }
 
     private void StopAll()
@@ -225,9 +227,10 @@ internal sealed class WiggleMouseForm : Form
         public MOUSEINPUT mi;
     }
 
-    private const uint MOUSEEVENTF_MOVE        = 0x0001;
-    private const uint MOUSEEVENTF_ABSOLUTE    = 0x8000;
-    private const uint MOUSEEVENTF_VIRTUALDESK = 0x4000; // multi-monitor support
+    private const uint MOUSEEVENTF_MOVE           = 0x0001;
+    private const uint MOUSEEVENTF_ABSOLUTE       = 0x8000;
+    private const uint MOUSEEVENTF_VIRTUALDESK    = 0x4000; // multi-monitor support
+    private const uint MOUSEEVENTF_MOVE_NOCOALESCE = 0x2000;
 
     // ── Wiggle logic ─────────────────────────────────────────────────────────
 
@@ -236,12 +239,12 @@ internal sealed class WiggleMouseForm : Form
         if (_wiggleCount == 0)
             _savedCursorPos = Cursor.Position;
 
-        // Pattern: right 60 → center → down 60 → center (net displacement = 0)
+        // Pattern: right 120 → center → down 120 → center (net displacement = 0)
         switch (_wiggleCount)
         {
-            case 0: SendMouseAbsolute(_savedCursorPos.X + 60, _savedCursorPos.Y);      break;
+            case 0: SendMouseAbsolute(_savedCursorPos.X + 120, _savedCursorPos.Y);     break;
             case 1: SendMouseAbsolute(_savedCursorPos.X,      _savedCursorPos.Y);      break;
-            case 2: SendMouseAbsolute(_savedCursorPos.X,      _savedCursorPos.Y + 60); break;
+            case 2: SendMouseAbsolute(_savedCursorPos.X,      _savedCursorPos.Y + 120); break;
             case 3: SendMouseAbsolute(_savedCursorPos.X,      _savedCursorPos.Y);      break;
             default:
                 _wiggleTimer.Stop();
@@ -279,7 +282,7 @@ internal sealed class WiggleMouseForm : Form
                 dx          = nx,
                 dy          = ny,
                 mouseData   = 0,
-                dwFlags     = MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_VIRTUALDESK,
+                dwFlags     = MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_VIRTUALDESK | MOUSEEVENTF_MOVE_NOCOALESCE,
                 time        = 0,
                 dwExtraInfo = IntPtr.Zero
             }
