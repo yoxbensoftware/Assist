@@ -1,4 +1,4 @@
-﻿namespace Assist.Forms.Passwords
+namespace Assist.Forms.Passwords
 {
     partial class PasswordListForm
     {
@@ -16,8 +16,8 @@
         private void InitializeComponent()
         {
             var dgv = new System.Windows.Forms.DataGridView();
-            // Apply dark grid styling via theme helper
-            Assist.Services.UITheme.ApplyDark(dgv);
+            // Apply grid styling via theme helper
+            Assist.Services.UITheme.Apply(dgv);
             dgv.Dock = System.Windows.Forms.DockStyle.Fill;
             dgv.AllowUserToAddRows = false;
             dgv.AllowUserToDeleteRows = false;
@@ -77,8 +77,8 @@
             Load += (s, e) =>
             {
                 dgv.Rows.Clear();
-                Assist.PasswordStore.LoadFromFile();
-                foreach (var entry in Assist.PasswordStore.Entries)
+                Assist.Services.PasswordStore.LoadFromFile();
+                foreach (var entry in Assist.Services.PasswordStore.Entries)
                 {
                     var mask = new string('*', entry.GetDecryptedPassword().Length);
                     var idx = dgv.Rows.Add(entry.Title, entry.Username, mask, entry.Notes, "👁");

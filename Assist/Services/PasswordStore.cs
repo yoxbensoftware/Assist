@@ -1,9 +1,9 @@
-﻿using System.Security.Cryptography;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Assist.Models;
 
-namespace Assist;
+namespace Assist.Services;
 
 /// <summary>
 /// Manages password storage with DPAPI encryption.

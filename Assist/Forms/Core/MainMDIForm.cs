@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Net.NetworkInformation;
 using System.Text;
 using Assist.Forms.ClipboardTools;
+using Assist.Forms.Core;
 using Assist.Forms.DeveloperTools;
 using Assist.Forms.Games;
 using Assist.Forms.Online;
@@ -14,7 +15,6 @@ namespace Assist;
 
 internal partial class MainMDIForm : Form
 {
-    private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
 
     private ClipboardHistoryService? _clipboardHistory;
 
@@ -43,10 +43,17 @@ internal partial class MainMDIForm : Form
     private long     _lastNetTx;
     private Label?   _lblProcBar;
 
+    // Dashboard panel refs for theme refresh
+    private Panel?   _topBorderPanel;
+    private Panel?   _procBarPanel;
+    private Label?   _lblVersion;
+
     public MainMDIForm()
     {
         InitializeComponent();
         IsMdiContainer = true;
+        ThemeService.ThemeChanged += OnThemeChanged;
+        FormClosed += OnFormClosed;
         InitializeMenu();
         ApplyTheme();
         EnsureClipboardHistory();
@@ -77,9 +84,7 @@ internal partial class MainMDIForm : Form
         {
             var iconPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "assist_icon.ico");
             if (File.Exists(iconPath))
-            {
                 Icon = new Icon(iconPath);
-            }
         }
         catch
         {
@@ -87,12 +92,22 @@ internal partial class MainMDIForm : Form
         }
     }
 
+    private void OnFormClosed(object? sender, FormClosedEventArgs e)
+    {
+        ThemeService.ThemeChanged -= OnThemeChanged;
+        _fastTimer?.Stop();
+        _fastTimer?.Dispose();
+        _mediumTimer?.Stop();
+        _mediumTimer?.Dispose();
+        _slowTimer?.Stop();
+        _slowTimer?.Dispose();
+        _selfProcess.Dispose();
+    }
+
     private void InitializeMenu()
     {
         var menuStrip = new MenuStrip
         {
-            BackColor = Color.Black,
-            ForeColor = GreenText,
             RenderMode = ToolStripRenderMode.System
         };
 
@@ -100,13 +115,14 @@ internal partial class MainMDIForm : Form
         menuStrip.Items.Add(CreatePasswordMenu());
         menuStrip.Items.Add(CreateSystemToolsMenu());
         menuStrip.Items.Add(CreateOnlineMenu());
+        menuStrip.Items.Add(CreateThemeMenu());
         menuStrip.Items.Add(CreateDeveloperToolsMenu());
         menuStrip.Items.Add(CreateClipboardMenu());
         menuStrip.Items.Add(CreateGamesMenu());
         menuStrip.Items.Add(CreateWindowMenu());
 
         // Right-aligned items
-        menuStrip.Items.Add(new ToolStripLabel("Oz") { Alignment = ToolStripItemAlignment.Right, ForeColor = GreenText });
+        menuStrip.Items.Add(new ToolStripLabel("Oz") { Alignment = ToolStripItemAlignment.Right, ForeColor = UITheme.Palette.Accent });
         menuStrip.Items.Add(CreateMenuItem("Hakkında", ShowAbout, ToolStripItemAlignment.Right));
 
         MainMenuStrip = menuStrip;
@@ -125,6 +141,21 @@ internal partial class MainMDIForm : Form
 
         // Password tools
         menu.DropDownItems.Add(CreateMenuItem("Şifre Üret", () => ShowMdiChild(new PasswordGeneratorForm())));
+
+        return menu;
+    }
+
+    private ToolStripMenuItem CreateThemeMenu()
+    {
+        var menu = new ToolStripMenuItem("Tema");
+        menu.DropDownItems.Add(CreateMenuItem("Tema Seçimi...", ShowThemeSelection));
+        menu.DropDownItems.Add(new ToolStripSeparator());
+
+        foreach (var (theme, name) in ThemeService.GetThemeOptions())
+        {
+            var capturedTheme = theme;
+            menu.DropDownItems.Add(CreateMenuItem(name, () => ApplyThemeSelection(capturedTheme)));
+        }
 
         return menu;
     }
@@ -161,7 +192,7 @@ internal partial class MainMDIForm : Form
         menu.DropDownItems.Add(new ToolStripSeparator());
 
         // EV Charger Finder
-        menu.DropDownItems.Add(CreateMenuItem("EV Şarj İstasyonu Bulucu", () => new EvChargerFinderForm().Show()));
+        menu.DropDownItems.Add(CreateMenuItem("EV Şarj İstasyonu Bulucu", () => ShowMdiChild(new EvChargerFinderForm())));
 
         menu.DropDownItems.Add(new ToolStripSeparator());
 
@@ -189,7 +220,7 @@ internal partial class MainMDIForm : Form
         menu.DropDownItems.Add(CreateMenuItem("WHOIS / Alan Adı", () => ShowMdiChild(new WhoisForm())));
         menu.DropDownItems.Add(CreateMenuItem("Deprem Takibi", () => ShowMdiChild(new EarthquakeForm())));
         menu.DropDownItems.Add(CreateMenuItem("Döviz Çevirici", () => ShowMdiChild(new CurrencyConverterForm())));
-        menu.DropDownItems.Add(CreateMenuItem("📊 Piyasa 20", () => ShowMdiChild(new ExchangeRatesForm())));
+        menu.DropDownItems.Add(CreateMenuItem("Piyasa 20", () => ShowMdiChild(new ExchangeRatesForm())));
 
         return menu;
     }
@@ -269,7 +300,7 @@ internal partial class MainMDIForm : Form
     private ToolStripMenuItem CreateGamesMenu()
     {
         var menu = new ToolStripMenuItem("Oyunlar");
-        menu.DropDownItems.Add(CreateMenuItem("Tetris", () => new TetrisGame().Show()));
+        menu.DropDownItems.Add(CreateMenuItem("Tetris", () => ShowMdiChild(new TetrisGame())));
         return menu;
     }
 
@@ -309,6 +340,27 @@ internal partial class MainMDIForm : Form
         }
     }
 
+    private void ShowThemeSelection()
+    {
+        using var form = new ThemeSelectionForm();
+        form.ShowDialog(this);
+    }
+
+    private void ApplyThemeSelection(AppTheme theme)
+    {
+        ThemeService.SetTheme(theme);
+    }
+
+    private void OnThemeChanged(object? sender, EventArgs e)
+    {
+        if (IsDisposed) return;
+        BeginInvoke(new Action(() =>
+        {
+            UITheme.ApplyToOpenForms();
+            ApplyDashboardTheme();
+        }));
+    }
+
     private static ToolStripMenuItem CreateMenuItem(string text, Action action, ToolStripItemAlignment alignment = ToolStripItemAlignment.Left)
     {
         var item = new ToolStripMenuItem(text) { Alignment = alignment };
@@ -334,16 +386,15 @@ internal partial class MainMDIForm : Form
     private void ApplyTheme()
     {
         Text = AppConstants.AppTitle;
-        BackColor = Color.Black;
-        ForeColor = GreenText;
-        Font = new Font("Consolas", 10);
+        UITheme.Apply(this);
         ShowIcon = false;
 
+        var p = UITheme.Palette;
         foreach (Control control in Controls)
         {
             if (control is MdiClient mdiClient)
             {
-                mdiClient.BackColor = Color.Black;
+                mdiClient.BackColor = p.Back;
                 break;
             }
         }
@@ -352,6 +403,7 @@ internal partial class MainMDIForm : Form
     private void ShowMdiChild(Form form)
     {
         form.MdiParent = this;
+        UITheme.Apply(form);
         form.Show();
     }
 
@@ -475,28 +527,29 @@ internal partial class MainMDIForm : Form
 
     private void InitializeDashboardPanel()
     {
+        var p = UITheme.Palette;
         _dashboardPanel = new Panel
         {
             Height      = 148,
             Dock        = DockStyle.Bottom,
-            BackColor   = Color.FromArgb(8, 8, 8),
+            BackColor   = p.Surface,
             BorderStyle = BorderStyle.None
         };
 
-        var topBorder = new Panel
+        _topBorderPanel = new Panel
         {
             Dock      = DockStyle.Top,
             Height    = 1,
-            BackColor = Color.FromArgb(0, 80, 0)
+            BackColor = p.Accent
         };
-        _dashboardPanel.Controls.Add(topBorder);
+        _dashboardPanel.Controls.Add(_topBorderPanel);
 
         // ── Process monitor bar ──
-        var procBarPanel = new Panel
+        _procBarPanel = new Panel
         {
             Dock      = DockStyle.Top,
             Height    = 24,
-            BackColor = Color.FromArgb(6, 6, 18)
+            BackColor = p.Surface2
         };
         _lblProcBar = new Label
         {
@@ -507,9 +560,9 @@ internal partial class MainMDIForm : Form
             BackColor = Color.Transparent,
             TextAlign = ContentAlignment.MiddleLeft
         };
-        procBarPanel.Controls.Add(_lblProcBar);
-        procBarPanel.Controls.Add(new Panel { Dock = DockStyle.Bottom, Height = 1, BackColor = Color.FromArgb(0, 40, 90) });
-        _dashboardPanel.Controls.Add(procBarPanel);
+        _procBarPanel.Controls.Add(_lblProcBar);
+        _procBarPanel.Controls.Add(new Panel { Dock = DockStyle.Bottom, Height = 1, BackColor = p.Grid });
+        _dashboardPanel.Controls.Add(_procBarPanel);
 
         var table = new TableLayoutPanel
         {
@@ -566,17 +619,17 @@ internal partial class MainMDIForm : Form
         // Row 5: Uptime | Version
         table.Controls.Add(_lblUptime, 0, 5);
 
-        var lblVersion = new Label
+        _lblVersion = new Label
         {
             Text = AppConstants.BuildVersion,
             Dock = DockStyle.Fill,
             AutoSize = false,
-            ForeColor = Color.FromArgb(0, 100, 0),
+            ForeColor = p.Muted,
             Font = new Font("Consolas", 8, FontStyle.Regular),
             BackColor = Color.Transparent,
             TextAlign = ContentAlignment.MiddleRight
         };
-        table.Controls.Add(lblVersion, 1, 5);
+        table.Controls.Add(_lblVersion, 1, 5);
 
         _dashboardPanel.Controls.Add(table);
         Controls.Add(_dashboardPanel);
@@ -602,6 +655,17 @@ internal partial class MainMDIForm : Form
         RefreshFast();
         _ = RefreshMediumAsync();
         _ = RefreshSlowAsync();
+        ApplyDashboardTheme();
+    }
+
+    private void ApplyDashboardTheme()
+    {
+        if (_dashboardPanel is null) return;
+        var p = UITheme.Palette;
+        _dashboardPanel.BackColor = p.Surface;
+        if (_topBorderPanel is not null) _topBorderPanel.BackColor = p.Accent;
+        if (_procBarPanel is not null) _procBarPanel.BackColor = p.Surface2;
+        if (_lblVersion is not null) _lblVersion.ForeColor = p.Muted;
     }
 
     private static Label CreateDashboardLabel(string text, int fontSize = 9, FontStyle style = FontStyle.Regular)
@@ -611,7 +675,7 @@ internal partial class MainMDIForm : Form
             Text = text,
             Dock = DockStyle.Fill,
             AutoSize = false,
-            ForeColor = GreenText,
+            ForeColor = UITheme.Palette.Text,
             Font = new Font("Consolas", fontSize, style),
             BackColor = Color.Transparent,
             TextAlign = ContentAlignment.MiddleLeft

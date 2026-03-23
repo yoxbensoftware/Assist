@@ -9,6 +9,7 @@ internal static class Program
     static void Main(string[] args)
     {
         ApplicationConfiguration.Initialize();
+        ThemeService.Load();
 
         // Handle uninstall request from Add/Remove Programs
         if (args.Contains("--uninstall"))
@@ -35,6 +36,7 @@ internal static class Program
         if (PasswordStore.LoadLogin() is null)
         {
             using var wizard = new SetupWizardForm();
+            UITheme.Apply(wizard);
             if (wizard.ShowDialog() != DialogResult.OK || !wizard.SetupCompleted)
                 return;
         }
@@ -44,6 +46,7 @@ internal static class Program
             AppInstallerService.Install();
 
         using var loginForm = new LoginForm();
+        UITheme.Apply(loginForm);
         if (loginForm.ShowDialog() == DialogResult.OK && loginForm.IsAuthenticated)
         {
             Application.Run(new MainMDIForm());

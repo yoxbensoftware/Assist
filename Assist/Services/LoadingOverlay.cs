@@ -1,15 +1,15 @@
-﻿namespace Assist.Services;
+namespace Assist.Services;
 
 /// <summary>
 /// Old school ASCII spinner loading overlay.
 /// </summary>
 internal sealed class LoadingOverlay : IDisposable
 {
-    private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
     private static readonly string[] SpinnerFrames = ["|", "/", "—", "\\"];
 
     private readonly Form _parentForm;
     private readonly Panel _overlay;
+    private readonly Panel _box;
     private readonly Label _spinnerLabel;
     private readonly Label _messageLabel;
     private readonly System.Windows.Forms.Timer _timer;
@@ -19,27 +19,30 @@ internal sealed class LoadingOverlay : IDisposable
     public LoadingOverlay(Form parentForm, string message = "Yükleniyor...")
     {
         _parentForm = parentForm ?? throw new ArgumentNullException(nameof(parentForm));
+        _box = new Panel
+        {
+            BorderStyle = BorderStyle.None
+        };
 
-        // Full black overlay with centered loading box
+        // Full-screen overlay with centered loading box
         _overlay = new Panel
         {
             Dock = DockStyle.Fill,
-            BackColor = Color.Black,
+            BackColor = UITheme.Palette.Back,
             Visible = false
         };
 
-        // Center box - size will be calculated based on content
-        var box = new Panel
+        _box.Paint += (_, e) =>
         {
-            BackColor = Color.Black,
-            BorderStyle = BorderStyle.FixedSingle
+            using var pen = new Pen(UITheme.Palette.Accent);
+            e.Graphics.DrawRectangle(pen, 0, 0, _box.Width - 1, _box.Height - 1);
         };
 
         _spinnerLabel = new Label
         {
             Text = SpinnerFrames[0],
             Font = new Font("Consolas", 20, FontStyle.Bold),
-            ForeColor = GreenText,
+            ForeColor = UITheme.Palette.Accent,
             AutoSize = true,
             BackColor = Color.Transparent
         };
@@ -48,23 +51,24 @@ internal sealed class LoadingOverlay : IDisposable
         {
             Text = message,
             Font = new Font("Consolas", 11),
-            ForeColor = GreenText,
+            ForeColor = UITheme.Palette.Text,
             AutoSize = true,
             BackColor = Color.Transparent
         };
 
-        box.Controls.Add(_spinnerLabel);
-        box.Controls.Add(_messageLabel);
-        _overlay.Controls.Add(box);
-        _overlay.Resize += (s, e) => CenterBox(box);
-        // compute initial size based on text
-        UpdateBoxSize(box);
+        _box.Controls.Add(_spinnerLabel);
+        _box.Controls.Add(_messageLabel);
+        _overlay.Controls.Add(_box);
+        _overlay.Resize += (_, _) => CenterBox();
+        UpdateBoxSize();
 
         _timer = new System.Windows.Forms.Timer { Interval = 100 };
         _timer.Tick += OnTimerTick;
 
+        ThemeService.ThemeChanged += OnThemeChanged;
         _parentForm.Controls.Add(_overlay);
         _overlay.BringToFront();
+        ApplyTheme();
     }
 
     public void Show(string? message = null)
@@ -78,7 +82,7 @@ internal sealed class LoadingOverlay : IDisposable
 
         // immediate show without fade
         // recalc size for the current message
-        if (_overlay.Controls.Count > 0 && _overlay.Controls[0] is Panel p) UpdateBoxSize(p);
+        UpdateBoxSize();
         _overlay.Visible = true;
         _overlay.BringToFront();
         _timer.Start();
@@ -99,8 +103,8 @@ internal sealed class LoadingOverlay : IDisposable
     {
         if (_disposed) return;
         _messageLabel.Text = message;
-        if (_overlay.Controls.Count > 0 && _overlay.Controls[0] is Panel p) UpdateBoxSize(p);
-        CenterLabels();
+        UpdateBoxSize();
+        CenterBox();
     }
 
     private void OnTimerTick(object? sender, EventArgs e)
@@ -108,28 +112,16 @@ internal sealed class LoadingOverlay : IDisposable
         _frameIndex = (_frameIndex + 1) % SpinnerFrames.Length;
         _spinnerLabel.Text = SpinnerFrames[_frameIndex];
     }
-    private void CenterLabels()
+
+    private void CenterBox()
     {
-        // kept for backward compatibility - center labels within overlay
-        if (_overlay.Controls.Count == 0) return;
-        var box = _overlay.Controls[0] as Panel;
-        if (box is null) return;
-        CenterBox(box);
+        _box.Location = new Point((_overlay.Width - _box.Width) / 2, (_overlay.Height - _box.Height) / 2);
+        _spinnerLabel.Location = new Point(12, (_box.Height - _spinnerLabel.Height) / 2);
+        _messageLabel.Location = new Point(12 + _spinnerLabel.Width + 12, (_box.Height - _messageLabel.Height) / 2);
     }
 
-    private void CenterBox(Panel box)
+    private void UpdateBoxSize()
     {
-        if (box is null) return;
-        box.Location = new Point((_overlay.Width - box.Width) / 2, (_overlay.Height - box.Height) / 2);
-
-        // position spinner and message inside box
-        _spinnerLabel.Location = new Point(12, (box.Height - _spinnerLabel.Height) / 2);
-        _messageLabel.Location = new Point(12 + _spinnerLabel.Width + 12, (box.Height - _messageLabel.Height) / 2);
-    }
-
-    private void UpdateBoxSize(Panel box)
-    {
-        if (box is null) return;
         // measure text sizes
         var spinnerSize = TextRenderer.MeasureText(SpinnerFrames[_frameIndex], _spinnerLabel.Font);
         var messageSize = TextRenderer.MeasureText(_messageLabel.Text ?? string.Empty, _messageLabel.Font);
@@ -137,11 +129,30 @@ internal sealed class LoadingOverlay : IDisposable
         var width = spinnerSize.Width + 12 + messageSize.Width + 24; // paddings
         var height = Math.Max(spinnerSize.Height, messageSize.Height) + 20;
 
-        box.Size = new Size(Math.Max(140, width), Math.Max(40, height));
-        // reposition labels inside box after resizing
+        _box.Size = new Size(Math.Max(140, width), Math.Max(40, height));
         _spinnerLabel.AutoSize = true;
         _messageLabel.AutoSize = true;
-        CenterBox(box);
+        CenterBox();
+    }
+
+    private void ApplyTheme()
+    {
+        var p = UITheme.Palette;
+        _overlay.BackColor = p.Back;
+        _box.BackColor = p.Surface;
+        _spinnerLabel.ForeColor = p.Accent;
+        _messageLabel.ForeColor = p.Text;
+        _box.Invalidate();
+    }
+
+    private void OnThemeChanged(object? sender, EventArgs e)
+    {
+        if (_disposed) return;
+
+        if (_overlay.InvokeRequired)
+            _overlay.BeginInvoke(new Action(ApplyTheme));
+        else
+            ApplyTheme();
     }
 
     public void Dispose()
@@ -149,6 +160,7 @@ internal sealed class LoadingOverlay : IDisposable
         if (_disposed) return;
         _disposed = true;
 
+        ThemeService.ThemeChanged -= OnThemeChanged;
         _timer.Stop();
         _timer.Dispose();
         _overlay.Dispose();

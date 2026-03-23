@@ -1,3 +1,5 @@
+using Assist.Services;
+
 namespace Assist.Forms.Core;
 
 internal partial class LoginForm : Form
@@ -8,6 +10,20 @@ internal partial class LoginForm : Form
     {
         InitializeComponent();
         AcceptButton = btnLogin;
+
+        txtUsername.GotFocus  += (s, e) => pnlUsername.Invalidate();
+        txtUsername.LostFocus += (s, e) => pnlUsername.Invalidate();
+        txtPassword.GotFocus  += (s, e) => pnlPassword.Invalidate();
+        txtPassword.LostFocus += (s, e) => pnlPassword.Invalidate();
+    }
+
+    private void PnlTextBox_Paint(object? sender, PaintEventArgs e)
+    {
+        if (sender is not Panel pnl) return;
+        var p = UITheme.Palette;
+        bool focused = pnl.Controls.Count > 0 && pnl.Controls[0].Focused;
+        using var pen = new Pen(focused ? p.Accent : p.Surface2);
+        e.Graphics.DrawRectangle(pen, 0, 0, pnl.Width - 1, pnl.Height - 1);
     }
 
     private void btnLogin_Click(object sender, EventArgs e)

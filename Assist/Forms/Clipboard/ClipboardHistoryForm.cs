@@ -1,4 +1,4 @@
-﻿using Assist.Services;
+using Assist.Services;
 
 namespace Assist.Forms.ClipboardTools;
 
@@ -57,7 +57,7 @@ internal sealed class ClipboardHistoryForm : Form
             AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
         };
         _dgv.RowTemplate.Height = 28;
-        UITheme.ApplyDark(_dgv);
+        UITheme.Apply(_dgv);
         _dgv.Columns.Add("Text", "Metin");
 
         _dgv.CellDoubleClick += OnCellDoubleClick;

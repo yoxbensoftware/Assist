@@ -1,4 +1,4 @@
-﻿using Assist.Models;
+using Assist.Models;
 using Assist.Services;
 
 namespace Assist.Forms.Passwords;
@@ -31,7 +31,7 @@ internal partial class PasswordListForm : Form
         _dgv.Dock = DockStyle.Fill;
         _dgv.ReadOnly = false;
         _dgv.EditMode = DataGridViewEditMode.EditOnEnter;
-        UITheme.ApplyDark(_dgv);
+        UITheme.Apply(_dgv);
 
         // Add search box
         _txtSearch = new TextBox

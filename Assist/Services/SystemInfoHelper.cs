@@ -1,7 +1,7 @@
-﻿using System.Management;
+using System.Management;
 using System.Runtime.InteropServices;
 
-namespace Assist;
+namespace Assist.Services;
 
 /// <summary>
 /// Collects detailed system information — AIDA64-style.

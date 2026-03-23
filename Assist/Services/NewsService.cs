@@ -1,4 +1,3 @@
-﻿using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Assist.Models;
 
@@ -7,16 +6,13 @@ namespace Assist.Services;
 /// <summary>
 /// Fetches news from Google News RSS feeds.
 /// </summary>
-internal sealed partial class NewsService
+internal sealed class NewsService
 {
     private const string GoogleNewsTrUrl = "https://news.google.com/rss?hl=tr&gl=TR&ceid=TR:tr";
     private const string GoogleNewsGlobalUrl = "https://news.google.com/rss?hl=en-US&gl=US&ceid=US:en";
     private const string GoogleNewsTechUrl = "https://news.google.com/rss/search?q=technology&hl=en-US&gl=US&ceid=US:en";
 
     private static readonly HttpClient SharedHttpClient = new();
-
-    [GeneratedRegex("<[^>]+>")]
-    private static partial Regex HtmlTagRegex();
 
     public Task<List<NewsItem>> GetTopTrAsync(int max = 30)
         => GetFromRssAsync(GoogleNewsTrUrl, max);

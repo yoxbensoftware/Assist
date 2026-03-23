@@ -1,4 +1,6 @@
-﻿namespace Assist.Forms.SystemTools;
+using Assist.Services;
+
+namespace Assist.Forms.SystemTools;
 
 internal partial class SystemInfoForm : Form
 {

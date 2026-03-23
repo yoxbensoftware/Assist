@@ -1,4 +1,5 @@
-﻿using Assist.Models;
+using System.Globalization;
+using Assist.Models;
 
 namespace Assist.Services;
 
@@ -135,7 +136,7 @@ internal sealed class HolidayAnalyzerService
 
     private static HolidayEntry H(string date, string country, string name) => new()
     {
-        Date = DateTime.Parse(date),
+        Date = DateTime.Parse(date, CultureInfo.InvariantCulture),
         Country = country,
         Name = name
     };

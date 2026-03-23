@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using Assist.Models;
 using Assist.Services;
 
@@ -78,7 +78,7 @@ internal sealed class NewsForm : Form
         };
         dgv.RowTemplate.Height = 28;
 
-        UITheme.ApplyDark(dgv);
+        UITheme.Apply(dgv);
 
         dgv.Columns.Add(new DataGridViewTextBoxColumn { Name = "Title", HeaderText = "Başlık" });
         dgv.Columns.Add(new DataGridViewTextBoxColumn { Name = "Source", HeaderText = "Kaynak", Width = 150 });

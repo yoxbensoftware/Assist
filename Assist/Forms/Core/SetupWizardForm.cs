@@ -1,3 +1,5 @@
+using Assist.Services;
+
 namespace Assist.Forms.Core;
 
 internal sealed class SetupWizardForm : Form
