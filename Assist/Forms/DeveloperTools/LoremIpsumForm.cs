@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 
 namespace Assist.Forms.DeveloperTools;
 
@@ -35,6 +35,9 @@ internal sealed class LoremIpsumForm : Form
     {
         Text = "Lorem Ipsum Generator";
         ClientSize = new Size(800, 600);
+        MinimumSize = new Size(650, 460);
+        StartPosition = FormStartPosition.CenterParent;
+        AutoScroll = true;
         BackColor = Color.Black;
         ForeColor = GreenText;
         Font = new Font("Consolas", 10);
@@ -154,7 +157,8 @@ internal sealed class LoremIpsumForm : Form
             Width = 760,
             Height = 20,
             ForeColor = GreenText,
-            Font = new Font("Consolas", 9)
+            Font = new Font("Consolas", 9),
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
         };
 
         _txtOutput = new TextBox
@@ -168,7 +172,8 @@ internal sealed class LoremIpsumForm : Form
             ForeColor = GreenText,
             Font = new Font("Consolas", 9),
             BorderStyle = BorderStyle.FixedSingle,
-            WordWrap = true
+            WordWrap = true,
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom
         };
 
         Controls.AddRange([lblTitle, lblParagraphs, _numParagraphs, lblWords, _numWordsPerPara, _chkStartWithLorem, btnGenerate, btnCopy, btnClear, _lblStatus, _txtOutput]);

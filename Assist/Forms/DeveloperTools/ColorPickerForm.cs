@@ -1,4 +1,4 @@
-﻿using System.Runtime.InteropServices;
+using System.Runtime.InteropServices;
 
 namespace Assist.Forms.DeveloperTools;
 
@@ -41,6 +41,9 @@ internal sealed class ColorPickerForm : Form
     {
         Text = "Color Picker";
         ClientSize = new Size(600, 500);
+        MinimumSize = new Size(500, 400);
+        StartPosition = FormStartPosition.CenterParent;
+        AutoScroll = true;
         BackColor = Color.Black;
         ForeColor = GreenText;
         Font = new Font("Consolas", 10);
@@ -60,7 +63,8 @@ internal sealed class ColorPickerForm : Form
             Width = 560,
             Height = 150,
             BorderStyle = BorderStyle.FixedSingle,
-            BackColor = Color.Gray
+            BackColor = Color.Gray,
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
         };
 
         var btnPick = new Button
@@ -159,7 +163,8 @@ internal sealed class ColorPickerForm : Form
             Location = new Point(20, 390),
             Width = 560,
             ForeColor = GreenText,
-            Font = new Font("Consolas", 9)
+            Font = new Font("Consolas", 9),
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
         };
 
         Controls.AddRange([lblTitle, _colorPreview, btnPick, lblInfo, _lblHex, _txtHex, btnCopyHex, _lblRgb, _txtRgb, btnCopyRgb, _lblHsv]);

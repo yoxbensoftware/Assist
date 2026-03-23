@@ -1,4 +1,4 @@
-﻿using System.Security.Cryptography;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace Assist.Forms.DeveloperTools;
@@ -23,6 +23,9 @@ internal sealed class HashGeneratorForm : Form
     {
         Text = "Hash Generator";
         ClientSize = new Size(800, 620);
+        MinimumSize = new Size(650, 480);
+        StartPosition = FormStartPosition.CenterParent;
+        AutoScroll = true;
         BackColor = Color.Black;
         ForeColor = GreenText;
         Font = new Font("Consolas", 10);
@@ -55,7 +58,8 @@ internal sealed class HashGeneratorForm : Form
             Font = new Font("Consolas", 10),
             Multiline = true,
             ScrollBars = ScrollBars.Vertical,
-            BorderStyle = BorderStyle.FixedSingle
+            BorderStyle = BorderStyle.FixedSingle,
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
         };
         _txtInput.TextChanged += (_, _) => ComputeTextHashes();
 
@@ -89,7 +93,8 @@ internal sealed class HashGeneratorForm : Form
             BackColor = Color.Black,
             ForeColor = GreenText,
             Font = new Font("Consolas", 10),
-            BorderStyle = BorderStyle.FixedSingle
+            BorderStyle = BorderStyle.FixedSingle,
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
         };
         _txtVerify.TextChanged += (_, _) => VerifyHash();
 
@@ -108,7 +113,8 @@ internal sealed class HashGeneratorForm : Form
             Location = new Point(20, y + 70),
             Width = 760,
             ForeColor = GreenText,
-            Font = new Font("Consolas", 9)
+            Font = new Font("Consolas", 9),
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
         };
 
         Controls.AddRange([
@@ -136,7 +142,8 @@ internal sealed class HashGeneratorForm : Form
             ForeColor = GreenText,
             Font = new Font("Consolas", 9),
             ReadOnly = true,
-            BorderStyle = BorderStyle.FixedSingle
+            BorderStyle = BorderStyle.FixedSingle,
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
         };
 
         var btnCopy = new Button
@@ -148,7 +155,8 @@ internal sealed class HashGeneratorForm : Form
             BackColor = Color.Black,
             ForeColor = GreenText,
             FlatStyle = FlatStyle.Flat,
-            Font = new Font("Consolas", 9)
+            Font = new Font("Consolas", 9),
+            Anchor = AnchorStyles.Top | AnchorStyles.Right
         };
         btnCopy.FlatAppearance.BorderColor = GreenText;
         var tb = textBox;

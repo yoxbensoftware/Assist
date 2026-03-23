@@ -1,4 +1,4 @@
-﻿using System.Xml;
+using System.Xml;
 using System.Xml.Linq;
 
 namespace Assist.Forms.DeveloperTools;
@@ -18,6 +18,9 @@ internal sealed class XmlFormatterForm : Form
     {
         Text = "XML Formatter";
         ClientSize = new Size(1000, 600);
+        MinimumSize = new Size(700, 500);
+        StartPosition = FormStartPosition.CenterParent;
+        AutoScroll = true;
         BackColor = Color.Black;
         ForeColor = GreenText;
         Font = new Font("Consolas", 10);
@@ -51,7 +54,8 @@ internal sealed class XmlFormatterForm : Form
             ForeColor = GreenText,
             Font = new Font("Consolas", 9),
             BorderStyle = BorderStyle.FixedSingle,
-            WordWrap = false
+            WordWrap = false,
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
         };
 
         var btnFormat = new Button
@@ -123,7 +127,8 @@ internal sealed class XmlFormatterForm : Form
             Width = 960,
             Height = 20,
             ForeColor = GreenText,
-            Font = new Font("Consolas", 9)
+            Font = new Font("Consolas", 9),
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
         };
 
         var lblOutput = new Label
@@ -147,7 +152,8 @@ internal sealed class XmlFormatterForm : Form
             ForeColor = GreenText,
             Font = new Font("Consolas", 9),
             BorderStyle = BorderStyle.FixedSingle,
-            WordWrap = false
+            WordWrap = false,
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom
         };
 
         Controls.AddRange([lblTitle, lblInput, _txtInput, btnFormat, btnValidate, btnMinify, btnClear, _lblStatus, lblOutput, _txtOutput]);

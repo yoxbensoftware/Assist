@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -19,6 +19,9 @@ internal sealed class PrettyXmlForm : Form
     {
         Text = "Pretty XML";
         ClientSize = new Size(860, 620);
+        MinimumSize = new Size(700, 500);
+        StartPosition = FormStartPosition.CenterParent;
+        AutoScroll = true;
         BackColor = Color.Black;
         ForeColor = GreenText;
         Font = new Font("Consolas", 10);
@@ -80,7 +83,8 @@ internal sealed class PrettyXmlForm : Form
             Font = new Font("Consolas", 9),
             Multiline = true,
             ScrollBars = ScrollBars.Both,
-            WordWrap = false
+            WordWrap = false,
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
         };
 
         // Output
@@ -105,7 +109,8 @@ internal sealed class PrettyXmlForm : Form
             Multiline = true,
             ScrollBars = ScrollBars.Both,
             WordWrap = false,
-            ReadOnly = true
+            ReadOnly = true,
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom
         };
 
         // Status
@@ -115,7 +120,8 @@ internal sealed class PrettyXmlForm : Form
             Location = new Point(20, 590),
             Size = new Size(820, 20),
             ForeColor = GreenText,
-            Font = new Font("Consolas", 9)
+            Font = new Font("Consolas", 9),
+            Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom
         };
 
         Controls.AddRange([

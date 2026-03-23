@@ -1,4 +1,4 @@
-﻿using System.Drawing.Imaging;
+using System.Drawing.Imaging;
 
 namespace Assist.Forms.DeveloperTools;
 
@@ -19,6 +19,9 @@ internal sealed class QrCodeForm : Form
     {
         Text = "QR Code Generator";
         ClientSize = new Size(800, 650);
+        MinimumSize = new Size(650, 480);
+        StartPosition = FormStartPosition.CenterParent;
+        AutoScroll = true;
         BackColor = Color.Black;
         ForeColor = GreenText;
         Font = new Font("Consolas", 10);
@@ -51,7 +54,8 @@ internal sealed class QrCodeForm : Form
             BackColor = Color.Black,
             ForeColor = GreenText,
             Font = new Font("Consolas", 9),
-            BorderStyle = BorderStyle.FixedSingle
+            BorderStyle = BorderStyle.FixedSingle,
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
         };
 
         var btnGenerate = new Button
@@ -103,7 +107,8 @@ internal sealed class QrCodeForm : Form
             Width = 760,
             Height = 20,
             ForeColor = GreenText,
-            Font = new Font("Consolas", 9)
+            Font = new Font("Consolas", 9),
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
         };
 
         _pictureBox = new PictureBox
@@ -137,7 +142,8 @@ internal sealed class QrCodeForm : Form
             ForeColor = GreenText,
             Font = new Font("Consolas", 9),
             BorderStyle = BorderStyle.FixedSingle,
-            WordWrap = true
+            WordWrap = true,
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom
         };
 
         ShowInfo();

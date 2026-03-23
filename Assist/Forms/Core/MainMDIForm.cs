@@ -403,6 +403,7 @@ internal partial class MainMDIForm : Form
     private void ShowMdiChild(Form form)
     {
         form.MdiParent = this;
+        form.WindowState = FormWindowState.Maximized;
         UITheme.Apply(form);
         form.Show();
     }

@@ -1,4 +1,4 @@
-﻿using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;
 
 namespace Assist.Forms.DeveloperTools;
 
@@ -20,6 +20,9 @@ internal sealed class RegexTesterForm : Form
     {
         Text = "Regex Tester";
         ClientSize = new Size(900, 650);
+        MinimumSize = new Size(700, 500);
+        StartPosition = FormStartPosition.CenterParent;
+        AutoScroll = true;
         BackColor = Color.Black;
         ForeColor = GreenText;
         Font = new Font("Consolas", 10);
@@ -50,7 +53,8 @@ internal sealed class RegexTesterForm : Form
             BackColor = Color.Black,
             ForeColor = GreenText,
             Font = new Font("Consolas", 10),
-            BorderStyle = BorderStyle.FixedSingle
+            BorderStyle = BorderStyle.FixedSingle,
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
         };
 
         _chkIgnoreCase = new CheckBox
@@ -91,7 +95,8 @@ internal sealed class RegexTesterForm : Form
             ForeColor = GreenText,
             Font = new Font("Consolas", 9),
             BorderStyle = BorderStyle.FixedSingle,
-            WordWrap = false
+            WordWrap = false,
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
         };
 
         var btnTest = new Button
@@ -136,7 +141,8 @@ internal sealed class RegexTesterForm : Form
             Width = 860,
             Height = 20,
             ForeColor = GreenText,
-            Font = new Font("Consolas", 9)
+            Font = new Font("Consolas", 9),
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
         };
 
         var lblMatches = new Label
@@ -160,7 +166,8 @@ internal sealed class RegexTesterForm : Form
             ForeColor = GreenText,
             Font = new Font("Consolas", 9),
             BorderStyle = BorderStyle.FixedSingle,
-            WordWrap = false
+            WordWrap = false,
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom
         };
 
         Controls.AddRange([lblTitle, lblPattern, _txtPattern, _chkIgnoreCase, _chkMultiline, lblInput, _txtInput, btnTest, btnClear, _lblStatus, lblMatches, _txtMatches]);

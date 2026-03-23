@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 
 namespace Assist.Forms.DeveloperTools;
 
@@ -22,6 +22,9 @@ internal sealed class Base64ConverterForm : Form
     {
         Text = "Base64 Encoder / Decoder";
         ClientSize = new Size(900, 720);
+        MinimumSize = new Size(700, 500);
+        StartPosition = FormStartPosition.CenterParent;
+        AutoScroll = true;
         BackColor = Color.Black;
         ForeColor = GreenText;
         Font = new Font("Consolas", 10);
@@ -106,7 +109,8 @@ internal sealed class Base64ConverterForm : Form
             Font = new Font("Consolas", 10),
             Multiline = true,
             ScrollBars = ScrollBars.Both,
-            WordWrap = false
+            WordWrap = false,
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
         };
 
         // Output
@@ -131,7 +135,8 @@ internal sealed class Base64ConverterForm : Form
             Multiline = true,
             ScrollBars = ScrollBars.Both,
             WordWrap = false,
-            ReadOnly = true
+            ReadOnly = true,
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
         };
 
         // Image preview panel
@@ -142,7 +147,8 @@ internal sealed class Base64ConverterForm : Form
             Size = new Size(860, 160),
             BackColor = Color.FromArgb(15, 15, 15),
             BorderStyle = BorderStyle.FixedSingle,
-            Visible = false
+            Visible = false,
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
         };
 
         _lblPicInfo = new Label
@@ -173,7 +179,8 @@ internal sealed class Base64ConverterForm : Form
             Location = new Point(20, 690),
             Size = new Size(860, 20),
             ForeColor = Color.Cyan,
-            Font = new Font("Consolas", 9)
+            Font = new Font("Consolas", 9),
+            Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom
         };
 
         Controls.AddRange([

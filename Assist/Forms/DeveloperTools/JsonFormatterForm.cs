@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 
 namespace Assist.Forms.DeveloperTools;
 
@@ -25,6 +25,9 @@ internal sealed class JsonFormatterForm : Form
     {
         Text = "JSON Formatter";
         ClientSize = new Size(900, 600);
+        MinimumSize = new Size(700, 500);
+        StartPosition = FormStartPosition.CenterParent;
+        AutoScroll = true;
         BackColor = Color.Black;
         ForeColor = GreenText;
         Font = new Font("Consolas", 10);
@@ -56,7 +59,8 @@ internal sealed class JsonFormatterForm : Form
             BackColor = Color.Black,
             ForeColor = GreenText,
             Font = new Font("Consolas", 10),
-            BorderStyle = BorderStyle.FixedSingle
+            BorderStyle = BorderStyle.FixedSingle,
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
         };
 
         var buttonPanel = new Panel
@@ -64,7 +68,8 @@ internal sealed class JsonFormatterForm : Form
             Location = new Point(20, 300),
             Width = 860,
             Height = 45,
-            BackColor = Color.Black
+            BackColor = Color.Black,
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
         };
 
         _btnFormat = CreateButton("Format (Pretty)", 0);
@@ -86,7 +91,8 @@ internal sealed class JsonFormatterForm : Form
             Height = 25,
             ForeColor = GreenText,
             Font = new Font("Consolas", 10),
-            Text = "Hazır."
+            Text = "Hazır.",
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
         };
 
         var lblOutput = new Label
@@ -108,7 +114,8 @@ internal sealed class JsonFormatterForm : Form
             ForeColor = GreenText,
             Font = new Font("Consolas", 10),
             BorderStyle = BorderStyle.FixedSingle,
-            ReadOnly = true
+            ReadOnly = true,
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom
         };
 
         Controls.AddRange(new Control[]

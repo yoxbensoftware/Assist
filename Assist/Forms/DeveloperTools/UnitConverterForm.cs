@@ -1,4 +1,4 @@
-﻿namespace Assist.Forms.DeveloperTools;
+namespace Assist.Forms.DeveloperTools;
 
 internal sealed class UnitConverterForm : Form
 {
@@ -33,6 +33,9 @@ internal sealed class UnitConverterForm : Form
     {
         Text = "Birim Çevirici";
         ClientSize = new Size(700, 400);
+        MinimumSize = new Size(580, 350);
+        StartPosition = FormStartPosition.CenterParent;
+        AutoScroll = true;
         BackColor = Color.Black;
         ForeColor = GreenText;
         Font = new Font("Consolas", 10);
@@ -57,7 +60,8 @@ internal sealed class UnitConverterForm : Form
             ForeColor = GreenText,
             BorderStyle = BorderStyle.FixedSingle,
             Font = new Font("Consolas", 14),
-            Text = "1"
+            Text = "1",
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
         };
         Controls.Add(_txtInput);
 
@@ -101,7 +105,8 @@ internal sealed class UnitConverterForm : Form
             ForeColor = Color.Cyan,
             BorderStyle = BorderStyle.FixedSingle,
             Font = new Font("Consolas", 14),
-            ReadOnly = true
+            ReadOnly = true,
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
         };
         Controls.Add(_txtResult);
 

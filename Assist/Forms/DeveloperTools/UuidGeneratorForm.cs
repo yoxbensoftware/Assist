@@ -1,4 +1,4 @@
-﻿namespace Assist.Forms.DeveloperTools;
+namespace Assist.Forms.DeveloperTools;
 
 /// <summary>
 /// UUID/GUID generator with multiple versions and formats.
@@ -17,6 +17,9 @@ internal sealed class UuidGeneratorForm : Form
     {
         Text = "UUID/GUID Generator";
         ClientSize = new Size(700, 550);
+        MinimumSize = new Size(600, 440);
+        StartPosition = FormStartPosition.CenterParent;
+        AutoScroll = true;
         BackColor = Color.Black;
         ForeColor = GreenText;
         Font = new Font("Consolas", 10);
@@ -76,7 +79,8 @@ internal sealed class UuidGeneratorForm : Form
             Font = new Font("Consolas", 11, FontStyle.Bold),
             BorderStyle = BorderStyle.FixedSingle,
             ReadOnly = true,
-            TextAlign = HorizontalAlignment.Center
+            TextAlign = HorizontalAlignment.Center,
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
         };
 
         var btnCopy = new Button
@@ -162,7 +166,8 @@ internal sealed class UuidGeneratorForm : Form
             ForeColor = GreenText,
             Font = new Font("Consolas", 9),
             BorderStyle = BorderStyle.FixedSingle,
-            WordWrap = false
+            WordWrap = false,
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom
         };
 
         _lblStatus = new Label
@@ -172,7 +177,8 @@ internal sealed class UuidGeneratorForm : Form
             Width = 660,
             Height = 20,
             ForeColor = GreenText,
-            Font = new Font("Consolas", 9)
+            Font = new Font("Consolas", 9),
+            Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom
         };
 
         Controls.AddRange([lblTitle, lblFormat, _cmbFormat, btnGenerate, _txtUuid, btnCopy, lblBulk, lblCount, _numCount, btnBulkGenerate, btnCopyBulk, _txtBulk, _lblStatus]);

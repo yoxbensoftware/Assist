@@ -121,38 +121,51 @@ internal sealed class ExchangeRatesForm : Form
         _topBar = new Panel
         {
             Dock = DockStyle.Top,
-            Height = 62,
+            Height = 52,
             BackColor = Color.FromArgb(11, 11, 11),
         };
 
         var layout = new TableLayoutPanel
         {
             Dock = DockStyle.Fill,
-            ColumnCount = 2,
+            ColumnCount = 3,
             RowCount = 1,
-            Padding = new Padding(14, 10, 14, 10),
+            Padding = new Padding(14, 8, 14, 8),
         };
+        layout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
         layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f));
         layout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
 
         _titleLabel = new Label
         {
-            Text = "📊 Piyasa 20 · 10 gerçek varlık + 10 coin",
+            Text = "📊 Piyasa 20",
             AutoSize = true,
-            Dock = DockStyle.Fill,
             ForeColor = CGreen,
             Font = new Font("Segoe UI", 11f, FontStyle.Bold),
             TextAlign = ContentAlignment.MiddleLeft,
-            Margin = new Padding(0, 4, 0, 0),
+            Anchor = AnchorStyles.Left,
+            Margin = new Padding(0, 4, 12, 0),
         };
         layout.Controls.Add(_titleLabel, 0, 0);
 
+        _statusLabel = new Label
+        {
+            Text = "Hazır",
+            AutoSize = true,
+            Dock = DockStyle.Fill,
+            ForeColor = CMuted,
+            Font = new Font("Segoe UI", 8f),
+            TextAlign = ContentAlignment.MiddleCenter,
+            Margin = new Padding(0, 7, 0, 0),
+        };
+        layout.Controls.Add(_statusLabel, 1, 0);
+
         var actions = new FlowLayoutPanel
         {
-            Dock = DockStyle.Fill,
             AutoSize = true,
             WrapContents = false,
             FlowDirection = FlowDirection.LeftToRight,
+            Anchor = AnchorStyles.Right,
             Margin = new Padding(0),
             Padding = new Padding(0),
         };
@@ -164,13 +177,13 @@ internal sealed class ExchangeRatesForm : Form
             var btn = new Button
             {
                 Text = Periods[i].Label,
-                Size = new Size(78, 30),
+                Size = new Size(72, 28),
                 FlatStyle = FlatStyle.Flat,
                 BackColor = i == 0 ? CGreen : CCard,
                 ForeColor = i == 0 ? Color.Black : CText,
                 Font = new Font("Segoe UI", 8.25f, FontStyle.Bold),
                 Cursor = Cursors.Hand,
-                Margin = new Padding(0, 0, 8, 0),
+                Margin = new Padding(0, 0, 4, 0),
             };
             btn.FlatAppearance.BorderColor = CBorder;
             btn.Click += async (_, _) => await SelectPeriodAsync(index);
@@ -181,33 +194,22 @@ internal sealed class ExchangeRatesForm : Form
         _refreshButton = new Button
         {
             Text = "⟳",
-            Size = new Size(62, 30),
+            Size = new Size(42, 28),
             FlatStyle = FlatStyle.Flat,
             BackColor = Color.FromArgb(0, 52, 20),
             ForeColor = CGreen,
             Font = new Font("Segoe UI", 9f, FontStyle.Bold),
             Cursor = Cursors.Hand,
-            Margin = new Padding(0, 0, 12, 0),
+            Margin = new Padding(4, 0, 0, 0),
         };
         _refreshButton.FlatAppearance.BorderColor = CBorder;
         _refreshButton.Click += async (_, _) => await RefreshAllAsync();
         actions.Controls.Add(_refreshButton);
 
-        _statusLabel = new Label
-        {
-            Text = "Hazır",
-            AutoSize = true,
-            ForeColor = CMuted,
-            Font = new Font("Segoe UI", 8f),
-            TextAlign = ContentAlignment.MiddleLeft,
-            Margin = new Padding(0, 7, 0, 0),
-        };
-        actions.Controls.Add(_statusLabel);
-
-        layout.Controls.Add(actions, 1, 0);
-        _topBar.Controls.Add(layout);
+        layout.Controls.Add(actions, 2, 0);
 
         _topBar.Controls.Add(new Panel { Dock = DockStyle.Bottom, Height = 1, BackColor = CBorder });
+        _topBar.Controls.Add(layout);
         Controls.Add(_topBar);
     }
 
@@ -247,8 +249,8 @@ internal sealed class ExchangeRatesForm : Form
         foreach (var asset in Assets)
             _cardList.Controls.Add(CreateCard(asset));
 
-        left.Controls.Add(_cardList);
         left.Controls.Add(new Panel { Dock = DockStyle.Right, Width = 1, BackColor = CBorder });
+        left.Controls.Add(_cardList);
         Controls.Add(left);
     }
 
