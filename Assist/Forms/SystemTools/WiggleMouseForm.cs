@@ -1,3 +1,5 @@
+using System.Runtime.InteropServices;
+
 namespace Assist.Forms.SystemTools;
 
 internal sealed class WiggleMouseForm : Form
@@ -82,7 +84,7 @@ internal sealed class WiggleMouseForm : Form
         _statusLabel.Location = new Point(20, 255);
 
         _countdownTimer.Interval = 1000;
-        _wiggleTimer.Interval = 50;
+        _wiggleTimer.Interval    = 300;  // 300ms per step — clearly visible movement
 
         Controls.AddRange([lblTitle, _countdownLabel, lblH, lblM, lblS, _nudHours, _nudMinutes, _nudSeconds, _btnSet, _btnStartStop, _statusLabel]);
     }
@@ -197,34 +199,92 @@ internal sealed class WiggleMouseForm : Form
         _wiggleTimer.Start();
     }
 
-    private int _wiggleCount;
-    private static readonly Point[] WiggleOffsets =
-    [
-        new(5, 0), new(0, 5), new(-5, 0), new(0, -5),
-        new(3, 3), new(-3, -3), new(3, -3), new(-3, 3)
-    ];
+    private int   _wiggleCount;
+    private Point _savedCursorPos;
+
+    // ── Win32 SendInput P/Invoke ─────────────────────────────────────────────
+    // IMPORTANT: Cursor.Position uses SetCursorPos which does NOT update
+    // GetLastInputInfo. Teams uses GetLastInputInfo for idle detection.
+    // SendInput is the only API that updates it, so online status is preserved.
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern uint SendInput(uint nInputs, INPUT[] pInputs, int cbSize);
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct MOUSEINPUT
+    {
+        public int    dx, dy;
+        public uint   mouseData, dwFlags, time;
+        public IntPtr dwExtraInfo;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct INPUT
+    {
+        public uint       type; // 0 = INPUT_MOUSE
+        public MOUSEINPUT mi;
+    }
+
+    private const uint MOUSEEVENTF_MOVE        = 0x0001;
+    private const uint MOUSEEVENTF_ABSOLUTE    = 0x8000;
+    private const uint MOUSEEVENTF_VIRTUALDESK = 0x4000; // multi-monitor support
+
+    // ── Wiggle logic ─────────────────────────────────────────────────────────
 
     private void OnWiggleTick()
     {
-        if (_wiggleCount < WiggleOffsets.Length)
+        if (_wiggleCount == 0)
+            _savedCursorPos = Cursor.Position;
+
+        // Pattern: right 60 → center → down 60 → center (net displacement = 0)
+        switch (_wiggleCount)
         {
-            var offset = WiggleOffsets[_wiggleCount];
-            Cursor.Position = new Point(Cursor.Position.X + offset.X, Cursor.Position.Y + offset.Y);
-            _wiggleCount++;
-            return;
+            case 0: SendMouseAbsolute(_savedCursorPos.X + 60, _savedCursorPos.Y);      break;
+            case 1: SendMouseAbsolute(_savedCursorPos.X,      _savedCursorPos.Y);      break;
+            case 2: SendMouseAbsolute(_savedCursorPos.X,      _savedCursorPos.Y + 60); break;
+            case 3: SendMouseAbsolute(_savedCursorPos.X,      _savedCursorPos.Y);      break;
+            default:
+                _wiggleTimer.Stop();
+                if (!_isRunning) return;
+                _remainingSeconds = (int)(_nudHours.Value * 3600 + _nudMinutes.Value * 60 + _nudSeconds.Value);
+                UpdateCountdownDisplay();
+                _countdownTimer.Start();
+                _statusLabel.Text      = "● Geri sayım...";
+                _statusLabel.ForeColor = Color.Yellow;
+                return;
         }
+        _wiggleCount++;
+    }
 
-        _wiggleTimer.Stop();
+    /// <summary>
+    /// Moves the cursor via SendInput (updates GetLastInputInfo → Teams stays online).
+    /// Supports multi-monitor via MOUSEEVENTF_VIRTUALDESK.
+    /// </summary>
+    private static void SendMouseAbsolute(int x, int y)
+    {
+        // Virtual desktop spans all monitors
+        var vd = SystemInformation.VirtualScreen;
+        x = Math.Clamp(x, vd.Left, vd.Right  - 1);
+        y = Math.Clamp(y, vd.Top,  vd.Bottom - 1);
 
-        if (!_isRunning)
-            return;
+        // Normalize pixel coords → 0–65535 range required by MOUSEEVENTF_ABSOLUTE
+        var nx = (int)((long)(x - vd.Left) * 65535 / Math.Max(vd.Width  - 1, 1));
+        var ny = (int)((long)(y - vd.Top)  * 65535 / Math.Max(vd.Height - 1, 1));
 
-        _remainingSeconds = (int)(_nudHours.Value * 3600 + _nudMinutes.Value * 60 + _nudSeconds.Value);
-        UpdateCountdownDisplay();
-        _countdownTimer.Start();
-
-        _statusLabel.Text = "● Geri sayım...";
-        _statusLabel.ForeColor = Color.Yellow;
+        var input = new INPUT
+        {
+            type = 0,
+            mi   = new MOUSEINPUT
+            {
+                dx          = nx,
+                dy          = ny,
+                mouseData   = 0,
+                dwFlags     = MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_VIRTUALDESK,
+                time        = 0,
+                dwExtraInfo = IntPtr.Zero
+            }
+        };
+        SendInput(1, [input], Marshal.SizeOf<INPUT>());
     }
 
     private void UpdateCountdownDisplay()
