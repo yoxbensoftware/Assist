@@ -1,4 +1,4 @@
-﻿using System.Net.Http.Json;
+using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 using Assist.Services;
@@ -33,7 +33,8 @@ internal sealed class IpDomainQueryForm : Form
             ForeColor = GreenText,
             BorderStyle = BorderStyle.FixedSingle,
             Font = new Font("Consolas", 11),
-            PlaceholderText = "IP adresi veya domain girin (ör: 8.8.8.8 veya google.com)"
+            PlaceholderText = "IP adresi veya domain girin (ör: 8.8.8.8 veya google.com)",
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
         };
 
         _btnQuery = new Button
@@ -45,7 +46,8 @@ internal sealed class IpDomainQueryForm : Form
             BackColor = Color.Black,
             ForeColor = GreenText,
             FlatStyle = FlatStyle.Flat,
-            Font = new Font("Consolas", 10, FontStyle.Bold)
+            Font = new Font("Consolas", 10, FontStyle.Bold),
+            Anchor = AnchorStyles.Top | AnchorStyles.Right
         };
         _btnQuery.FlatAppearance.BorderColor = GreenText;
 

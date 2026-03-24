@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -50,7 +50,8 @@ internal sealed partial class WikipediaSearchForm : Form
             BackColor = Color.FromArgb(30, 30, 30),
             ForeColor = GreenText,
             BorderStyle = BorderStyle.FixedSingle,
-            Font = new Font("Consolas", 11)
+            Font = new Font("Consolas", 11),
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
         };
 
         _btnSearch = new Button
@@ -62,7 +63,8 @@ internal sealed partial class WikipediaSearchForm : Form
             BackColor = Color.Black,
             ForeColor = GreenText,
             FlatStyle = FlatStyle.Flat,
-            Font = new Font("Consolas", 10, FontStyle.Bold)
+            Font = new Font("Consolas", 10, FontStyle.Bold),
+            Anchor = AnchorStyles.Top | AnchorStyles.Right
         };
         _btnSearch.FlatAppearance.BorderColor = GreenText;
 

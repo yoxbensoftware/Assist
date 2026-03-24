@@ -41,7 +41,8 @@ internal sealed class WhoisForm : Form
             ForeColor = GreenText,
             BorderStyle = BorderStyle.FixedSingle,
             Font = new Font("Consolas", 11),
-            PlaceholderText = "Alan adı girin (ör: google.com)"
+            PlaceholderText = "Alan adı girin (ör: google.com)",
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
         };
 
         _btnQuery = new Button
@@ -53,7 +54,8 @@ internal sealed class WhoisForm : Form
             BackColor = Color.Black,
             ForeColor = GreenText,
             FlatStyle = FlatStyle.Flat,
-            Font = new Font("Consolas", 10, FontStyle.Bold)
+            Font = new Font("Consolas", 10, FontStyle.Bold),
+            Anchor = AnchorStyles.Top | AnchorStyles.Right
         };
         _btnQuery.FlatAppearance.BorderColor = GreenText;
 

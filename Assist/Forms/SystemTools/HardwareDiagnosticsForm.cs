@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Net;
 
 namespace Assist.Forms.SystemTools;
@@ -54,7 +54,8 @@ internal sealed class HardwareDiagnosticsForm : Form
             Location = new Point(20, 95),
             Size = new Size(910, 560),
             AutoScroll = true,
-            BackColor = Color.Black
+            BackColor = Color.Black,
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom
         };
 
         _lblStatus = new Label
@@ -63,7 +64,8 @@ internal sealed class HardwareDiagnosticsForm : Form
             Location = new Point(20, 665),
             Size = new Size(910, 25),
             ForeColor = InfoColor,
-            Font = new Font("Consolas", 9)
+            Font = new Font("Consolas", 9),
+            Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom
         };
 
         Controls.AddRange([lblTitle, _btnScan, _resultsPanel, _lblStatus]);

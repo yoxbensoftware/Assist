@@ -1,4 +1,4 @@
-﻿using System.Net.Http.Json;
+using System.Net.Http.Json;
 using System.Text.Json;
 using Assist.Services;
 
@@ -57,7 +57,8 @@ internal sealed class CurrencyConverterForm : Form
             ForeColor = GreenText,
             BorderStyle = BorderStyle.FixedSingle,
             Font = new Font("Consolas", 14),
-            Text = "1"
+            Text = "1",
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
         };
         Controls.Add(_txtAmount);
 
@@ -116,7 +117,8 @@ internal sealed class CurrencyConverterForm : Form
             ForeColor = Color.Cyan,
             BorderStyle = BorderStyle.FixedSingle,
             Font = new Font("Consolas", 14),
-            ReadOnly = true
+            ReadOnly = true,
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
         };
         Controls.Add(_txtResult);
 

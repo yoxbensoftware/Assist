@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Text.Json;
 
 namespace Assist.Forms.SystemTools;
@@ -235,7 +235,8 @@ internal sealed class EvChargerFinderForm : Form
             Width = 270,
             Height = 23,
             Style = ProgressBarStyle.Continuous,
-            Visible = false
+            Visible = false,
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
         };
 
         // Buttons row 1
@@ -333,7 +334,8 @@ internal sealed class EvChargerFinderForm : Form
             Location = new Point(20, 180),
             Width = 900,
             ForeColor = !string.IsNullOrEmpty(_googleApiKey) ? GreenText : Color.Yellow,
-            Font = new Font("Consolas", 9)
+            Font = new Font("Consolas", 9),
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
         };
 
         // Station list
@@ -353,7 +355,8 @@ internal sealed class EvChargerFinderForm : Form
             Height = 380,
             BackColor = Color.Black,
             ForeColor = GreenText,
-            BorderStyle = BorderStyle.FixedSingle
+            BorderStyle = BorderStyle.FixedSingle,
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Bottom
         };
         _lstStations.SelectedIndexChanged += (_, _) => ShowStationDetails();
 
@@ -378,7 +381,8 @@ internal sealed class EvChargerFinderForm : Form
             BackColor = Color.Black,
             ForeColor = GreenText,
             BorderStyle = BorderStyle.FixedSingle,
-            Font = new Font("Consolas", 9)
+            Font = new Font("Consolas", 9),
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom
         };
 
         // Bottom buttons
@@ -391,7 +395,8 @@ internal sealed class EvChargerFinderForm : Form
             BackColor = Color.Black,
             ForeColor = GreenText,
             FlatStyle = FlatStyle.Flat,
-            Cursor = Cursors.Hand
+            Cursor = Cursors.Hand,
+            Anchor = AnchorStyles.Left | AnchorStyles.Bottom
         };
         btnOpenSelected.FlatAppearance.BorderColor = GreenText;
         btnOpenSelected.Click += (_, _) => OpenSelectedInMaps();
@@ -405,7 +410,8 @@ internal sealed class EvChargerFinderForm : Form
             BackColor = Color.Black,
             ForeColor = Color.Orange,
             FlatStyle = FlatStyle.Flat,
-            Cursor = Cursors.Hand
+            Cursor = Cursors.Hand,
+            Anchor = AnchorStyles.Left | AnchorStyles.Bottom
         };
         btnStreetView.FlatAppearance.BorderColor = Color.Orange;
         btnStreetView.Click += (_, _) => OpenStreetView();
@@ -419,7 +425,8 @@ internal sealed class EvChargerFinderForm : Form
             BackColor = Color.Black,
             ForeColor = Color.Red,
             FlatStyle = FlatStyle.Flat,
-            Cursor = Cursors.Hand
+            Cursor = Cursors.Hand,
+            Anchor = AnchorStyles.Left | AnchorStyles.Bottom
         };
         btnDelete.FlatAppearance.BorderColor = Color.Red;
         btnDelete.Click += (_, _) => DeleteSelected();
@@ -433,7 +440,8 @@ internal sealed class EvChargerFinderForm : Form
             BackColor = Color.Black,
             ForeColor = Color.Gray,
             FlatStyle = FlatStyle.Flat,
-            Cursor = Cursors.Hand
+            Cursor = Cursors.Hand,
+            Anchor = AnchorStyles.Left | AnchorStyles.Bottom
         };
         btnClear.FlatAppearance.BorderColor = Color.Gray;
         btnClear.Click += (_, _) => ClearList();
@@ -445,7 +453,8 @@ internal sealed class EvChargerFinderForm : Form
             Location = new Point(20, 680),
             Width = 600,
             ForeColor = Color.Gray,
-            Font = new Font("Consolas", 9)
+            Font = new Font("Consolas", 9),
+            Anchor = AnchorStyles.Left | AnchorStyles.Bottom
         };
 
         // Stats label
@@ -456,7 +465,8 @@ internal sealed class EvChargerFinderForm : Form
             Location = new Point(20, 715),
             Width = 500,
             ForeColor = Color.Cyan,
-            Font = new Font("Consolas", 10, FontStyle.Bold)
+            Font = new Font("Consolas", 10, FontStyle.Bold),
+            Anchor = AnchorStyles.Left | AnchorStyles.Bottom
         };
 
         Controls.AddRange([

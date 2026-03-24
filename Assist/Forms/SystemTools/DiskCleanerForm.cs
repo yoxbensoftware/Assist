@@ -1,4 +1,4 @@
-﻿using Assist.Services;
+using Assist.Services;
 
 namespace Assist.Forms.SystemTools;
 
@@ -61,7 +61,8 @@ internal sealed class DiskCleanerForm : Form
             ForeColor = GreenText,
             Font = new Font("Consolas", 9),
             BorderStyle = BorderStyle.FixedSingle,
-            CheckOnClick = true
+            CheckOnClick = true,
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
         };
 
         _chkTargets.Items.Add("Windows Temp (%TEMP%)", true);
@@ -87,7 +88,8 @@ internal sealed class DiskCleanerForm : Form
             Multiline = true,
             ScrollBars = ScrollBars.Vertical,
             ReadOnly = true,
-            BorderStyle = BorderStyle.FixedSingle
+            BorderStyle = BorderStyle.FixedSingle,
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom
         };
 
         _lblStatus = new Label
@@ -96,7 +98,8 @@ internal sealed class DiskCleanerForm : Form
             Location = new Point(20, 565),
             Width = 760,
             ForeColor = GreenText,
-            Font = new Font("Consolas", 9)
+            Font = new Font("Consolas", 9),
+            Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom
         };
 
         Controls.AddRange([lblTitle, lblWarning, _chkTargets, _btnScan, _btnClean, _txtLog, _lblStatus]);

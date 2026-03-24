@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 
 namespace Assist.Forms.SystemTools;
 
@@ -62,7 +62,8 @@ internal sealed class PerformanceMonitorForm : Form
         {
             Location = new Point(20, 95),
             Width = 660,
-            Height = 25
+            Height = 25,
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
         };
 
         // RAM
@@ -88,7 +89,8 @@ internal sealed class PerformanceMonitorForm : Form
         {
             Location = new Point(20, 165),
             Width = 660,
-            Height = 25
+            Height = 25,
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
         };
 
         // Disk (simulated)
@@ -114,7 +116,8 @@ internal sealed class PerformanceMonitorForm : Form
         {
             Location = new Point(20, 235),
             Width = 660,
-            Height = 25
+            Height = 25,
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
         };
 
         // Details
@@ -129,7 +132,8 @@ internal sealed class PerformanceMonitorForm : Form
             BackColor = Color.Black,
             ForeColor = GreenText,
             Font = new Font("Consolas", 9),
-            BorderStyle = BorderStyle.FixedSingle
+            BorderStyle = BorderStyle.FixedSingle,
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom
         };
 
         Controls.AddRange(new Control[]

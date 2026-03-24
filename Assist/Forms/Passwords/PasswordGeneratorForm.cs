@@ -1,4 +1,4 @@
-﻿using System.Security.Cryptography;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace Assist.Forms.Passwords;
@@ -51,7 +51,8 @@ internal sealed class PasswordGeneratorForm : Form
             ForeColor = GreenText,
             Font = new Font("Consolas", 14),
             ReadOnly = true,
-            BorderStyle = BorderStyle.FixedSingle
+            BorderStyle = BorderStyle.FixedSingle,
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
         };
 
         _lengthLabel = new Label
@@ -69,7 +70,8 @@ internal sealed class PasswordGeneratorForm : Form
             Minimum = 8,
             Maximum = 64,
             Value = 16,
-            TickFrequency = 4
+            TickFrequency = 4,
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
         };
         _lengthSlider.ValueChanged += (_, _) => _lengthLabel.Text = $"Uzunluk: {_lengthSlider.Value}";
 

@@ -536,6 +536,9 @@ internal partial class MainMDIForm : Form
             BackColor   = p.Surface,
             BorderStyle = BorderStyle.None
         };
+        typeof(Panel).InvokeMember("DoubleBuffered",
+            System.Reflection.BindingFlags.SetProperty | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic,
+            null, _dashboardPanel, [true]);
 
         _topBorderPanel = new Panel
         {
@@ -558,9 +561,12 @@ internal partial class MainMDIForm : Form
             Text      = "  \u25ba ASSIST  |  Monitoring...",
             Font      = new Font("Consolas", 8, FontStyle.Regular),
             ForeColor = Color.FromArgb(80, 180, 255),
-            BackColor = Color.Transparent,
+            BackColor = p.Surface2,
             TextAlign = ContentAlignment.MiddleLeft
         };
+        typeof(Panel).InvokeMember("DoubleBuffered",
+            System.Reflection.BindingFlags.SetProperty | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic,
+            null, _procBarPanel, [true]);
         _procBarPanel.Controls.Add(_lblProcBar);
         _procBarPanel.Controls.Add(new Panel { Dock = DockStyle.Bottom, Height = 1, BackColor = p.Grid });
         _dashboardPanel.Controls.Add(_procBarPanel);
@@ -632,6 +638,14 @@ internal partial class MainMDIForm : Form
         };
         table.Controls.Add(_lblVersion, 1, 5);
 
+        typeof(Control).InvokeMember("DoubleBuffered",
+            System.Reflection.BindingFlags.SetProperty | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic,
+            null, table, [true]);
+
+        // Set non-transparent background on fast-updating labels to prevent flicker
+        _lblClock!.BackColor = p.Surface;
+        _lblCpuRam!.BackColor = p.Surface;
+
         _dashboardPanel.Controls.Add(table);
         Controls.Add(_dashboardPanel);
 
@@ -666,7 +680,15 @@ internal partial class MainMDIForm : Form
         _dashboardPanel.BackColor = p.Surface;
         if (_topBorderPanel is not null) _topBorderPanel.BackColor = p.Accent;
         if (_procBarPanel is not null) _procBarPanel.BackColor = p.Surface2;
-        if (_lblVersion is not null) _lblVersion.ForeColor = p.Muted;
+        if (_lblProcBar is not null) _lblProcBar.BackColor = p.Surface2;
+        if (_lblVersion is not null) { _lblVersion.ForeColor = p.Muted; _lblVersion.BackColor = p.Surface; }
+
+        // Sync all dashboard label BackColors
+        foreach (var lbl in new[] { _lblClock, _lblCpuRam, _lblWeather, _lblDisk, _lblBattery, _lblUptime,
+                                     _lblIpInfo, _lblPing, _lblCurrency, _lblCrypto, _lblAppStats })
+        {
+            if (lbl is not null) lbl.BackColor = p.Surface;
+        }
     }
 
     private static Label CreateDashboardLabel(string text, int fontSize = 9, FontStyle style = FontStyle.Regular)
@@ -678,7 +700,7 @@ internal partial class MainMDIForm : Form
             AutoSize = false,
             ForeColor = UITheme.Palette.Text,
             Font = new Font("Consolas", fontSize, style),
-            BackColor = Color.Transparent,
+            BackColor = UITheme.Palette.Surface,
             TextAlign = ContentAlignment.MiddleLeft
         };
     }
@@ -687,10 +709,18 @@ internal partial class MainMDIForm : Form
     private void RefreshFast()
     {
         if (_lblClock is not null)
-            _lblClock.Text = $"⏰ {DateTime.Now:HH:mm:ss}  📅 {DateTime.Now:dddd, dd MMMM yyyy}";
+        {
+            var clockText = $"⏰ {DateTime.Now:HH:mm:ss}  📅 {DateTime.Now:dddd, dd MMMM yyyy}";
+            if (_lblClock.Text != clockText)
+                _lblClock.Text = clockText;
+        }
 
         if (_lblCpuRam is not null)
-            _lblCpuRam.Text = DashboardService.GetCpuRam();
+        {
+            var cpuRamText = DashboardService.GetCpuRam();
+            if (_lblCpuRam.Text != cpuRamText)
+                _lblCpuRam.Text = cpuRamText;
+        }
 
         RefreshProcessBar();
     }
@@ -728,11 +758,13 @@ internal partial class MainMDIForm : Form
             _lastNetRx = rx;
             _lastNetTx = tx;
 
-            _lblProcBar.Text =
-                $"  \u25ba ASSIST  |  \uD83D\uDCBE RAM: {ram} MB" +
-                $"  |  \uD83D\uDDA5 CPU: {cpu:F1}%" +
-                $"  |  \uD83D\uDD00 Threads: {_selfProcess.Threads.Count}" +
-                $"  |  \uD83C\uDF10 \u2193 {rxKb:F0} KB/s  \u2191 {txKb:F0} KB/s";
+            var procText =
+                $"  ► ASSIST  |  💾 RAM: {ram} MB" +
+                $"  |  🖥 CPU: {cpu:F1}%" +
+                $"  |  🔀 Threads: {_selfProcess.Threads.Count}" +
+                $"  |  🌐 ↓ {rxKb:F0} KB/s  ↑ {txKb:F0} KB/s";
+            if (_lblProcBar.Text != procText)
+                _lblProcBar.Text = procText;
         }
         catch { }
     }

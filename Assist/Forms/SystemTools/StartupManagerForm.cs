@@ -1,4 +1,4 @@
-﻿using Microsoft.Win32;
+using Microsoft.Win32;
 
 namespace Assist.Forms.SystemTools;
 
@@ -43,7 +43,8 @@ internal sealed class StartupManagerForm : Form
             Font = new Font("Consolas", 9),
             BorderStyle = BorderStyle.FixedSingle,
             GridLines = true,
-            MultiSelect = false
+            MultiSelect = false,
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom
         };
         _listView.Columns.Add("Durum", 80);
         _listView.Columns.Add("Ad", 200);
@@ -69,7 +70,8 @@ internal sealed class StartupManagerForm : Form
             Location = new Point(20, 510),
             Width = 810,
             ForeColor = GreenText,
-            Font = new Font("Consolas", 9)
+            Font = new Font("Consolas", 9),
+            Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom
         };
 
         Controls.AddRange([lblTitle, _listView, btnEnable, btnDisable, btnRefresh, btnDelete, _lblStatus]);

@@ -1,4 +1,4 @@
-﻿namespace Assist.Forms.SystemTools;
+namespace Assist.Forms.SystemTools;
 
 /// <summary>
 /// Editor for the Windows hosts file with syntax highlighting.
@@ -50,7 +50,8 @@ internal sealed class HostsFileEditorForm : Form
             Font = new Font("Consolas", 10),
             BorderStyle = BorderStyle.FixedSingle,
             WordWrap = false,
-            AcceptsTab = true
+            AcceptsTab = true,
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom
         };
         _txtEditor.TextChanged += (_, _) => ApplySyntaxHighlighting();
 

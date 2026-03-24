@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 
 namespace Assist.Forms.SystemTools;
 
@@ -40,7 +40,8 @@ internal sealed class SpeedTestForm : Form
             Location = new Point(20, 70),
             Width = 560,
             ForeColor = GreenText,
-            Font = new Font("Consolas", 11)
+            Font = new Font("Consolas", 11),
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
         };
 
         _lblUpload = new Label
@@ -49,7 +50,8 @@ internal sealed class SpeedTestForm : Form
             Location = new Point(20, 100),
             Width = 560,
             ForeColor = GreenText,
-            Font = new Font("Consolas", 11)
+            Font = new Font("Consolas", 11),
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
         };
 
         _lblPing = new Label
@@ -58,7 +60,8 @@ internal sealed class SpeedTestForm : Form
             Location = new Point(20, 130),
             Width = 560,
             ForeColor = GreenText,
-            Font = new Font("Consolas", 11)
+            Font = new Font("Consolas", 11),
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
         };
 
         _progressBar = new ProgressBar
@@ -66,7 +69,8 @@ internal sealed class SpeedTestForm : Form
             Location = new Point(20, 170),
             Width = 560,
             Height = 25,
-            Style = ProgressBarStyle.Continuous
+            Style = ProgressBarStyle.Continuous,
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
         };
 
         _btnStart = new Button
@@ -78,7 +82,8 @@ internal sealed class SpeedTestForm : Form
             BackColor = Color.Black,
             ForeColor = GreenText,
             FlatStyle = FlatStyle.Flat,
-            Font = new Font("Consolas", 11, FontStyle.Bold)
+            Font = new Font("Consolas", 11, FontStyle.Bold),
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
         };
         _btnStart.FlatAppearance.BorderColor = GreenText;
         _btnStart.Click += async (_, _) => await RunSpeedTest();
@@ -94,7 +99,8 @@ internal sealed class SpeedTestForm : Form
             BackColor = Color.Black,
             ForeColor = GreenText,
             Font = new Font("Consolas", 9),
-            BorderStyle = BorderStyle.FixedSingle
+            BorderStyle = BorderStyle.FixedSingle,
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom
         };
 
         Controls.AddRange(new Control[]
