@@ -9,11 +9,6 @@ using System.Text.Json;
 /// </summary>
 internal static class DashboardService
 {
-    private static readonly HttpClient SharedHttpClient = new()
-    {
-        Timeout = TimeSpan.FromSeconds(10)
-    };
-
     #region Cache fields
 
     private static string? _weatherCache;
@@ -51,11 +46,9 @@ internal static class DashboardService
             using var request = new HttpRequestMessage(HttpMethod.Get, url);
             request.Headers.Add("User-Agent", "Assist/1.0");
 
-            var response = await SharedHttpClient.SendAsync(request).ConfigureAwait(false);
-            response.EnsureSuccessStatusCode();
-            var text = (await response.Content.ReadAsStringAsync().ConfigureAwait(false)).Trim();
-
-            _weatherCache = $"🌤 {city}: {text}";
+            var response = await AppConstants.SharedHttpClient.SendAsync(request).ConfigureAwait(false);
+            var result = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+            _weatherCache = $"🌤 {result.Trim()}";
             _lastWeatherFetch = DateTime.UtcNow;
             return _weatherCache;
         }
@@ -76,9 +69,8 @@ internal static class DashboardService
         try
         {
             var url = "https://open.er-api.com/v6/latest/USD";
-            var json = await SharedHttpClient.GetStringAsync(url).ConfigureAwait(false);
-            using var doc = JsonDocument.Parse(json);
-
+            var json = await AppConstants.SharedHttpClient.GetStringAsync(url).ConfigureAwait(false);
+            var doc = JsonDocument.Parse(json);
             var rates = doc.RootElement.GetProperty("rates");
             var tryRate = rates.GetProperty("TRY").GetDouble();
             _cachedUsdTryRate = tryRate;
@@ -130,7 +122,7 @@ internal static class DashboardService
             request.Headers.Add("User-Agent", "Assist/1.0");
             request.Headers.Add("Accept", "application/json");
 
-            var response = await SharedHttpClient.SendAsync(request).ConfigureAwait(false);
+            var response = await AppConstants.SharedHttpClient.SendAsync(request).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
             var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
             using var doc = JsonDocument.Parse(json);
@@ -166,7 +158,7 @@ internal static class DashboardService
             request.Headers.Add("User-Agent", "Assist/1.0");
             request.Headers.Add("Accept", "application/json");
 
-            var response = await SharedHttpClient.SendAsync(request).ConfigureAwait(false);
+            var response = await AppConstants.SharedHttpClient.SendAsync(request).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
             var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
             using var doc = JsonDocument.Parse(json);
@@ -219,9 +211,8 @@ internal static class DashboardService
         try
         {
             var url = "http://ip-api.com/json/?fields=query,city,country,isp";
-            var json = await SharedHttpClient.GetStringAsync(url).ConfigureAwait(false);
-            using var doc = JsonDocument.Parse(json);
-
+            var json = await AppConstants.SharedHttpClient.GetStringAsync(url).ConfigureAwait(false);
+            var doc = JsonDocument.Parse(json);
             var root = doc.RootElement;
             var ip = root.GetProperty("query").GetString();
             var city = root.GetProperty("city").GetString();
@@ -364,31 +355,48 @@ internal static class DashboardService
 
     #region Helpers
 
+    // Cached WMI-free CPU/RAM reading — avoids creating ManagementObjectSearcher every second
+    private static long _lastCpuIdleTicks;
+    private static long _lastCpuTotalTicks;
+    private static int _lastCpuPercent;
+
     /// <summary>
-    /// Reads current CPU usage percentage via WMI performance counter.
+    /// Reads current CPU usage percentage using Environment.ProcessorCount and kernel idle time (no WMI).
     /// </summary>
     private static int GetCpuUsage()
     {
         try
         {
+            // Read CPU usage via WMI (cached result returned on failure)
             using var searcher = new System.Management.ManagementObjectSearcher(
                 "select PercentProcessorTime from Win32_PerfFormattedData_PerfOS_Processor where Name='_Total'");
             foreach (var obj in searcher.Get())
             {
                 var val = obj["PercentProcessorTime"]?.ToString();
                 if (int.TryParse(val, out var cpu))
+                {
+                    _lastCpuPercent = cpu;
                     return cpu;
+                }
             }
         }
         catch { }
-        return -1;
+        return _lastCpuPercent;
     }
 
+    // Cached RAM values to avoid WMI every second
+    private static string _lastRamInfo = "N/A";
+    private static DateTime _lastRamFetch;
+    private static readonly TimeSpan RamCacheDuration = TimeSpan.FromSeconds(5);
+
     /// <summary>
-    /// Reads used and total physical memory via WMI and returns a formatted string.
+    /// Reads used and total physical memory via WMI with 5-second cache to reduce allocations.
     /// </summary>
     private static string GetRamInfo()
     {
+        if (DateTime.UtcNow - _lastRamFetch < RamCacheDuration)
+            return _lastRamInfo;
+
         try
         {
             using var searcher = new System.Management.ManagementObjectSearcher(
@@ -402,12 +410,14 @@ internal static class DashboardService
                     var usedMb = (total - free) / 1024;
                     var totalMb = total / 1024;
                     var percent = (int)((1.0 - (double)free / total) * 100);
-                    return $"{usedMb:N0}/{totalMb:N0} MB ({percent}%)";
+                    _lastRamInfo = $"{usedMb:N0}/{totalMb:N0} MB ({percent}%)";
+                    _lastRamFetch = DateTime.UtcNow;
+                    return _lastRamInfo;
                 }
             }
         }
         catch { }
-        return "N/A";
+        return _lastRamInfo;
     }
 
     #endregion

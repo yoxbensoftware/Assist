@@ -56,7 +56,13 @@ internal static class Program
         UITheme.Apply(loginForm);
         if (loginForm.ShowDialog() == DialogResult.OK && loginForm.IsAuthenticated)
         {
-            Application.Run(new MainMDIForm());
+            using var splash = new SplashForm();
+            splash.Show();
+            Application.DoEvents();
+
+            var mainForm = new MainMDIForm();
+            mainForm.Shown += (_, _) => splash.Close();
+            Application.Run(mainForm);
         }
     }
 }

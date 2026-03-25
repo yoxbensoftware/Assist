@@ -15,9 +15,22 @@
     <AnalysisLevel>latest</AnalysisLevel>
     <AnalysisMode>Minimum</AnalysisMode>
     <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
+
+    <!-- Publish Settings: single file + trimmed for smaller distribution -->
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>true</SelfContained>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Obfuscar" Version="2.2.38">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
     <PackageReference Include="System.Management" Version="8.0.0" />
     <PackageReference Include="Vortice.DXGI" Version="*" />
   </ItemGroup>
@@ -27,6 +40,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Resources\assist_icon.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="obfuscar.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

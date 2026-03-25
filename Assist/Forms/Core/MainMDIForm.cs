@@ -15,7 +15,6 @@ using Assist.Services;
 
 internal partial class MainMDIForm : Form
 {
-
     private ClipboardHistoryService? _clipboardHistory;
 
     // Dashboard fields
@@ -31,7 +30,7 @@ internal partial class MainMDIForm : Form
     private Label? _lblCrypto;
     private Label? _lblIpInfo;
     private Label? _lblPing;
-    private System.Windows.Forms.Timer? _fastTimer;   // 1s — clock, CPU/RAM
+    private System.Windows.Forms.Timer? _fastTimer;   // 2s — clock, CPU/RAM
     private System.Windows.Forms.Timer? _mediumTimer;  // 30s — disk, battery, uptime, ping, app stats
     private System.Windows.Forms.Timer? _slowTimer;    // 5min — weather, currency, crypto, IP
 
@@ -41,6 +40,9 @@ internal partial class MainMDIForm : Form
     private DateTime _lastCpuCheck = DateTime.MinValue;
     private long _lastNetRx;
     private long _lastNetTx;
+    private DateTime _lastNetCheck = DateTime.MinValue;
+    private double _cachedRxKbPerSec;
+    private double _cachedTxKbPerSec;
     private Label? _lblProcBar;
 
     // Dashboard panel refs for theme refresh
@@ -59,6 +61,7 @@ internal partial class MainMDIForm : Form
         EnsureClipboardHistory();
         LoadIcon();
         InitializeDashboardPanel();
+        Shown += async (_, _) => await CheckForUpdateAsync(silent: true);
     }
 
     /// <summary>
@@ -124,6 +127,9 @@ internal partial class MainMDIForm : Form
         // Right-aligned items
         menuStrip.Items.Add(new ToolStripLabel("Oz") { Alignment = ToolStripItemAlignment.Right, ForeColor = UITheme.Palette.Accent });
         menuStrip.Items.Add(CreateMenuItem("Hakkında", ShowAbout, ToolStripItemAlignment.Right));
+        var updateItem = CreateAsyncMenuItem("Güncelleme Kontrol", () => CheckForUpdateAsync(silent: false));
+        updateItem.Alignment = ToolStripItemAlignment.Right;
+        menuStrip.Items.Add(updateItem);
 
         MainMenuStrip = menuStrip;
         Controls.Add(menuStrip);
@@ -524,6 +530,73 @@ internal partial class MainMDIForm : Form
         }
     }
 
+    /// <summary>
+    /// Checks GitHub Releases for a newer version. If silent, only notifies when an update exists.
+    /// </summary>
+    private async Task CheckForUpdateAsync(bool silent)
+    {
+        try
+        {
+            var update = await AutoUpdateService.CheckForUpdateAsync().ConfigureAwait(true);
+
+            if (update is null)
+            {
+                if (!silent)
+                    MessageBox.Show(
+                        $"Assist güncel! (Mevcut sürüm: {AppConstants.BuildVersion})",
+                        "Güncelleme",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information);
+                return;
+            }
+
+            var releaseNotes = string.IsNullOrWhiteSpace(update.Body)
+                ? ""
+                : $"\n\nDeğişiklikler:\n{update.Body}";
+
+            var result = MessageBox.Show(
+                $"Yeni sürüm mevcut: {update.TagName}\nMevcut sürüm: {AppConstants.BuildVersion}{releaseNotes}\n\nŞimdi güncellemek ister misiniz?",
+                "Güncelleme Mevcut",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Information);
+
+            if (result != DialogResult.Yes)
+                return;
+
+            var success = await Loading.RunAsync(this, async () =>
+            {
+                return await AutoUpdateService.DownloadAndApplyAsync(update).ConfigureAwait(false);
+            }, "Güncelleme indiriliyor...");
+
+            if (success)
+            {
+                MessageBox.Show(
+                    "Güncelleme indirildi. Uygulama yeniden başlatılacak.",
+                    "Güncelleme",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+                Application.Exit();
+            }
+            else
+            {
+                MessageBox.Show(
+                    "Güncelleme indirilemedi. Lütfen daha sonra tekrar deneyin.",
+                    "Hata",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+            }
+        }
+        catch
+        {
+            if (!silent)
+                MessageBox.Show(
+                    "Güncelleme kontrolü sırasında bir hata oluştu.",
+                    "Hata",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+        }
+    }
+
     #region Dashboard Panel
 
     private void InitializeDashboardPanel()
@@ -559,7 +632,7 @@ internal partial class MainMDIForm : Form
         {
             Dock = DockStyle.Fill,
             Text = "  \u25ba ASSIST  |  Monitoring...",
-            Font = new Font("Consolas", 8, FontStyle.Regular),
+            Font = ProcBarFont,
             ForeColor = Color.FromArgb(80, 180, 255),
             BackColor = p.Surface2,
             TextAlign = ContentAlignment.MiddleLeft
@@ -589,7 +662,7 @@ internal partial class MainMDIForm : Form
             table.RowStyles.Add(new RowStyle(SizeType.Percent, 16.67F));
 
         // ── Left column labels ──
-        _lblClock = CreateDashboardLabel("⏰ --:--:--", 10, FontStyle.Bold);
+        _lblClock = CreateDashboardLabel("⏰ --:--:--", FontStyle.Bold);
         _lblWeather = CreateDashboardLabel("🌤 Yükleniyor...");
         _lblCpuRam = CreateDashboardLabel("💻 CPU: --%  RAM: --/-- MB");
         _lblDisk = CreateDashboardLabel("💾 C: -- GB boş / -- GB");
@@ -632,7 +705,7 @@ internal partial class MainMDIForm : Form
             Dock = DockStyle.Fill,
             AutoSize = false,
             ForeColor = p.Muted,
-            Font = new Font("Consolas", 8, FontStyle.Regular),
+            Font = VersionFont,
             BackColor = Color.Transparent,
             TextAlign = ContentAlignment.MiddleRight
         };
@@ -651,8 +724,8 @@ internal partial class MainMDIForm : Form
 
         // ── Timers ──
 
-        // Fast: every 1 second — clock, CPU/RAM
-        _fastTimer = new System.Windows.Forms.Timer { Interval = 1_000 };
+        // Fast: every 2 seconds — clock, CPU/RAM (reduced from 1s to lower GC pressure)
+        _fastTimer = new System.Windows.Forms.Timer { Interval = 2_000 };
         _fastTimer.Tick += (_, _) => RefreshFast();
         _fastTimer.Start();
 
@@ -691,7 +764,13 @@ internal partial class MainMDIForm : Form
         }
     }
 
-    private static Label CreateDashboardLabel(string text, int fontSize = 9, FontStyle style = FontStyle.Regular)
+    // Cached fonts for dashboard labels to prevent repeated allocations
+    private static readonly Font DashboardFont = new("Consolas", 9);
+    private static readonly Font DashboardFontBold = new("Consolas", 10, FontStyle.Bold);
+    private static readonly Font ProcBarFont = new("Consolas", 8);
+    private static readonly Font VersionFont = new("Consolas", 8);
+
+    private static Label CreateDashboardLabel(string text, FontStyle style = FontStyle.Regular)
     {
         return new Label
         {
@@ -699,13 +778,13 @@ internal partial class MainMDIForm : Form
             Dock = DockStyle.Fill,
             AutoSize = false,
             ForeColor = UITheme.Palette.Text,
-            Font = new Font("Consolas", fontSize, style),
+            Font = style == FontStyle.Bold ? DashboardFontBold : DashboardFont,
             BackColor = UITheme.Palette.Surface,
             TextAlign = ContentAlignment.MiddleLeft
         };
     }
 
-    /// <summary>Clock + CPU/RAM — every 1 second.</summary>
+    /// <summary>Clock + CPU/RAM — every 2 seconds.</summary>
     private void RefreshFast()
     {
         if (_lblClock is not null)
@@ -744,25 +823,33 @@ internal partial class MainMDIForm : Form
             _lastCpuTime = _selfProcess.TotalProcessorTime;
             _lastCpuCheck = now;
 
-            // System-wide network delta (KB/s)
-            long rx = 0, tx = 0;
-            foreach (var ni in NetworkInterface.GetAllNetworkInterfaces())
+            // System-wide network delta — only update every ~10 seconds to reduce allocations
+            var secondsSinceNetCheck = (now - _lastNetCheck).TotalSeconds;
+            if (secondsSinceNetCheck >= 10)
             {
-                if (ni.OperationalStatus != OperationalStatus.Up) continue;
-                var stats = ni.GetIPv4Statistics();
-                rx += stats.BytesReceived;
-                tx += stats.BytesSent;
+                long rx = 0, tx = 0;
+                foreach (var ni in NetworkInterface.GetAllNetworkInterfaces())
+                {
+                    if (ni.OperationalStatus != OperationalStatus.Up) continue;
+                    var stats = ni.GetIPv4Statistics();
+                    rx += stats.BytesReceived;
+                    tx += stats.BytesSent;
+                }
+                if (_lastNetRx > 0)
+                {
+                    _cachedRxKbPerSec = (rx - _lastNetRx) / 1024.0 / secondsSinceNetCheck;
+                    _cachedTxKbPerSec = (tx - _lastNetTx) / 1024.0 / secondsSinceNetCheck;
+                }
+                _lastNetRx = rx;
+                _lastNetTx = tx;
+                _lastNetCheck = now;
             }
-            var rxKb = _lastNetRx > 0 ? (rx - _lastNetRx) / 1024.0 : 0;
-            var txKb = _lastNetTx > 0 ? (tx - _lastNetTx) / 1024.0 : 0;
-            _lastNetRx = rx;
-            _lastNetTx = tx;
 
             var procText =
-                $"  ► ASSIST  |  💾 RAM: {ram} MB" +
-                $"  |  🖥 CPU: {cpu:F1}%" +
-                $"  |  🔀 Threads: {_selfProcess.Threads.Count}" +
-                $"  |  🌐 ↓ {rxKb:F0} KB/s  ↑ {txKb:F0} KB/s";
+                $"  \u25ba ASSIST  |  \ud83d\udcbe RAM: {ram} MB" +
+                $"  |  \ud83d\udda5 CPU: {cpu:F1}%" +
+                $"  |  \ud83d\udd00 Threads: {_selfProcess.Threads.Count}" +
+                $"  |  \ud83c\udf10 \u2193 {_cachedRxKbPerSec:F0} KB/s  \u2191 {_cachedTxKbPerSec:F0} KB/s";
             if (_lblProcBar.Text != procText)
                 _lblProcBar.Text = procText;
         }

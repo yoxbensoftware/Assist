@@ -5,6 +5,9 @@ namespace Assist.Services;
 /// </summary>
 internal static class UITheme
 {
+    // Cached font instance to prevent repeated allocations on every Apply call
+    private static readonly Font DefaultFont = new("Consolas", 10);
+
     /// <summary>
     /// Gets the current theme's color palette.
     /// </summary>
@@ -86,7 +89,7 @@ internal static class UITheme
         var p = Palette;
         form.BackColor = p.Back;
         form.ForeColor = p.Text;
-        form.Font = new Font("Consolas", 10);
+        form.Font = DefaultFont;
 
         ApplyCore(form, p);
     }
@@ -138,7 +141,7 @@ internal static class UITheme
             case Form form:
                 form.BackColor = p.Back;
                 form.ForeColor = p.Text;
-                form.Font = new Font("Consolas", 10);
+                form.Font = DefaultFont;
                 break;
             case MenuStrip menu:
                 menu.BackColor = p.MenuBack;

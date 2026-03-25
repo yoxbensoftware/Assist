@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Obfuscator>
+  <Var name="InPath" value="." />
+  <Var name="OutPath" value=".\Obfuscated" />
+
+  <!-- Rename symbols to unreadable names -->
+  <Var name="RenameProperties" value="true" />
+  <Var name="RenameEvents" value="true" />
+  <Var name="RenameFields" value="true" />
+  <Var name="RenameNamespaces" value="true" />
+
+  <!-- Encrypt string literals to prevent easy reading -->
+  <Var name="HideStrings" value="true" />
+
+  <!-- Use Unicode characters for obfuscated names -->
+  <Var name="UseUnicodeNames" value="true" />
+
+  <!-- Do not regenerate debug info for release builds -->
+  <Var name="RegenerateDebugInfo" value="false" />
+
+  <!-- Only obfuscate our assembly -->
+  <Module file="Assist.dll">
+
+    <!-- Skip WinForms designer-generated members -->
+    <SkipMethod type="*" name="InitializeComponent" />
+    <SkipMethod type="*" name="Dispose" />
+
+    <!-- Skip Program entry point -->
+    <SkipType name="Assist.Program" />
+
+    <!-- Skip serialization records used by System.Text.Json -->
+    <SkipType name="Assist.Services.ThemeService/ThemeState" />
+
+    <!-- Skip auto-update version comparison constants -->
+    <SkipField type="Assist.AppConstants" name="BuildVersion" />
+
+  </Module>
+</Obfuscator>
