@@ -1,12 +1,11 @@
-﻿using System.Diagnostics;
+namespace Assist.Forms.SystemTools;
+
+using System.Diagnostics;
 using System.Text.RegularExpressions;
 using Assist.Services;
 
-namespace Assist.Forms.SystemTools;
-
 internal sealed partial class WifiPasswordForm : Form
 {
-    private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
 
     private readonly DataGridView _dgv;
     private readonly Label _lblStatus;
@@ -16,7 +15,7 @@ internal sealed partial class WifiPasswordForm : Form
         Text = "Wi-Fi Şifreleri";
         ClientSize = new Size(860, 520);
         BackColor = Color.Black;
-        ForeColor = GreenText;
+        ForeColor = AppConstants.AccentText;
         Font = new Font("Consolas", 10);
 
         var topPanel = new Panel { Dock = DockStyle.Top, Height = 44, BackColor = Color.Black };
@@ -28,11 +27,11 @@ internal sealed partial class WifiPasswordForm : Form
             Width = 140,
             Height = 30,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             FlatStyle = FlatStyle.Flat,
             Font = new Font("Consolas", 10, FontStyle.Bold)
         };
-        btnRefresh.FlatAppearance.BorderColor = GreenText;
+        btnRefresh.FlatAppearance.BorderColor = AppConstants.AccentText;
         btnRefresh.Click += async (_, _) => await LoadProfilesAsync();
 
         var btnCopy = new Button
@@ -42,11 +41,11 @@ internal sealed partial class WifiPasswordForm : Form
             Width = 220,
             Height = 30,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             FlatStyle = FlatStyle.Flat,
             Font = new Font("Consolas", 10, FontStyle.Bold)
         };
-        btnCopy.FlatAppearance.BorderColor = GreenText;
+        btnCopy.FlatAppearance.BorderColor = AppConstants.AccentText;
         btnCopy.Click += (_, _) => CopySelectedPassword();
 
         _lblStatus = new Label

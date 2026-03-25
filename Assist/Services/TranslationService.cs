@@ -1,7 +1,7 @@
-﻿using System.Text;
-using System.Text.Json;
-
 namespace Assist.Services;
+
+using System.Text;
+using System.Text.Json;
 
 /// <summary>
 /// Translation service using Azure Translator API with MyMemory fallback.
@@ -41,6 +41,9 @@ internal static class TranslationService
         return fallback ?? text;
     }
 
+    /// <summary>
+    /// Attempts to translate text using the Azure Cognitive Translator API.
+    /// </summary>
     private static async Task<string?> TryAzureTranslateAsync(string text, string toLanguage)
     {
         try
@@ -80,6 +83,9 @@ internal static class TranslationService
         return null;
     }
 
+    /// <summary>
+    /// Attempts to translate text using the MyMemory free translation API as a fallback.
+    /// </summary>
     private static async Task<string?> TryMyMemoryTranslateAsync(string text, string toLanguage)
     {
         try

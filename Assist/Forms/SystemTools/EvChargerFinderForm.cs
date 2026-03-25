@@ -1,7 +1,7 @@
+namespace Assist.Forms.SystemTools;
+
 using System.Diagnostics;
 using System.Text.Json;
-
-namespace Assist.Forms.SystemTools;
 
 /// <summary>
 /// EV Charging Station Finder - Finds electric vehicle charging stations across Turkey
@@ -10,7 +10,6 @@ namespace Assist.Forms.SystemTools;
 internal sealed class EvChargerFinderForm : Form
 {
     #region Constants
-    private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
     private static readonly JsonSerializerOptions IndentedJsonOptions = new() { WriteIndented = true };
     private const string DefaultApiKey = "AIzaSyDolQkxpbCHEuVYmh9jhcTZIeRt77Rx1nY";
 
@@ -93,7 +92,7 @@ internal sealed class EvChargerFinderForm : Form
         Text = "🔌 Elektrikli Araç Şarj İstasyonu Bulucu - Türkiye";
         ClientSize = new Size(950, 780);
         BackColor = Color.Black;
-        ForeColor = GreenText;
+        ForeColor = AppConstants.AccentText;
         Font = new Font("Consolas", 10);
         StartPosition = FormStartPosition.CenterScreen;
 
@@ -115,7 +114,7 @@ internal sealed class EvChargerFinderForm : Form
             Text = "Türkiye Geneli EV Şarj Noktaları",
             Location = new Point(20, 35),
             AutoSize = true,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 9)
         };
 
@@ -134,7 +133,7 @@ internal sealed class EvChargerFinderForm : Form
             Location = new Point(100, 62),
             Width = 300,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             BorderStyle = BorderStyle.FixedSingle,
             PasswordChar = '●'
         };
@@ -147,11 +146,11 @@ internal sealed class EvChargerFinderForm : Form
             Width = 30,
             Height = 25,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             FlatStyle = FlatStyle.Flat,
             Cursor = Cursors.Hand
         };
-        btnShowKey.FlatAppearance.BorderColor = GreenText;
+        btnShowKey.FlatAppearance.BorderColor = AppConstants.AccentText;
         btnShowKey.Click += (_, _) => _txtApiKey.PasswordChar = _txtApiKey.PasswordChar == '●' ? '\0' : '●';
 
         var btnGetApiKey = new LinkLabel
@@ -171,7 +170,7 @@ internal sealed class EvChargerFinderForm : Form
             Text = "🏙️ Şehir:",
             Location = new Point(550, 65),
             Width = 70,
-            ForeColor = GreenText
+            ForeColor = AppConstants.AccentText
         };
 
         _cmbCity = new ComboBox
@@ -179,7 +178,7 @@ internal sealed class EvChargerFinderForm : Form
             Location = new Point(620, 62),
             Width = 180,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             DropDownStyle = ComboBoxStyle.DropDownList,
             FlatStyle = FlatStyle.Flat
         };
@@ -194,7 +193,7 @@ internal sealed class EvChargerFinderForm : Form
             Text = "📍 Koordinat:",
             Location = new Point(20, 100),
             Width = 100,
-            ForeColor = GreenText
+            ForeColor = AppConstants.AccentText
         };
 
         _txtLocation = new TextBox
@@ -203,7 +202,7 @@ internal sealed class EvChargerFinderForm : Form
             Location = new Point(120, 97),
             Width = 180,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             BorderStyle = BorderStyle.FixedSingle
         };
 
@@ -213,7 +212,7 @@ internal sealed class EvChargerFinderForm : Form
             Text = "📏 Yarıçap (km):",
             Location = new Point(320, 100),
             Width = 120,
-            ForeColor = GreenText
+            ForeColor = AppConstants.AccentText
         };
 
         _nudRadius = new NumericUpDown
@@ -224,7 +223,7 @@ internal sealed class EvChargerFinderForm : Form
             Maximum = 50,
             Value = 30,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             BorderStyle = BorderStyle.FixedSingle
         };
 
@@ -247,11 +246,11 @@ internal sealed class EvChargerFinderForm : Form
             Width = 180,
             Height = 35,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             FlatStyle = FlatStyle.Flat,
             Cursor = Cursors.Hand
         };
-        _btnSearch.FlatAppearance.BorderColor = GreenText;
+        _btnSearch.FlatAppearance.BorderColor = AppConstants.AccentText;
         _btnSearch.Click += async (_, _) => await SearchCityAsync();
 
         _btnSearchAll = new Button
@@ -275,11 +274,11 @@ internal sealed class EvChargerFinderForm : Form
             Width = 140,
             Height = 35,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             FlatStyle = FlatStyle.Flat,
             Cursor = Cursors.Hand
         };
-        _btnOpenMaps.FlatAppearance.BorderColor = GreenText;
+        _btnOpenMaps.FlatAppearance.BorderColor = AppConstants.AccentText;
         _btnOpenMaps.Click += (_, _) => OpenInChrome();
 
         _btnAddManual = new Button
@@ -328,12 +327,12 @@ internal sealed class EvChargerFinderForm : Form
         // Status
         _lblStatus = new Label
         {
-            Text = !string.IsNullOrEmpty(_googleApiKey) 
-                ? "✅ API Key hazır. Bir şehir seçip arama yapın veya Tüm Türkiye'de arayın." 
+            Text = !string.IsNullOrEmpty(_googleApiKey)
+                ? "✅ API Key hazır. Bir şehir seçip arama yapın veya Tüm Türkiye'de arayın."
                 : "⚠️ API Key girilmedi. Yukarıdan API Key alıp girin.",
             Location = new Point(20, 180),
             Width = 900,
-            ForeColor = !string.IsNullOrEmpty(_googleApiKey) ? GreenText : Color.Yellow,
+            ForeColor = !string.IsNullOrEmpty(_googleApiKey) ? AppConstants.AccentText : Color.Yellow,
             Font = new Font("Consolas", 9),
             Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
         };
@@ -354,7 +353,7 @@ internal sealed class EvChargerFinderForm : Form
             Width = 430,
             Height = 380,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             BorderStyle = BorderStyle.FixedSingle,
             Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Bottom
         };
@@ -379,7 +378,7 @@ internal sealed class EvChargerFinderForm : Form
             ReadOnly = true,
             ScrollBars = ScrollBars.Vertical,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             BorderStyle = BorderStyle.FixedSingle,
             Font = new Font("Consolas", 9),
             Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom
@@ -393,12 +392,12 @@ internal sealed class EvChargerFinderForm : Form
             Width = 150,
             Height = 35,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             FlatStyle = FlatStyle.Flat,
             Cursor = Cursors.Hand,
             Anchor = AnchorStyles.Left | AnchorStyles.Bottom
         };
-        btnOpenSelected.FlatAppearance.BorderColor = GreenText;
+        btnOpenSelected.FlatAppearance.BorderColor = AppConstants.AccentText;
         btnOpenSelected.Click += (_, _) => OpenSelectedInMaps();
 
         var btnStreetView = new Button
@@ -531,7 +530,7 @@ internal sealed class EvChargerFinderForm : Form
             var keyFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, ApiKeySettingsFile);
             File.WriteAllText(keyFile, key);
             _lblStatus.Text = "✅ API Key kaydedildi. Artık API ile arama yapabilirsiniz.";
-            _lblStatus.ForeColor = GreenText;
+            _lblStatus.ForeColor = AppConstants.AccentText;
         }
         else
         {
@@ -632,7 +631,7 @@ internal sealed class EvChargerFinderForm : Form
 
             RefreshList();
             _lblStatus.Text = $"✅ {cityName}: {newCount} yeni EV şarj istasyonu bulundu! (Toplam: {_foundStations.Count})";
-            _lblStatus.ForeColor = GreenText;
+            _lblStatus.ForeColor = AppConstants.AccentText;
         }
         catch (Exception ex)
         {
@@ -748,7 +747,7 @@ internal sealed class EvChargerFinderForm : Form
                 _lblStatus.Text = $"✅ Tarama tamamlandı. {totalNew} yeni, toplam {_foundStations.Count}. Kaydetme hatası: {ex.Message}";
             }
 
-            _lblStatus.ForeColor = GreenText;
+            _lblStatus.ForeColor = AppConstants.AccentText;
         }
         catch (Exception ex)
         {
@@ -971,7 +970,7 @@ internal sealed class EvChargerFinderForm : Form
             Text = "🔌 Manuel EV Şarj İstasyonu Ekle",
             ClientSize = new Size(450, 360),
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 10),
             StartPosition = FormStartPosition.CenterParent,
             FormBorderStyle = FormBorderStyle.FixedDialog,
@@ -979,49 +978,49 @@ internal sealed class EvChargerFinderForm : Form
             MinimizeBox = false
         };
 
-        var lblName = new Label { Text = "İstasyon Adı:", Location = new Point(20, 20), Width = 120, ForeColor = GreenText };
-        var txtName = new TextBox { Location = new Point(150, 17), Width = 270, BackColor = Color.Black, ForeColor = GreenText, BorderStyle = BorderStyle.FixedSingle };
+        var lblName = new Label { Text = "İstasyon Adı:", Location = new Point(20, 20), Width = 120, ForeColor = AppConstants.AccentText };
+        var txtName = new TextBox { Location = new Point(150, 17), Width = 270, BackColor = Color.Black, ForeColor = AppConstants.AccentText, BorderStyle = BorderStyle.FixedSingle };
 
-        var lblCity = new Label { Text = "Şehir:", Location = new Point(20, 60), Width = 120, ForeColor = GreenText };
-        var cmbCity = new ComboBox 
-        { 
-            Location = new Point(150, 57), 
-            Width = 200, 
-            BackColor = Color.Black, 
-            ForeColor = GreenText,
+        var lblCity = new Label { Text = "Şehir:", Location = new Point(20, 60), Width = 120, ForeColor = AppConstants.AccentText };
+        var cmbCity = new ComboBox
+        {
+            Location = new Point(150, 57),
+            Width = 200,
+            BackColor = Color.Black,
+            ForeColor = AppConstants.AccentText,
             DropDownStyle = ComboBoxStyle.DropDownList
         };
         foreach (var city in TurkishCities.Keys)
             cmbCity.Items.Add(city);
         cmbCity.SelectedIndex = 2; // Ankara default
 
-        var lblAddress = new Label { Text = "Adres:", Location = new Point(20, 100), Width = 120, ForeColor = GreenText };
-        var txtAddress = new TextBox { Location = new Point(150, 97), Width = 270, BackColor = Color.Black, ForeColor = GreenText, BorderStyle = BorderStyle.FixedSingle };
+        var lblAddress = new Label { Text = "Adres:", Location = new Point(20, 100), Width = 120, ForeColor = AppConstants.AccentText };
+        var txtAddress = new TextBox { Location = new Point(150, 97), Width = 270, BackColor = Color.Black, ForeColor = AppConstants.AccentText, BorderStyle = BorderStyle.FixedSingle };
 
-        var lblLat = new Label { Text = "Enlem (Lat):", Location = new Point(20, 140), Width = 120, ForeColor = GreenText };
-        var txtLat = new TextBox { Location = new Point(150, 137), Width = 150, BackColor = Color.Black, ForeColor = GreenText, BorderStyle = BorderStyle.FixedSingle };
+        var lblLat = new Label { Text = "Enlem (Lat):", Location = new Point(20, 140), Width = 120, ForeColor = AppConstants.AccentText };
+        var txtLat = new TextBox { Location = new Point(150, 137), Width = 150, BackColor = Color.Black, ForeColor = AppConstants.AccentText, BorderStyle = BorderStyle.FixedSingle };
 
-        var lblLng = new Label { Text = "Boylam (Lng):", Location = new Point(20, 180), Width = 120, ForeColor = GreenText };
-        var txtLng = new TextBox { Location = new Point(150, 177), Width = 150, BackColor = Color.Black, ForeColor = GreenText, BorderStyle = BorderStyle.FixedSingle };
+        var lblLng = new Label { Text = "Boylam (Lng):", Location = new Point(20, 180), Width = 120, ForeColor = AppConstants.AccentText };
+        var txtLng = new TextBox { Location = new Point(150, 177), Width = 150, BackColor = Color.Black, ForeColor = AppConstants.AccentText, BorderStyle = BorderStyle.FixedSingle };
 
-        var lblInfo = new Label 
-        { 
-            Text = "💡 İpucu: Google Maps'te sağ tık > 'Koordinatlar'", 
-            Location = new Point(20, 215), 
-            Width = 400, 
-            ForeColor = Color.Gray 
+        var lblInfo = new Label
+        {
+            Text = "💡 İpucu: Google Maps'te sağ tık > 'Koordinatlar'",
+            Location = new Point(20, 215),
+            Width = 400,
+            ForeColor = Color.Gray
         };
 
-        var lblNotes = new Label { Text = "Notlar:", Location = new Point(20, 250), Width = 120, ForeColor = GreenText };
-        var txtNotes = new TextBox 
-        { 
-            Location = new Point(150, 247), 
-            Width = 270, 
+        var lblNotes = new Label { Text = "Notlar:", Location = new Point(20, 250), Width = 120, ForeColor = AppConstants.AccentText };
+        var txtNotes = new TextBox
+        {
+            Location = new Point(150, 247),
+            Width = 270,
             Height = 50,
             Multiline = true,
-            BackColor = Color.Black, 
-            ForeColor = GreenText, 
-            BorderStyle = BorderStyle.FixedSingle 
+            BackColor = Color.Black,
+            ForeColor = AppConstants.AccentText,
+            BorderStyle = BorderStyle.FixedSingle
         };
 
         var btnOk = new Button
@@ -1031,11 +1030,11 @@ internal sealed class EvChargerFinderForm : Form
             Width = 100,
             Height = 30,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             FlatStyle = FlatStyle.Flat,
             DialogResult = DialogResult.OK
         };
-        btnOk.FlatAppearance.BorderColor = GreenText;
+        btnOk.FlatAppearance.BorderColor = AppConstants.AccentText;
 
         var btnCancel = new Button
         {
@@ -1050,7 +1049,7 @@ internal sealed class EvChargerFinderForm : Form
         };
         btnCancel.FlatAppearance.BorderColor = Color.Red;
 
-        dialog.Controls.AddRange([lblName, txtName, lblCity, cmbCity, lblAddress, txtAddress, 
+        dialog.Controls.AddRange([lblName, txtName, lblCity, cmbCity, lblAddress, txtAddress,
                                   lblLat, txtLat, lblLng, txtLng, lblInfo, lblNotes, txtNotes, btnOk, btnCancel]);
 
         if (dialog.ShowDialog() == DialogResult.OK)
@@ -1073,7 +1072,7 @@ internal sealed class EvChargerFinderForm : Form
                 _foundStations.Add(station);
                 RefreshList();
                 _lblStatus.Text = $"✅ '{station.Name}' eklendi!";
-                _lblStatus.ForeColor = GreenText;
+                _lblStatus.ForeColor = AppConstants.AccentText;
             }
             catch (Exception ex)
             {
@@ -1086,7 +1085,7 @@ internal sealed class EvChargerFinderForm : Form
     {
         if (_lstStations.SelectedIndex < 0 || _lstStations.SelectedIndex >= _displayedStations.Count) return;
 
-        var result = MessageBox.Show("Seçili istasyonu silmek istediğinize emin misiniz?", 
+        var result = MessageBox.Show("Seçili istasyonu silmek istediğinize emin misiniz?",
             "Onay", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
 
         if (result == DialogResult.Yes)
@@ -1102,14 +1101,14 @@ internal sealed class EvChargerFinderForm : Form
     private void SaveStations()
     {
         var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ev_stations.json");
-        
+
         try
         {
             var json = JsonSerializer.Serialize(_foundStations, IndentedJsonOptions);
-            
+
             File.WriteAllText(path, json);
-            
-            MessageBox.Show($"✅ {_foundStations.Count} istasyon kaydedildi!\n\n{path}", 
+
+            MessageBox.Show($"✅ {_foundStations.Count} istasyon kaydedildi!\n\n{path}",
                 "Başarılı", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
         catch (Exception ex)
@@ -1121,7 +1120,7 @@ internal sealed class EvChargerFinderForm : Form
     private void LoadStations()
     {
         var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ev_stations.json");
-        
+
         if (!File.Exists(path))
         {
             MessageBox.Show("Kayıtlı istasyon dosyası bulunamadı.", "Bilgi", MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -1132,14 +1131,14 @@ internal sealed class EvChargerFinderForm : Form
         {
             var json = File.ReadAllText(path);
             var stations = JsonSerializer.Deserialize<List<ChargingStation>>(json);
-            
+
             if (stations != null)
             {
                 _foundStations.Clear();
                 _foundStations.AddRange(stations);
                 RefreshList();
-                
-                MessageBox.Show($"✅ {_foundStations.Count} istasyon yüklendi!", 
+
+                MessageBox.Show($"✅ {_foundStations.Count} istasyon yüklendi!",
                     "Başarılı", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
@@ -1152,14 +1151,14 @@ internal sealed class EvChargerFinderForm : Form
     private void LoadStationsQuiet()
     {
         var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ev_stations.json");
-        
+
         if (!File.Exists(path)) return;
 
         try
         {
             var json = File.ReadAllText(path);
             var stations = JsonSerializer.Deserialize<List<ChargingStation>>(json);
-            
+
             if (stations != null)
             {
                 _foundStations.AddRange(stations);
@@ -1176,7 +1175,7 @@ internal sealed class EvChargerFinderForm : Form
 
     private void ClearList()
     {
-        var result = MessageBox.Show("Tüm bulunan istasyonları silmek istediğinize emin misiniz?", 
+        var result = MessageBox.Show("Tüm bulunan istasyonları silmek istediğinize emin misiniz?",
             "Onay", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
 
         if (result == DialogResult.Yes)
@@ -1206,7 +1205,7 @@ internal sealed class EvChargerFinderForm : Form
         if (statsLabel != null)
         {
             var cityCount = _displayedStations.Select(s => s.City).Where(c => !string.IsNullOrEmpty(c)).Distinct().Count();
-            statsLabel.Text = cityCount > 0 
+            statsLabel.Text = cityCount > 0
                 ? $"📊 Toplam: {_displayedStations.Count} EV Şarj İstasyonu | {cityCount} Şehir"
                 : $"📊 Toplam: {_displayedStations.Count} EV Şarj İstasyonu";
         }

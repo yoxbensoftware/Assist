@@ -56,6 +56,9 @@ internal static class AppInstallerService
         Registry.CurrentUser.DeleteSubKey(RegistryKeyPath, throwOnMissingSubKey: false);
     }
 
+    /// <summary>
+    /// Writes the application registration entries to the Windows registry for Add/Remove Programs.
+    /// </summary>
     private static void RegisterInRegistry()
     {
         using var key = Registry.CurrentUser.CreateSubKey(RegistryKeyPath);
@@ -73,6 +76,9 @@ internal static class AppInstallerService
         key.SetValue("EstimatedSize", sizeKb, RegistryValueKind.DWord);
     }
 
+    /// <summary>
+    /// Estimates the total installation size in kilobytes by scanning the install directory.
+    /// </summary>
     private static int EstimateInstallSizeKb()
     {
         try
@@ -87,6 +93,9 @@ internal static class AppInstallerService
         }
     }
 
+    /// <summary>
+    /// Creates a Windows shortcut (.lnk) at the specified path using WScript.Shell COM automation.
+    /// </summary>
     private static void CreateShortcut(string shortcutPath)
     {
         try
@@ -118,6 +127,9 @@ internal static class AppInstallerService
         }
     }
 
+    /// <summary>
+    /// Deletes the file at the specified path if it exists, suppressing any errors.
+    /// </summary>
     private static void DeleteFileIfExists(string path)
     {
         try

@@ -1,13 +1,12 @@
-using System.Diagnostics;
-
 namespace Assist.Forms.SystemTools;
+
+using System.Diagnostics;
 
 /// <summary>
 /// Real-time performance monitor showing CPU, RAM, and Disk usage.
 /// </summary>
 internal sealed class PerformanceMonitorForm : Form
 {
-    private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
 
     private readonly Label _lblCpu = null!;
     private readonly Label _lblRam = null!;
@@ -27,7 +26,7 @@ internal sealed class PerformanceMonitorForm : Form
         Text = "Performance Monitor";
         ClientSize = new Size(700, 500);
         BackColor = Color.Black;
-        ForeColor = GreenText;
+        ForeColor = AppConstants.AccentText;
         Font = new Font("Consolas", 10);
 
         var lblTitle = new Label
@@ -35,7 +34,7 @@ internal sealed class PerformanceMonitorForm : Form
             Text = "=== PERFORMANCE MONITOR ===",
             Location = new Point(20, 20),
             AutoSize = true,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 12, FontStyle.Bold)
         };
 
@@ -45,7 +44,7 @@ internal sealed class PerformanceMonitorForm : Form
             Text = "CPU Kullanımı:",
             Location = new Point(20, 70),
             Width = 200,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 10, FontStyle.Bold)
         };
 
@@ -55,7 +54,7 @@ internal sealed class PerformanceMonitorForm : Form
             Location = new Point(600, 70),
             Width = 80,
             TextAlign = ContentAlignment.MiddleRight,
-            ForeColor = GreenText
+            ForeColor = AppConstants.AccentText
         };
 
         _barCpu = new ProgressBar
@@ -72,7 +71,7 @@ internal sealed class PerformanceMonitorForm : Form
             Text = "RAM Kullanımı:",
             Location = new Point(20, 140),
             Width = 200,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 10, FontStyle.Bold)
         };
 
@@ -82,7 +81,7 @@ internal sealed class PerformanceMonitorForm : Form
             Location = new Point(600, 140),
             Width = 80,
             TextAlign = ContentAlignment.MiddleRight,
-            ForeColor = GreenText
+            ForeColor = AppConstants.AccentText
         };
 
         _barRam = new ProgressBar
@@ -99,7 +98,7 @@ internal sealed class PerformanceMonitorForm : Form
             Text = "Disk Kullanımı:",
             Location = new Point(20, 210),
             Width = 200,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 10, FontStyle.Bold)
         };
 
@@ -109,7 +108,7 @@ internal sealed class PerformanceMonitorForm : Form
             Location = new Point(600, 210),
             Width = 80,
             TextAlign = ContentAlignment.MiddleRight,
-            ForeColor = GreenText
+            ForeColor = AppConstants.AccentText
         };
 
         _barDisk = new ProgressBar
@@ -130,7 +129,7 @@ internal sealed class PerformanceMonitorForm : Form
             ReadOnly = true,
             ScrollBars = ScrollBars.Vertical,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 9),
             BorderStyle = BorderStyle.FixedSingle,
             Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom

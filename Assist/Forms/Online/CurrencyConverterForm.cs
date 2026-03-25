@@ -1,12 +1,11 @@
+namespace Assist.Forms.Online;
+
 using System.Net.Http.Json;
 using System.Text.Json;
 using Assist.Services;
 
-namespace Assist.Forms.Online;
-
 internal sealed class CurrencyConverterForm : Form
 {
-    private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
     private static readonly HttpClient Http = new();
 
     // Comprehensive fallback list – the API may return even more
@@ -42,7 +41,7 @@ internal sealed class CurrencyConverterForm : Form
         Text = "Döviz Çevirici";
         ClientSize = new Size(700, 340);
         BackColor = Color.Black;
-        ForeColor = GreenText;
+        ForeColor = AppConstants.AccentText;
         Font = new Font("Consolas", 10);
 
         int y = 16;
@@ -54,7 +53,7 @@ internal sealed class CurrencyConverterForm : Form
             Width = 250,
             Height = 28,
             BackColor = Color.FromArgb(30, 30, 30),
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             BorderStyle = BorderStyle.FixedSingle,
             Font = new Font("Consolas", 14),
             Text = "1",
@@ -74,11 +73,11 @@ internal sealed class CurrencyConverterForm : Form
             Width = 40,
             Height = 28,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             FlatStyle = FlatStyle.Flat,
             Font = new Font("Consolas", 12, FontStyle.Bold)
         };
-        btnSwap.FlatAppearance.BorderColor = GreenText;
+        btnSwap.FlatAppearance.BorderColor = AppConstants.AccentText;
         btnSwap.Click += (_, _) =>
         {
             (_cmbFrom.SelectedIndex, _cmbTo.SelectedIndex) = (_cmbTo.SelectedIndex, _cmbFrom.SelectedIndex);
@@ -97,11 +96,11 @@ internal sealed class CurrencyConverterForm : Form
             Width = 180,
             Height = 34,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             FlatStyle = FlatStyle.Flat,
             Font = new Font("Consolas", 11, FontStyle.Bold)
         };
-        btnConvert.FlatAppearance.BorderColor = GreenText;
+        btnConvert.FlatAppearance.BorderColor = AppConstants.AccentText;
         btnConvert.Click += async (_, _) => await ConvertAsync();
         Controls.Add(btnConvert);
 
@@ -268,7 +267,7 @@ internal sealed class CurrencyConverterForm : Form
         Text = text,
         Location = new Point(x, y),
         AutoSize = true,
-        ForeColor = GreenText
+        ForeColor = AppConstants.AccentText
     };
 
     private static ComboBox MakeCombo(int x, int y, int w) => new()
@@ -277,7 +276,7 @@ internal sealed class CurrencyConverterForm : Form
         Width = w,
         DropDownStyle = ComboBoxStyle.DropDownList,
         BackColor = Color.Black,
-        ForeColor = GreenText,
+        ForeColor = AppConstants.AccentText,
         FlatStyle = FlatStyle.Flat
     };
 }

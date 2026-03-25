@@ -2,7 +2,6 @@ namespace Assist.Forms.DeveloperTools;
 
 internal sealed class UnitConverterForm : Form
 {
-    private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
 
     private static readonly Dictionary<string, (string[] Units, double[] Factors)> Categories = new()
     {
@@ -37,7 +36,7 @@ internal sealed class UnitConverterForm : Form
         StartPosition = FormStartPosition.CenterParent;
         AutoScroll = true;
         BackColor = Color.Black;
-        ForeColor = GreenText;
+        ForeColor = AppConstants.AccentText;
         Font = new Font("Consolas", 10);
 
         int y = 16;
@@ -57,7 +56,7 @@ internal sealed class UnitConverterForm : Form
             Width = 300,
             Height = 28,
             BackColor = Color.FromArgb(30, 30, 30),
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             BorderStyle = BorderStyle.FixedSingle,
             Font = new Font("Consolas", 14),
             Text = "1",
@@ -77,11 +76,11 @@ internal sealed class UnitConverterForm : Form
             Width = 40,
             Height = 28,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             FlatStyle = FlatStyle.Flat,
             Font = new Font("Consolas", 12, FontStyle.Bold)
         };
-        btnSwap.FlatAppearance.BorderColor = GreenText;
+        btnSwap.FlatAppearance.BorderColor = AppConstants.AccentText;
         btnSwap.Click += (_, _) =>
         {
             (_cmbFrom.SelectedIndex, _cmbTo.SelectedIndex) = (_cmbTo.SelectedIndex, _cmbFrom.SelectedIndex);
@@ -212,7 +211,7 @@ internal sealed class UnitConverterForm : Form
         Text = text,
         Location = new Point(x, y),
         AutoSize = true,
-        ForeColor = GreenText
+        ForeColor = AppConstants.AccentText
     };
 
     private static ComboBox MakeCombo(int x, int y, int w) => new()
@@ -221,7 +220,7 @@ internal sealed class UnitConverterForm : Form
         Width = w,
         DropDownStyle = ComboBoxStyle.DropDownList,
         BackColor = Color.Black,
-        ForeColor = GreenText,
+        ForeColor = AppConstants.AccentText,
         FlatStyle = FlatStyle.Flat
     };
 }

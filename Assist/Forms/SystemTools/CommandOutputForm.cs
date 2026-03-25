@@ -1,11 +1,10 @@
-﻿namespace Assist.Forms.SystemTools;
+namespace Assist.Forms.SystemTools;
 
 /// <summary>
 /// Form to display command output text.
 /// </summary>
 internal sealed class CommandOutputForm : Form
 {
-    private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
 
     private readonly TextBox _txtOutput = null!;
 
@@ -14,7 +13,7 @@ internal sealed class CommandOutputForm : Form
         Text = "Komut Çıktısı";
         ClientSize = new Size(700, 400);
         BackColor = Color.Black;
-        ForeColor = GreenText;
+        ForeColor = AppConstants.AccentText;
 
         _txtOutput = new TextBox
         {
@@ -24,7 +23,7 @@ internal sealed class CommandOutputForm : Form
             ScrollBars = ScrollBars.Both,
             Font = new Font("Consolas", 10),
             BackColor = Color.Black,
-            ForeColor = GreenText
+            ForeColor = AppConstants.AccentText
         };
 
         Controls.Add(_txtOutput);

@@ -1,10 +1,12 @@
-using Assist.Services;
-
 namespace Assist.Forms.ClipboardTools;
 
+using Assist.Services;
+
+/// <summary>
+/// Displays the clipboard history in a searchable data grid with copy-on-double-click support.
+/// </summary>
 internal sealed class ClipboardHistoryForm : Form
 {
-    private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
 
     private readonly ClipboardHistoryService _service;
     private DataGridView _dgv = null!;
@@ -12,18 +14,24 @@ internal sealed class ClipboardHistoryForm : Form
     private System.Windows.Forms.Timer? _refreshTimer;
     private List<string> _allItems = [];
 
+    /// <summary>
+    /// Initializes the clipboard history form with the specified service instance.
+    /// </summary>
     public ClipboardHistoryForm(ClipboardHistoryService service)
     {
         _service = service ?? throw new ArgumentNullException(nameof(service));
         Text = "Pano Geçmişi";
         ClientSize = new Size(700, 400);
         BackColor = Color.Black;
-        ForeColor = GreenText;
+        ForeColor = AppConstants.AccentText;
         Font = new Font("Consolas", 10);
         InitializeComponents();
         StartAutoRefresh();
     }
 
+    /// <summary>
+    /// Creates and configures the search panel and data grid view controls.
+    /// </summary>
     private void InitializeComponents()
     {
         // Search panel
@@ -33,14 +41,14 @@ internal sealed class ClipboardHistoryForm : Form
             Text = "Ara:",
             Location = new Point(10, 12),
             AutoSize = true,
-            ForeColor = GreenText
+            ForeColor = AppConstants.AccentText
         };
         _txtSearch = new TextBox
         {
             Location = new Point(50, 8),
             Width = 300,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 10)
         };
         _txtSearch.TextChanged += (_, _) => ApplyFilter();
@@ -66,6 +74,9 @@ internal sealed class ClipboardHistoryForm : Form
         Controls.Add(searchPanel);
     }
 
+    /// <summary>
+    /// Copies the selected clipboard entry to the system clipboard on double-click.
+    /// </summary>
     private void OnCellDoubleClick(object? sender, DataGridViewCellEventArgs e)
     {
         if (e.RowIndex < 0) return;
@@ -81,6 +92,9 @@ internal sealed class ClipboardHistoryForm : Form
         catch { /* Clipboard access failed */ }
     }
 
+    /// <summary>
+    /// Starts a timer that periodically refreshes the displayed clipboard history.
+    /// </summary>
     private void StartAutoRefresh()
     {
         _refreshTimer = new System.Windows.Forms.Timer { Interval = 1000 };
@@ -88,6 +102,9 @@ internal sealed class ClipboardHistoryForm : Form
         _refreshTimer.Start();
     }
 
+    /// <summary>
+    /// Retrieves the latest clipboard history items and updates the data grid.
+    /// </summary>
     private async Task RefreshDataAsync()
     {
         try
@@ -101,6 +118,9 @@ internal sealed class ClipboardHistoryForm : Form
         catch { /* Service unavailable */ }
     }
 
+    /// <summary>
+    /// Filters the displayed clipboard entries based on the search text.
+    /// </summary>
     private void ApplyFilter()
     {
         var filter = _txtSearch.Text.Trim();
@@ -115,6 +135,9 @@ internal sealed class ClipboardHistoryForm : Form
         }
     }
 
+    /// <summary>
+    /// Stops and disposes the auto-refresh timer when the form is closed.
+    /// </summary>
     protected override void OnFormClosed(FormClosedEventArgs e)
     {
         base.OnFormClosed(e);

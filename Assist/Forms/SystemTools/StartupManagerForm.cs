@@ -1,13 +1,12 @@
-using Microsoft.Win32;
-
 namespace Assist.Forms.SystemTools;
+
+using Microsoft.Win32;
 
 /// <summary>
 /// Manages Windows startup programs — list, enable, disable.
 /// </summary>
 internal sealed class StartupManagerForm : Form
 {
-    private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
 
     private readonly ListView _listView = null!;
     private readonly Label _lblStatus = null!;
@@ -20,7 +19,7 @@ internal sealed class StartupManagerForm : Form
         Text = "Startup Manager";
         ClientSize = new Size(850, 550);
         BackColor = Color.Black;
-        ForeColor = GreenText;
+        ForeColor = AppConstants.AccentText;
         Font = new Font("Consolas", 10);
 
         var lblTitle = new Label
@@ -28,7 +27,7 @@ internal sealed class StartupManagerForm : Form
             Text = "=== STARTUP MANAGER ===",
             Location = new Point(20, 15),
             AutoSize = true,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 12, FontStyle.Bold)
         };
 
@@ -39,7 +38,7 @@ internal sealed class StartupManagerForm : Form
             View = View.Details,
             FullRowSelect = true,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 9),
             BorderStyle = BorderStyle.FixedSingle,
             GridLines = true,
@@ -69,7 +68,7 @@ internal sealed class StartupManagerForm : Form
             Text = "",
             Location = new Point(20, 510),
             Width = 810,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 9),
             Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom
         };
@@ -106,7 +105,7 @@ internal sealed class StartupManagerForm : Form
                 item.SubItems.Add($"[{rootLabel}] {displayName}");
                 item.SubItems.Add(value);
                 item.Tag = new StartupEntry(root, name, value, !isDisabled, rootLabel);
-                item.ForeColor = isDisabled ? Color.Gray : GreenText;
+                item.ForeColor = isDisabled ? Color.Gray : AppConstants.AccentText;
 
                 _listView.Items.Add(item);
             }
@@ -216,11 +215,11 @@ internal sealed class StartupManagerForm : Form
             Width = 160,
             Height = 30,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             FlatStyle = FlatStyle.Flat,
             Font = new Font("Consolas", 9, FontStyle.Bold)
         };
-        btn.FlatAppearance.BorderColor = GreenText;
+        btn.FlatAppearance.BorderColor = AppConstants.AccentText;
         return btn;
     }
 

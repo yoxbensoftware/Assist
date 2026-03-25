@@ -1,6 +1,6 @@
-﻿using System.Drawing.Drawing2D;
-
 namespace Assist.Forms.Games;
+
+using System.Drawing.Drawing2D;
 
 /// <summary>
 /// Classic Tetris game with terminal green aesthetic.
@@ -13,7 +13,6 @@ internal sealed class TetrisGame : Form
     private const int InitialSpeed = 500;
     private const int MinSpeed = 80;
 
-    private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
     private static readonly Color GridColor = Color.FromArgb(0, 30, 0);
 
     private static readonly Color[] PieceColors =
@@ -66,13 +65,13 @@ internal sealed class TetrisGame : Form
 
     public TetrisGame()
     {
-        Text = "🧱 Tetris";
+        Text = "?? Tetris";
         var boardPixelW = BoardWidth * CellSize;
         var boardPixelH = BoardHeight * CellSize;
         var panelWidth = 160;
         ClientSize = new Size(boardPixelW + panelWidth + 20, boardPixelH + 10);
         BackColor = Color.Black;
-        ForeColor = GreenText;
+        ForeColor = AppConstants.AccentText;
         Font = new Font("Consolas", 10);
         DoubleBuffered = true;
         FormBorderStyle = FormBorderStyle.FixedSingle;
@@ -84,7 +83,7 @@ internal sealed class TetrisGame : Form
             Text = "Skor: 0",
             Location = new Point(boardPixelW + 20, 20),
             Width = panelWidth - 10,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 11, FontStyle.Bold)
         };
 
@@ -93,7 +92,7 @@ internal sealed class TetrisGame : Form
             Text = "Seviye: 1",
             Location = new Point(boardPixelW + 20, 50),
             Width = panelWidth - 10,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 11, FontStyle.Bold)
         };
 
@@ -102,13 +101,13 @@ internal sealed class TetrisGame : Form
             Text = "Sıradaki:",
             Location = new Point(boardPixelW + 20, 90),
             AutoSize = true,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 10, FontStyle.Bold)
         };
 
         var lblControls = new Label
         {
-            Text = "← → : Hareket\n↑ : Döndür\n↓ : Hızlı\nSpace: Düşür\nP : Duraklat",
+            Text = "‹ › : Hareket\n^ : Döndür\nv : Hızlı\nSpace: Düşür\nP : Duraklat",
             Location = new Point(boardPixelW + 20, 220),
             Size = new Size(panelWidth - 10, 120),
             ForeColor = Color.Gray,
@@ -377,7 +376,7 @@ internal sealed class TetrisGame : Form
         }
 
         // Border
-        using var borderPen = new Pen(GreenText, 2);
+        using var borderPen = new Pen(AppConstants.AccentText, 2);
         g.DrawRectangle(borderPen, 0, 0, BoardWidth * CellSize, BoardHeight * CellSize);
     }
 

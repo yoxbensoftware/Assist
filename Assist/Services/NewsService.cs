@@ -1,7 +1,7 @@
+namespace Assist.Services;
+
 using System.Xml.Linq;
 using Assist.Models;
-
-namespace Assist.Services;
 
 /// <summary>
 /// Fetches news from Google News RSS feeds.
@@ -14,15 +14,27 @@ internal sealed class NewsService
 
     private static readonly HttpClient SharedHttpClient = new();
 
+    /// <summary>
+    /// Fetches the top Turkish news headlines from Google News RSS.
+    /// </summary>
     public Task<List<NewsItem>> GetTopTrAsync(int max = 30)
         => GetFromRssAsync(GoogleNewsTrUrl, max);
 
+    /// <summary>
+    /// Fetches the top global news headlines from Google News RSS.
+    /// </summary>
     public Task<List<NewsItem>> GetTopGlobalAsync(int max = 30)
         => GetFromRssAsync(GoogleNewsGlobalUrl, max);
 
+    /// <summary>
+    /// Fetches the top technology news headlines from Google News RSS.
+    /// </summary>
     public Task<List<NewsItem>> GetTopTechAsync(int max = 30)
         => GetFromRssAsync(GoogleNewsTechUrl, max);
 
+    /// <summary>
+    /// Parses an RSS feed URL and returns a list of news items up to the specified maximum.
+    /// </summary>
     private static async Task<List<NewsItem>> GetFromRssAsync(string rssUrl, int max)
     {
         try
@@ -56,6 +68,9 @@ internal sealed class NewsService
         }
     }
 
+    /// <summary>
+    /// Strips HTML tags from the input string and returns plain text.
+    /// </summary>
     private static string? StripHtml(string? input)
     {
         if (string.IsNullOrEmpty(input)) return input;
@@ -63,8 +78,8 @@ internal sealed class NewsService
         try
         {
             var doc = XDocument.Parse($"<root>{input}</root>");
-            return doc.Root?.Nodes() is not null 
-                ? string.Concat(doc.Root.Nodes()) 
+            return doc.Root?.Nodes() is not null
+                ? string.Concat(doc.Root.Nodes())
                 : input;
         }
         catch

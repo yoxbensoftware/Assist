@@ -1,7 +1,7 @@
+namespace Assist.Services;
+
 using System.Globalization;
 using Assist.Models;
-
-namespace Assist.Services;
 
 /// <summary>
 /// Provides public holiday data and sprint risk analysis.
@@ -89,6 +89,9 @@ internal sealed class HolidayAnalyzerService
         };
     }
 
+    /// <summary>
+    /// Calculates the impact level of a holiday based on its position relative to weekends and clusters.
+    /// </summary>
     private static ImpactLevel CalculateImpact(HolidayEntry holiday, HashSet<DateTime> weekdayHolidayDates)
     {
         if (holiday.IsWeekend)
@@ -104,11 +107,17 @@ internal sealed class HolidayAnalyzerService
         return ImpactLevel.High;
     }
 
+    /// <summary>
+    /// Determines whether the given date is adjacent to another weekday holiday, forming a cluster.
+    /// </summary>
     private static bool IsPartOfCluster(DateTime date, HashSet<DateTime> weekdayDates)
     {
         return weekdayDates.Contains(date.AddDays(-1)) || weekdayDates.Contains(date.AddDays(1));
     }
 
+    /// <summary>
+    /// Classifies sprint risk level based on the number of weekday holidays.
+    /// </summary>
     private static RiskLevel ClassifyRisk(int weekdayHolidayCount) => weekdayHolidayCount switch
     {
         >= 3 => RiskLevel.High,
@@ -116,6 +125,9 @@ internal sealed class HolidayAnalyzerService
         _ => RiskLevel.Low
     };
 
+    /// <summary>
+    /// Builds a localized risk message string based on risk level and capacity loss.
+    /// </summary>
     private static string BuildRiskMessage(RiskLevel risk, int weekdayCount, double capacityLoss) => risk switch
     {
         RiskLevel.High => $"⚠️ Yüksek Risk: Sprint {weekdayCount} iş günü tatili ile çakışıyor (kapasite kaybı: %{capacityLoss:F1})",
@@ -123,6 +135,9 @@ internal sealed class HolidayAnalyzerService
         _ => "✅ Düşük Risk: Sprint'te iş gününe denk gelen tatil yok"
     };
 
+    /// <summary>
+    /// Counts the number of weekday (non-weekend) days between two dates inclusive.
+    /// </summary>
     private static int CountWorkDays(DateTime start, DateTime end)
     {
         int count = 0;
@@ -134,6 +149,9 @@ internal sealed class HolidayAnalyzerService
         return count;
     }
 
+    /// <summary>
+    /// Creates a <see cref="HolidayEntry"/> from a date string, country code, and holiday name.
+    /// </summary>
     private static HolidayEntry H(string date, string country, string name) => new()
     {
         Date = DateTime.Parse(date, CultureInfo.InvariantCulture),

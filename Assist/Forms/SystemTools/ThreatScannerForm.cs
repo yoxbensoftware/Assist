@@ -1,13 +1,11 @@
+namespace Assist.Forms.SystemTools;
+
 using System.Diagnostics;
-using System.Text;
 using System.Text.RegularExpressions;
 using Assist.Services;
 
-namespace Assist.Forms.SystemTools;
-
 internal sealed partial class ThreatScannerForm : Form
 {
-    private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
 
     private static readonly HashSet<int> SuspiciousPorts =
         [4444, 5555, 6666, 6667, 12345, 31337, 1337, 9999, 3127, 27374, 20000, 65535];
@@ -24,7 +22,7 @@ internal sealed partial class ThreatScannerForm : Form
         Text = "Tehdit Tarayıcı — Güvenlik Analizi";
         ClientSize = new Size(960, 680);
         BackColor = Color.Black;
-        ForeColor = GreenText;
+        ForeColor = AppConstants.AccentText;
         Font = new Font("Consolas", 10);
 
         var topPanel = new Panel { Dock = DockStyle.Top, Height = 50, BackColor = Color.Black };
@@ -36,11 +34,11 @@ internal sealed partial class ThreatScannerForm : Form
             Width = 140,
             Height = 32,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             FlatStyle = FlatStyle.Flat,
             Font = new Font("Consolas", 10, FontStyle.Bold)
         };
-        btnScan.FlatAppearance.BorderColor = GreenText;
+        btnScan.FlatAppearance.BorderColor = AppConstants.AccentText;
         btnScan.Click += async (_, _) => await ScanAsync();
 
         _chkShowAll = new CheckBox
@@ -48,7 +46,7 @@ internal sealed partial class ThreatScannerForm : Form
             Text = "Tümünü göster",
             Location = new Point(164, 16),
             AutoSize = true,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Checked = false
         };
 

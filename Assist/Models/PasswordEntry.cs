@@ -1,7 +1,7 @@
-﻿using System.Security.Cryptography;
-using System.Text;
-
 namespace Assist.Models;
+
+using System.Security.Cryptography;
+using System.Text;
 
 /// <summary>
 /// Represents a password entry with encrypted password storage.
@@ -13,6 +13,10 @@ internal sealed class PasswordEntry
     public string EncryptedPassword { get; set; } = string.Empty;
     public string Notes { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Decrypts and returns the stored password using DPAPI.
+    /// Returns empty string if decryption fails.
+    /// </summary>
     public string GetDecryptedPassword()
     {
         if (string.IsNullOrEmpty(EncryptedPassword))
@@ -33,6 +37,9 @@ internal sealed class PasswordEntry
         }
     }
 
+    /// <summary>
+    /// Encrypts the given password using DPAPI and stores it as a Base64 string.
+    /// </summary>
     public void SetPassword(string password)
     {
         var bytes = Encoding.UTF8.GetBytes(password ?? string.Empty);

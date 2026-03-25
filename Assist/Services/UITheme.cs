@@ -5,14 +5,23 @@ namespace Assist.Services;
 /// </summary>
 internal static class UITheme
 {
+    /// <summary>
+    /// Gets the current theme's color palette.
+    /// </summary>
     public static ThemePalette Palette => ThemeService.GetPalette(ThemeService.CurrentTheme);
 
+    /// <summary>
+    /// Applies the current theme to all currently open forms.
+    /// </summary>
     public static void ApplyToOpenForms()
     {
         foreach (Form form in Application.OpenForms)
             Apply(form);
     }
 
+    /// <summary>
+    /// Applies the current theme to a control and all its children recursively.
+    /// </summary>
     public static void Apply(Control? root)
     {
         if (root is null) return;
@@ -20,6 +29,9 @@ internal static class UITheme
         ApplyCore(root, Palette);
     }
 
+    /// <summary>
+    /// Applies the current theme styling to a <see cref="DataGridView"/> control.
+    /// </summary>
     public static void Apply(DataGridView? dgv)
     {
         if (dgv is null) return;
@@ -39,6 +51,9 @@ internal static class UITheme
         dgv.RowHeadersDefaultCellStyle.ForeColor = p.Text;
     }
 
+    /// <summary>
+    /// Applies the current theme styling to a <see cref="ListView"/> control.
+    /// </summary>
     public static void Apply(ListView? lv)
     {
         if (lv is null) return;
@@ -49,6 +64,9 @@ internal static class UITheme
         lv.FullRowSelect = true;
     }
 
+    /// <summary>
+    /// Applies the current theme styling to a <see cref="TextBox"/> control.
+    /// </summary>
     public static void Apply(TextBox? txt)
     {
         if (txt is null) return;
@@ -58,6 +76,9 @@ internal static class UITheme
         txt.ForeColor = p.Text;
     }
 
+    /// <summary>
+    /// Applies the current theme styling to a <see cref="Form"/>, including font and child controls.
+    /// </summary>
     public static void Apply(Form? form)
     {
         if (form is null) return;
@@ -70,12 +91,18 @@ internal static class UITheme
         ApplyCore(form, p);
     }
 
+    /// <summary>
+    /// Applies the current theme text color to a <see cref="Label"/> control.
+    /// </summary>
     public static void Apply(Label? lbl)
     {
         if (lbl is null) return;
         lbl.ForeColor = Palette.Text;
     }
 
+    /// <summary>
+    /// Applies the current theme styling to a <see cref="Button"/> with flat appearance.
+    /// </summary>
     public static void Apply(Button? btn)
     {
         if (btn is null) return;
@@ -89,6 +116,9 @@ internal static class UITheme
         btn.FlatAppearance.BorderColor = p.Accent;
     }
 
+    /// <summary>
+    /// Applies the current theme styling to a <see cref="MenuStrip"/> control.
+    /// </summary>
     public static void Apply(MenuStrip? menu)
     {
         if (menu is null) return;
@@ -98,6 +128,9 @@ internal static class UITheme
         menu.ForeColor = p.Text;
     }
 
+    /// <summary>
+    /// Recursively applies theme colors and fonts to a control tree based on control type.
+    /// </summary>
     private static void ApplyCore(Control root, ThemePalette p)
     {
         switch (root)

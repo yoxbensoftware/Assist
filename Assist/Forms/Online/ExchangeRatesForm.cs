@@ -1,9 +1,9 @@
+namespace Assist.Forms.Online;
+
 using System.Drawing.Drawing2D;
 using System.Drawing.Text;
 using System.Text.Json;
 using Assist.Services;
-
-namespace Assist.Forms.Online;
 
 internal sealed class ExchangeRatesForm : Form
 {

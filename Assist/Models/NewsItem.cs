@@ -1,4 +1,4 @@
-﻿namespace Assist.Models;
+namespace Assist.Models;
 
 /// <summary>
 /// Represents a news article from RSS feed.

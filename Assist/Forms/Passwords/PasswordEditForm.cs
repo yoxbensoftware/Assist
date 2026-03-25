@@ -1,6 +1,6 @@
-using Assist.Services;
-
 namespace Assist.Forms.Passwords;
+
+using Assist.Services;
 
 internal partial class PasswordEditForm : Form
 {

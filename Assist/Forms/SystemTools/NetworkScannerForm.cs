@@ -1,12 +1,11 @@
-﻿using System.Diagnostics;
+namespace Assist.Forms.SystemTools;
+
+using System.Diagnostics;
 using System.Text.RegularExpressions;
 using Assist.Services;
 
-namespace Assist.Forms.SystemTools;
-
 internal sealed partial class NetworkScannerForm : Form
 {
-    private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
 
     private readonly DataGridView _dgv;
     private readonly Label _lblStatus;
@@ -17,7 +16,7 @@ internal sealed partial class NetworkScannerForm : Form
         Text = "Ağ Bağlantı Tarayıcı";
         ClientSize = new Size(960, 600);
         BackColor = Color.Black;
-        ForeColor = GreenText;
+        ForeColor = AppConstants.AccentText;
         Font = new Font("Consolas", 10);
 
         var topPanel = new Panel { Dock = DockStyle.Top, Height = 44, BackColor = Color.Black };
@@ -29,14 +28,14 @@ internal sealed partial class NetworkScannerForm : Form
             Width = 120,
             Height = 30,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             FlatStyle = FlatStyle.Flat,
             Font = new Font("Consolas", 10, FontStyle.Bold)
         };
-        btnRefresh.FlatAppearance.BorderColor = GreenText;
+        btnRefresh.FlatAppearance.BorderColor = AppConstants.AccentText;
         btnRefresh.Click += async (_, _) => await ScanAsync();
 
-        var lblFilter = new Label { Text = "Filtre:", Location = new Point(146, 12), AutoSize = true, ForeColor = GreenText };
+        var lblFilter = new Label { Text = "Filtre:", Location = new Point(146, 12), AutoSize = true, ForeColor = AppConstants.AccentText };
 
         _cmbFilter = new ComboBox
         {
@@ -44,7 +43,7 @@ internal sealed partial class NetworkScannerForm : Form
             Width = 160,
             DropDownStyle = ComboBoxStyle.DropDownList,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             FlatStyle = FlatStyle.Flat
         };
         _cmbFilter.Items.AddRange(["Tümü", "ESTABLISHED", "LISTENING", "TIME_WAIT", "CLOSE_WAIT"]);
@@ -115,12 +114,12 @@ internal sealed partial class NetworkScannerForm : Form
                 // Color code by state
                 row.DefaultCellStyle.ForeColor = state switch
                 {
-                    "ESTABLISHED" => GreenText,
+                    "ESTABLISHED" => AppConstants.AccentText,
                     "LISTENING" => Color.Cyan,
                     "TIME_WAIT" => Color.DarkGray,
                     "CLOSE_WAIT" => Color.Orange,
                     "SYN_SENT" => Color.Yellow,
-                    _ => GreenText
+                    _ => AppConstants.AccentText
                 };
 
                 count++;
@@ -142,8 +141,8 @@ internal sealed partial class NetworkScannerForm : Form
             AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
             BackgroundColor = Color.Black,
             GridColor = Color.FromArgb(0, 80, 0),
-            DefaultCellStyle = { BackColor = Color.Black, ForeColor = GreenText, SelectionBackColor = Color.FromArgb(0, 60, 0) },
-            ColumnHeadersDefaultCellStyle = { BackColor = Color.FromArgb(20, 20, 20), ForeColor = GreenText, Font = new Font("Consolas", 10, FontStyle.Bold) },
+            DefaultCellStyle = { BackColor = Color.Black, ForeColor = AppConstants.AccentText, SelectionBackColor = Color.FromArgb(0, 60, 0) },
+            ColumnHeadersDefaultCellStyle = { BackColor = Color.FromArgb(20, 20, 20), ForeColor = AppConstants.AccentText, Font = new Font("Consolas", 10, FontStyle.Bold) },
             EnableHeadersVisualStyles = false,
             BorderStyle = BorderStyle.None
         };

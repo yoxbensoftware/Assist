@@ -3,8 +3,15 @@ namespace Assist;
 using Assist.Forms.Core;
 using Assist.Services;
 
+/// <summary>
+/// Application entry point.
+/// </summary>
 internal static class Program
 {
+    /// <summary>
+    /// Main entry point — initializes the application, handles uninstall requests,
+    /// runs the setup wizard on first launch, and starts the login flow.
+    /// </summary>
     [STAThread]
     static void Main(string[] args)
     {

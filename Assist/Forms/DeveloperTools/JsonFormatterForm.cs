@@ -1,13 +1,12 @@
-using System.Text.Json;
-
 namespace Assist.Forms.DeveloperTools;
+
+using System.Text.Json;
 
 /// <summary>
 /// JSON formatter and validator tool.
 /// </summary>
 internal sealed class JsonFormatterForm : Form
 {
-    private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
 
     // Cache JsonSerializerOptions instances (CA1869)
     private static readonly JsonSerializerOptions FormattedOptions = new() { WriteIndented = true };
@@ -29,7 +28,7 @@ internal sealed class JsonFormatterForm : Form
         StartPosition = FormStartPosition.CenterParent;
         AutoScroll = true;
         BackColor = Color.Black;
-        ForeColor = GreenText;
+        ForeColor = AppConstants.AccentText;
         Font = new Font("Consolas", 10);
 
         var lblTitle = new Label
@@ -37,7 +36,7 @@ internal sealed class JsonFormatterForm : Form
             Text = "=== JSON FORMATTER & VALIDATOR ===",
             Location = new Point(20, 20),
             AutoSize = true,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 12, FontStyle.Bold)
         };
 
@@ -46,7 +45,7 @@ internal sealed class JsonFormatterForm : Form
             Text = "JSON Girişi:",
             Location = new Point(20, 60),
             AutoSize = true,
-            ForeColor = GreenText
+            ForeColor = AppConstants.AccentText
         };
 
         _txtInput = new TextBox
@@ -57,7 +56,7 @@ internal sealed class JsonFormatterForm : Form
             Multiline = true,
             ScrollBars = ScrollBars.Both,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 10),
             BorderStyle = BorderStyle.FixedSingle,
             Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
@@ -89,7 +88,7 @@ internal sealed class JsonFormatterForm : Form
             Location = new Point(20, 355),
             Width = 860,
             Height = 25,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 10),
             Text = "Hazır.",
             Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
@@ -100,7 +99,7 @@ internal sealed class JsonFormatterForm : Form
             Text = "JSON Çıkışı:",
             Location = new Point(20, 390),
             AutoSize = true,
-            ForeColor = GreenText
+            ForeColor = AppConstants.AccentText
         };
 
         _txtOutput = new TextBox
@@ -111,7 +110,7 @@ internal sealed class JsonFormatterForm : Form
             Multiline = true,
             ScrollBars = ScrollBars.Both,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 10),
             BorderStyle = BorderStyle.FixedSingle,
             ReadOnly = true,
@@ -137,11 +136,11 @@ internal sealed class JsonFormatterForm : Form
             Width = 200,
             Height = 40,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             FlatStyle = FlatStyle.Flat,
             Font = new Font("Consolas", 10)
         };
-        btn.FlatAppearance.BorderColor = GreenText;
+        btn.FlatAppearance.BorderColor = AppConstants.AccentText;
         return btn;
     }
 
@@ -229,7 +228,7 @@ internal sealed class JsonFormatterForm : Form
     {
         _txtInput.Clear();
         _txtOutput.Clear();
-        SetStatus("Temizlendi.", GreenText);
+        SetStatus("Temizlendi.", AppConstants.AccentText);
     }
 
     private void SetStatus(string message, Color color)

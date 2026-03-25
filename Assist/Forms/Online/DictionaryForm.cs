@@ -1,13 +1,12 @@
+namespace Assist.Forms.Online;
+
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 using Assist.Services;
 
-namespace Assist.Forms.Online;
-
 internal sealed class DictionaryForm : Form
 {
-    private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
     private static readonly HttpClient Http = new();
 
     private readonly TextBox _txtWord;
@@ -19,7 +18,7 @@ internal sealed class DictionaryForm : Form
         Text = "Sözlük (EN)";
         ClientSize = new Size(850, 580);
         BackColor = Color.Black;
-        ForeColor = GreenText;
+        ForeColor = AppConstants.AccentText;
         Font = new Font("Consolas", 10);
 
         var topPanel = new Panel { Dock = DockStyle.Top, Height = 44, BackColor = Color.Black };
@@ -30,7 +29,7 @@ internal sealed class DictionaryForm : Form
             Width = 660,
             Height = 28,
             BackColor = Color.FromArgb(30, 30, 30),
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             BorderStyle = BorderStyle.FixedSingle,
             Font = new Font("Consolas", 11),
             Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
@@ -43,12 +42,12 @@ internal sealed class DictionaryForm : Form
             Width = 160,
             Height = 30,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             FlatStyle = FlatStyle.Flat,
             Font = new Font("Consolas", 10, FontStyle.Bold),
             Anchor = AnchorStyles.Top | AnchorStyles.Right
         };
-        _btnSearch.FlatAppearance.BorderColor = GreenText;
+        _btnSearch.FlatAppearance.BorderColor = AppConstants.AccentText;
 
         topPanel.Controls.AddRange([_txtWord, _btnSearch]);
 
@@ -57,7 +56,7 @@ internal sealed class DictionaryForm : Form
             Dock = DockStyle.Fill,
             ReadOnly = true,
             BackColor = Color.FromArgb(15, 15, 15),
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             BorderStyle = BorderStyle.None,
             Font = new Font("Consolas", 10)
         };

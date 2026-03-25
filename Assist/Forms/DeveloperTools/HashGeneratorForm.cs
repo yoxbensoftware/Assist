@@ -1,14 +1,13 @@
+namespace Assist.Forms.DeveloperTools;
+
 using System.Security.Cryptography;
 using System.Text;
-
-namespace Assist.Forms.DeveloperTools;
 
 /// <summary>
 /// Hash generator — MD5, SHA-1, SHA-256, SHA-512 for text and files.
 /// </summary>
 internal sealed class HashGeneratorForm : Form
 {
-    private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
 
     private readonly TextBox _txtInput = null!;
     private readonly TextBox _txtMd5 = null!;
@@ -27,7 +26,7 @@ internal sealed class HashGeneratorForm : Form
         StartPosition = FormStartPosition.CenterParent;
         AutoScroll = true;
         BackColor = Color.Black;
-        ForeColor = GreenText;
+        ForeColor = AppConstants.AccentText;
         Font = new Font("Consolas", 10);
 
         var lblTitle = new Label
@@ -35,7 +34,7 @@ internal sealed class HashGeneratorForm : Form
             Text = "=== HASH GENERATOR ===",
             Location = new Point(20, 15),
             AutoSize = true,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 12, FontStyle.Bold)
         };
 
@@ -45,7 +44,7 @@ internal sealed class HashGeneratorForm : Form
             Text = "Metin Girişi:",
             Location = new Point(20, 50),
             AutoSize = true,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 10, FontStyle.Bold)
         };
 
@@ -54,7 +53,7 @@ internal sealed class HashGeneratorForm : Form
             Location = new Point(20, 75),
             Size = new Size(760, 80),
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 10),
             Multiline = true,
             ScrollBars = ScrollBars.Vertical,
@@ -82,7 +81,7 @@ internal sealed class HashGeneratorForm : Form
             Text = "Doğrulama (hash yapıştır):",
             Location = new Point(20, y + 10),
             AutoSize = true,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 10, FontStyle.Bold)
         };
 
@@ -91,7 +90,7 @@ internal sealed class HashGeneratorForm : Form
             Location = new Point(20, y + 35),
             Size = new Size(660, 25),
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 10),
             BorderStyle = BorderStyle.FixedSingle,
             Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
@@ -103,7 +102,7 @@ internal sealed class HashGeneratorForm : Form
             Text = "",
             Location = new Point(690, y + 37),
             Width = 90,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 10, FontStyle.Bold)
         };
 
@@ -112,7 +111,7 @@ internal sealed class HashGeneratorForm : Form
             Text = "Metin girin veya dosya seçin.",
             Location = new Point(20, y + 70),
             Width = 760,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 9),
             Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
         };
@@ -130,7 +129,7 @@ internal sealed class HashGeneratorForm : Form
             Text = label,
             Location = new Point(20, y),
             Width = 80,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 10, FontStyle.Bold)
         };
 
@@ -139,7 +138,7 @@ internal sealed class HashGeneratorForm : Form
             Location = new Point(105, y - 2),
             Width = 630,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 9),
             ReadOnly = true,
             BorderStyle = BorderStyle.FixedSingle,
@@ -153,12 +152,12 @@ internal sealed class HashGeneratorForm : Form
             Width = 35,
             Height = 25,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             FlatStyle = FlatStyle.Flat,
             Font = new Font("Consolas", 9),
             Anchor = AnchorStyles.Top | AnchorStyles.Right
         };
-        btnCopy.FlatAppearance.BorderColor = GreenText;
+        btnCopy.FlatAppearance.BorderColor = AppConstants.AccentText;
         var tb = textBox;
         btnCopy.Click += (_, _) =>
         {
@@ -241,7 +240,7 @@ internal sealed class HashGeneratorForm : Form
                     input == _txtSha256.Text || input == _txtSha512.Text;
 
         _lblVerifyResult.Text = match ? "✅ Eşleşti" : "❌ Eşleşmedi";
-        _lblVerifyResult.ForeColor = match ? GreenText : Color.OrangeRed;
+        _lblVerifyResult.ForeColor = match ? AppConstants.AccentText : Color.OrangeRed;
     }
 
     private void ClearAll()
@@ -278,11 +277,11 @@ internal sealed class HashGeneratorForm : Form
             Width = 160,
             Height = 30,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             FlatStyle = FlatStyle.Flat,
             Font = new Font("Consolas", 9, FontStyle.Bold)
         };
-        btn.FlatAppearance.BorderColor = GreenText;
+        btn.FlatAppearance.BorderColor = AppConstants.AccentText;
         return btn;
     }
 }

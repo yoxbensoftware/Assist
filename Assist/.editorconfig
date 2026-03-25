@@ -16,6 +16,7 @@ end_of_line = crlf
 # .NET Code Style Rules
 dotnet_sort_system_directives_first = true
 dotnet_separate_import_directive_groups = false
+csharp_using_directive_placement = inside_namespace:warning
 
 # C# Code Style Rules
 csharp_prefer_braces = true:suggestion

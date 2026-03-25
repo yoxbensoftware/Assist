@@ -1,7 +1,7 @@
+namespace Assist.Forms.Passwords;
+
 using Assist.Models;
 using Assist.Services;
-
-namespace Assist.Forms.Passwords;
 
 internal partial class PasswordEntryForm : Form
 {

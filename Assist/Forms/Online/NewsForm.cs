@@ -1,15 +1,14 @@
+namespace Assist.Forms.Online;
+
 using System.Diagnostics;
 using Assist.Models;
 using Assist.Services;
-
-namespace Assist.Forms.Online;
 
 /// <summary>
 /// Form to display and translate news articles.
 /// </summary>
 internal sealed class NewsForm : Form
 {
-    private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
 
     private readonly DataGridView _dgv = null!;
     private readonly Button _btnTranslateAll = null!;
@@ -20,7 +19,7 @@ internal sealed class NewsForm : Form
         Text = title;
         ClientSize = new Size(800, 600);
         BackColor = Color.Black;
-        ForeColor = GreenText;
+        ForeColor = AppConstants.AccentText;
         Font = new Font("Consolas", 10);
 
         _dgv = CreateDataGridView();
@@ -30,10 +29,10 @@ internal sealed class NewsForm : Form
             Dock = DockStyle.Top,
             Height = 30,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             FlatStyle = FlatStyle.Flat
         };
-        _btnTranslateAll.FlatAppearance.BorderColor = GreenText;
+        _btnTranslateAll.FlatAppearance.BorderColor = AppConstants.AccentText;
 
         _btnTranslateSelected = new Button
         {
@@ -41,10 +40,10 @@ internal sealed class NewsForm : Form
             Dock = DockStyle.Top,
             Height = 30,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             FlatStyle = FlatStyle.Flat
         };
-        _btnTranslateSelected.FlatAppearance.BorderColor = GreenText;
+        _btnTranslateSelected.FlatAppearance.BorderColor = AppConstants.AccentText;
 
         var lblTitle = new Label
         {
@@ -52,7 +51,7 @@ internal sealed class NewsForm : Form
             Dock = DockStyle.Top,
             Height = 24,
             TextAlign = ContentAlignment.MiddleLeft,
-            ForeColor = GreenText
+            ForeColor = AppConstants.AccentText
         };
 
         _btnTranslateAll.Click += async (_, _) => await TranslateAllAsync();

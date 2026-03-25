@@ -1,13 +1,12 @@
-using System.Text;
-
 namespace Assist.Forms.DeveloperTools;
+
+using System.Text;
 
 /// <summary>
 /// Base64 encoder / decoder — text, file, and image preview support.
 /// </summary>
 internal sealed class Base64ConverterForm : Form
 {
-    private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
 
     private readonly TextBox _txtInput;
     private readonly TextBox _txtOutput;
@@ -26,7 +25,7 @@ internal sealed class Base64ConverterForm : Form
         StartPosition = FormStartPosition.CenterParent;
         AutoScroll = true;
         BackColor = Color.Black;
-        ForeColor = GreenText;
+        ForeColor = AppConstants.AccentText;
         Font = new Font("Consolas", 10);
 
         int y = 12;
@@ -36,7 +35,7 @@ internal sealed class Base64ConverterForm : Form
             Text = "=== BASE64 ENCODER / DECODER ===",
             Location = new Point(20, y),
             AutoSize = true,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 12, FontStyle.Bold)
         };
 
@@ -47,7 +46,7 @@ internal sealed class Base64ConverterForm : Form
             Text = "Enc:",
             Location = new Point(20, y + 3),
             AutoSize = true,
-            ForeColor = GreenText
+            ForeColor = AppConstants.AccentText
         };
 
         _cmbEncoding = new ComboBox
@@ -56,7 +55,7 @@ internal sealed class Base64ConverterForm : Form
             Size = new Size(120, 24),
             DropDownStyle = ComboBoxStyle.DropDownList,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 9)
         };
         _cmbEncoding.Items.AddRange(["UTF-8", "ASCII", "UTF-16", "Latin-1"]);
@@ -95,7 +94,7 @@ internal sealed class Base64ConverterForm : Form
             Text = "Girdi (Normal metin veya Base64):",
             Location = new Point(20, y),
             AutoSize = true,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 10, FontStyle.Bold)
         };
 
@@ -105,7 +104,7 @@ internal sealed class Base64ConverterForm : Form
             Location = new Point(20, y),
             Size = new Size(860, 170),
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 10),
             Multiline = true,
             ScrollBars = ScrollBars.Both,
@@ -120,7 +119,7 @@ internal sealed class Base64ConverterForm : Form
             Text = "Çıktı:",
             Location = new Point(20, y),
             AutoSize = true,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 10, FontStyle.Bold)
         };
 
@@ -130,7 +129,7 @@ internal sealed class Base64ConverterForm : Form
             Location = new Point(20, y),
             Size = new Size(860, 170),
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 10),
             Multiline = true,
             ScrollBars = ScrollBars.Both,
@@ -202,12 +201,12 @@ internal sealed class Base64ConverterForm : Form
             Location = new Point(x, y),
             Size = new Size(w, 30),
             BackColor = Color.FromArgb(30, 30, 30),
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             FlatStyle = FlatStyle.Flat,
             Font = new Font("Consolas", 9, FontStyle.Bold),
             Cursor = Cursors.Hand
         };
-        btn.FlatAppearance.BorderColor = GreenText;
+        btn.FlatAppearance.BorderColor = AppConstants.AccentText;
         return btn;
     }
 

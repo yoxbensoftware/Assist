@@ -1,18 +1,21 @@
+namespace Assist.Forms.Online;
+
 using System.Diagnostics;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Assist.Services;
 
-namespace Assist.Forms.Online;
-
 internal sealed partial class WikipediaSearchForm : Form
 {
-    private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
     private static readonly HttpClient Http = new();
     private static readonly Dictionary<string, string> LangMap = new()
     {
-        ["TR"] = "tr", ["EN"] = "en", ["DE"] = "de", ["FR"] = "fr", ["ES"] = "es"
+        ["TR"] = "tr",
+        ["EN"] = "en",
+        ["DE"] = "de",
+        ["FR"] = "fr",
+        ["ES"] = "es"
     };
 
     private readonly TextBox _txtSearch;
@@ -25,7 +28,7 @@ internal sealed partial class WikipediaSearchForm : Form
         Text = "Wikipedia Arama";
         ClientSize = new Size(900, 620);
         BackColor = Color.Black;
-        ForeColor = GreenText;
+        ForeColor = AppConstants.AccentText;
         Font = new Font("Consolas", 10);
 
         var topPanel = new Panel { Dock = DockStyle.Top, Height = 44, BackColor = Color.Black };
@@ -36,7 +39,7 @@ internal sealed partial class WikipediaSearchForm : Form
             Width = 60,
             Location = new Point(6, 8),
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             FlatStyle = FlatStyle.Flat
         };
         _cmbLang.Items.AddRange(["TR", "EN", "DE", "FR", "ES"]);
@@ -48,7 +51,7 @@ internal sealed partial class WikipediaSearchForm : Form
             Width = 640,
             Height = 28,
             BackColor = Color.FromArgb(30, 30, 30),
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             BorderStyle = BorderStyle.FixedSingle,
             Font = new Font("Consolas", 11),
             Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
@@ -61,12 +64,12 @@ internal sealed partial class WikipediaSearchForm : Form
             Width = 160,
             Height = 30,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             FlatStyle = FlatStyle.Flat,
             Font = new Font("Consolas", 10, FontStyle.Bold),
             Anchor = AnchorStyles.Top | AnchorStyles.Right
         };
-        _btnSearch.FlatAppearance.BorderColor = GreenText;
+        _btnSearch.FlatAppearance.BorderColor = AppConstants.AccentText;
 
         topPanel.Controls.AddRange([_cmbLang, _txtSearch, _btnSearch]);
 
@@ -156,7 +159,7 @@ internal sealed partial class WikipediaSearchForm : Form
         var lblTitle = new Label
         {
             Text = $"📖  {title}",
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 11, FontStyle.Bold),
             AutoSize = false,
             Width = width - 180,
@@ -181,12 +184,12 @@ internal sealed partial class WikipediaSearchForm : Form
             Height = 26,
             Location = new Point(width - 125, 6),
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             FlatStyle = FlatStyle.Flat,
             Font = new Font("Consolas", 9, FontStyle.Bold),
             Tag = url
         };
-        btnOpen.FlatAppearance.BorderColor = GreenText;
+        btnOpen.FlatAppearance.BorderColor = AppConstants.AccentText;
         btnOpen.Click += (s, _) =>
         {
             if (s is Button b && b.Tag is string link)

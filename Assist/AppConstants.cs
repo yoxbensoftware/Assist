@@ -36,4 +36,20 @@ internal static class AppConstants
     public const string AddPasswordTitle = "➕ Şifre Ekle";
     public const string EditPasswordTitle = "✏️ Şifre Düzenle";
     public const string ViewPasswordsTitle = "📄 Şifreleri Gör";
+
+    // Shared theme color — used by all forms before theme is applied
+    public static readonly Color AccentText = Color.FromArgb(0, 255, 0);
+
+    // Shared HttpClient — reuse a single instance across the entire app
+    public static HttpClient SharedHttpClient { get; } = CreateSharedHttpClient();
+
+    /// <summary>
+    /// Creates and configures the shared <see cref="HttpClient"/> instance with default timeout and user-agent.
+    /// </summary>
+    private static HttpClient CreateSharedHttpClient()
+    {
+        var client = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
+        client.DefaultRequestHeaders.UserAgent.ParseAdd("Assist/1.0");
+        return client;
+    }
 }

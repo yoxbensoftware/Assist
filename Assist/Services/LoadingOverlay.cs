@@ -16,6 +16,9 @@ internal sealed class LoadingOverlay : IDisposable
     private int _frameIndex;
     private bool _disposed;
 
+    /// <summary>
+    /// Creates a loading overlay with an ASCII spinner on the specified parent form.
+    /// </summary>
     public LoadingOverlay(Form parentForm, string message = "Yükleniyor...")
     {
         _parentForm = parentForm ?? throw new ArgumentNullException(nameof(parentForm));
@@ -71,6 +74,9 @@ internal sealed class LoadingOverlay : IDisposable
         ApplyTheme();
     }
 
+    /// <summary>
+    /// Displays the loading overlay and starts the spinner animation.
+    /// </summary>
     public void Show(string? message = null)
     {
         if (_disposed) return;
@@ -90,6 +96,9 @@ internal sealed class LoadingOverlay : IDisposable
         Application.DoEvents();
     }
 
+    /// <summary>
+    /// Hides the loading overlay and stops the spinner animation.
+    /// </summary>
     public void Hide()
     {
         if (_disposed) return;
@@ -99,6 +108,9 @@ internal sealed class LoadingOverlay : IDisposable
         _parentForm.Cursor = Cursors.Default;
     }
 
+    /// <summary>
+    /// Updates the message text displayed on the loading overlay.
+    /// </summary>
     public void UpdateMessage(string message)
     {
         if (_disposed) return;
@@ -107,12 +119,18 @@ internal sealed class LoadingOverlay : IDisposable
         CenterBox();
     }
 
+    /// <summary>
+    /// Advances the spinner to the next animation frame.
+    /// </summary>
     private void OnTimerTick(object? sender, EventArgs e)
     {
         _frameIndex = (_frameIndex + 1) % SpinnerFrames.Length;
         _spinnerLabel.Text = SpinnerFrames[_frameIndex];
     }
 
+    /// <summary>
+    /// Centers the loading box and positions the spinner and message labels within it.
+    /// </summary>
     private void CenterBox()
     {
         _box.Location = new Point((_overlay.Width - _box.Width) / 2, (_overlay.Height - _box.Height) / 2);
@@ -120,6 +138,9 @@ internal sealed class LoadingOverlay : IDisposable
         _messageLabel.Location = new Point(12 + _spinnerLabel.Width + 12, (_box.Height - _messageLabel.Height) / 2);
     }
 
+    /// <summary>
+    /// Recalculates the loading box dimensions based on current text content.
+    /// </summary>
     private void UpdateBoxSize()
     {
         // measure text sizes
@@ -135,6 +156,9 @@ internal sealed class LoadingOverlay : IDisposable
         CenterBox();
     }
 
+    /// <summary>
+    /// Applies the current theme palette colors to the overlay and its child controls.
+    /// </summary>
     private void ApplyTheme()
     {
         var p = UITheme.Palette;
@@ -145,6 +169,9 @@ internal sealed class LoadingOverlay : IDisposable
         _box.Invalidate();
     }
 
+    /// <summary>
+    /// Handles the theme changed event by re-applying theme colors on the UI thread.
+    /// </summary>
     private void OnThemeChanged(object? sender, EventArgs e)
     {
         if (_disposed) return;
@@ -155,6 +182,9 @@ internal sealed class LoadingOverlay : IDisposable
             ApplyTheme();
     }
 
+    /// <summary>
+    /// Disposes the overlay, stops the timer, and unsubscribes from theme change events.
+    /// </summary>
     public void Dispose()
     {
         if (_disposed) return;
@@ -172,6 +202,9 @@ internal sealed class LoadingOverlay : IDisposable
 /// </summary>
 internal static class Loading
 {
+    /// <summary>
+    /// Displays a loading overlay on the form while executing an asynchronous operation that returns a result.
+    /// </summary>
     public static async Task<T> RunAsync<T>(Form form, Func<Task<T>> action, string message = "Yükleniyor...")
     {
         using var overlay = new LoadingOverlay(form, message);
@@ -186,6 +219,9 @@ internal static class Loading
         }
     }
 
+    /// <summary>
+    /// Displays a loading overlay on the form while executing an asynchronous operation.
+    /// </summary>
     public static async Task RunAsync(Form form, Func<Task> action, string message = "Yükleniyor...")
     {
         using var overlay = new LoadingOverlay(form, message);

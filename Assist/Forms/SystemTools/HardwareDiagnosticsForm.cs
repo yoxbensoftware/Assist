@@ -1,14 +1,13 @@
+namespace Assist.Forms.SystemTools;
+
 using System.Diagnostics;
 using System.Net;
-
-namespace Assist.Forms.SystemTools;
 
 /// <summary>
 /// Detects common hardware/system issues and provides per-issue fix buttons.
 /// </summary>
 internal sealed class HardwareDiagnosticsForm : Form
 {
-    private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
     private static readonly Color WarningColor = Color.FromArgb(255, 165, 0);
     private static readonly Color ErrorColor = Color.FromArgb(255, 60, 60);
     private static readonly Color OkColor = Color.FromArgb(0, 200, 0);
@@ -23,7 +22,7 @@ internal sealed class HardwareDiagnosticsForm : Form
         Text = "Donanım Sorun Giderici";
         ClientSize = new Size(950, 700);
         BackColor = Color.Black;
-        ForeColor = GreenText;
+        ForeColor = AppConstants.AccentText;
         Font = new Font("Consolas", 10);
 
         var lblTitle = new Label
@@ -31,7 +30,7 @@ internal sealed class HardwareDiagnosticsForm : Form
             Text = "=== DONANIM SORUN GİDERİCİ ===",
             Location = new Point(20, 12),
             AutoSize = true,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 14, FontStyle.Bold)
         };
 
@@ -41,12 +40,12 @@ internal sealed class HardwareDiagnosticsForm : Form
             Location = new Point(20, 48),
             Size = new Size(220, 35),
             BackColor = Color.FromArgb(30, 30, 30),
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             FlatStyle = FlatStyle.Flat,
             Font = new Font("Consolas", 11, FontStyle.Bold),
             Cursor = Cursors.Hand
         };
-        _btnScan.FlatAppearance.BorderColor = GreenText;
+        _btnScan.FlatAppearance.BorderColor = AppConstants.AccentText;
         _btnScan.Click += async (_, _) => await RunDiagnosticsAsync();
 
         _resultsPanel = new Panel

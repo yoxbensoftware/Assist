@@ -1,6 +1,6 @@
-using System.Runtime.InteropServices;
-
 namespace Assist.Forms.SystemTools;
+
+using System.Runtime.InteropServices;
 
 internal sealed class WiggleMouseForm : Form
 {
@@ -84,7 +84,7 @@ internal sealed class WiggleMouseForm : Form
         _statusLabel.Location = new Point(20, 255);
 
         _countdownTimer.Interval = 1000;
-        _wiggleTimer.Interval    = 180;  // shorter steps = more reliable idle reset
+        _wiggleTimer.Interval = 180;  // shorter steps = more reliable idle reset
 
         Controls.AddRange([lblTitle, _countdownLabel, lblH, lblM, lblS, _nudHours, _nudMinutes, _nudSeconds, _btnSet, _btnStartStop, _statusLabel]);
     }
@@ -201,7 +201,7 @@ internal sealed class WiggleMouseForm : Form
         _wiggleTimer.Start();
     }
 
-    private int   _wiggleCount;
+    private int _wiggleCount;
     private Point _savedCursorPos;
 
     // ── Win32 SendInput P/Invoke ─────────────────────────────────────────────
@@ -215,21 +215,21 @@ internal sealed class WiggleMouseForm : Form
     [StructLayout(LayoutKind.Sequential)]
     private struct MOUSEINPUT
     {
-        public int    dx, dy;
-        public uint   mouseData, dwFlags, time;
+        public int dx, dy;
+        public uint mouseData, dwFlags, time;
         public IntPtr dwExtraInfo;
     }
 
     [StructLayout(LayoutKind.Sequential)]
     private struct INPUT
     {
-        public uint       type; // 0 = INPUT_MOUSE
+        public uint type; // 0 = INPUT_MOUSE
         public MOUSEINPUT mi;
     }
 
-    private const uint MOUSEEVENTF_MOVE           = 0x0001;
-    private const uint MOUSEEVENTF_ABSOLUTE       = 0x8000;
-    private const uint MOUSEEVENTF_VIRTUALDESK    = 0x4000; // multi-monitor support
+    private const uint MOUSEEVENTF_MOVE = 0x0001;
+    private const uint MOUSEEVENTF_ABSOLUTE = 0x8000;
+    private const uint MOUSEEVENTF_VIRTUALDESK = 0x4000; // multi-monitor support
     private const uint MOUSEEVENTF_MOVE_NOCOALESCE = 0x2000;
 
     // ── Wiggle logic ─────────────────────────────────────────────────────────
@@ -242,17 +242,17 @@ internal sealed class WiggleMouseForm : Form
         // Pattern: right 120 → center → down 120 → center (net displacement = 0)
         switch (_wiggleCount)
         {
-            case 0: SendMouseAbsolute(_savedCursorPos.X + 120, _savedCursorPos.Y);     break;
-            case 1: SendMouseAbsolute(_savedCursorPos.X,      _savedCursorPos.Y);      break;
-            case 2: SendMouseAbsolute(_savedCursorPos.X,      _savedCursorPos.Y + 120); break;
-            case 3: SendMouseAbsolute(_savedCursorPos.X,      _savedCursorPos.Y);      break;
+            case 0: SendMouseAbsolute(_savedCursorPos.X + 120, _savedCursorPos.Y); break;
+            case 1: SendMouseAbsolute(_savedCursorPos.X, _savedCursorPos.Y); break;
+            case 2: SendMouseAbsolute(_savedCursorPos.X, _savedCursorPos.Y + 120); break;
+            case 3: SendMouseAbsolute(_savedCursorPos.X, _savedCursorPos.Y); break;
             default:
                 _wiggleTimer.Stop();
                 if (!_isRunning) return;
                 _remainingSeconds = (int)(_nudHours.Value * 3600 + _nudMinutes.Value * 60 + _nudSeconds.Value);
                 UpdateCountdownDisplay();
                 _countdownTimer.Start();
-                _statusLabel.Text      = "● Geri sayım...";
+                _statusLabel.Text = "● Geri sayım...";
                 _statusLabel.ForeColor = Color.Yellow;
                 return;
         }
@@ -267,23 +267,23 @@ internal sealed class WiggleMouseForm : Form
     {
         // Virtual desktop spans all monitors
         var vd = SystemInformation.VirtualScreen;
-        x = Math.Clamp(x, vd.Left, vd.Right  - 1);
-        y = Math.Clamp(y, vd.Top,  vd.Bottom - 1);
+        x = Math.Clamp(x, vd.Left, vd.Right - 1);
+        y = Math.Clamp(y, vd.Top, vd.Bottom - 1);
 
         // Normalize pixel coords → 0–65535 range required by MOUSEEVENTF_ABSOLUTE
-        var nx = (int)((long)(x - vd.Left) * 65535 / Math.Max(vd.Width  - 1, 1));
-        var ny = (int)((long)(y - vd.Top)  * 65535 / Math.Max(vd.Height - 1, 1));
+        var nx = (int)((long)(x - vd.Left) * 65535 / Math.Max(vd.Width - 1, 1));
+        var ny = (int)((long)(y - vd.Top) * 65535 / Math.Max(vd.Height - 1, 1));
 
         var input = new INPUT
         {
             type = 0,
-            mi   = new MOUSEINPUT
+            mi = new MOUSEINPUT
             {
-                dx          = nx,
-                dy          = ny,
-                mouseData   = 0,
-                dwFlags     = MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_VIRTUALDESK | MOUSEEVENTF_MOVE_NOCOALESCE,
-                time        = 0,
+                dx = nx,
+                dy = ny,
+                mouseData = 0,
+                dwFlags = MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_VIRTUALDESK | MOUSEEVENTF_MOVE_NOCOALESCE,
+                time = 0,
                 dwExtraInfo = IntPtr.Zero
             }
         };

@@ -1,13 +1,12 @@
-using System.Text.RegularExpressions;
-
 namespace Assist.Forms.DeveloperTools;
+
+using System.Text.RegularExpressions;
 
 /// <summary>
 /// Regular expression tester with pattern matching and capture groups display.
 /// </summary>
 internal sealed class RegexTesterForm : Form
 {
-    private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
 
     private readonly TextBox _txtPattern = null!;
     private readonly TextBox _txtInput = null!;
@@ -24,7 +23,7 @@ internal sealed class RegexTesterForm : Form
         StartPosition = FormStartPosition.CenterParent;
         AutoScroll = true;
         BackColor = Color.Black;
-        ForeColor = GreenText;
+        ForeColor = AppConstants.AccentText;
         Font = new Font("Consolas", 10);
 
         var lblTitle = new Label
@@ -32,7 +31,7 @@ internal sealed class RegexTesterForm : Form
             Text = "=== REGEX TESTER ===",
             Location = new Point(20, 20),
             AutoSize = true,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 12, FontStyle.Bold)
         };
 
@@ -41,7 +40,7 @@ internal sealed class RegexTesterForm : Form
             Text = "Regex Pattern:",
             Location = new Point(20, 60),
             AutoSize = true,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 10, FontStyle.Bold)
         };
 
@@ -51,7 +50,7 @@ internal sealed class RegexTesterForm : Form
             Width = 860,
             Height = 25,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 10),
             BorderStyle = BorderStyle.FixedSingle,
             Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
@@ -62,7 +61,7 @@ internal sealed class RegexTesterForm : Form
             Text = "Ignore Case (i)",
             Location = new Point(20, 120),
             Width = 200,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 9)
         };
 
@@ -71,7 +70,7 @@ internal sealed class RegexTesterForm : Form
             Text = "Multiline (m)",
             Location = new Point(230, 120),
             Width = 200,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 9)
         };
 
@@ -80,7 +79,7 @@ internal sealed class RegexTesterForm : Form
             Text = "Test String:",
             Location = new Point(20, 155),
             AutoSize = true,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 10, FontStyle.Bold)
         };
 
@@ -92,7 +91,7 @@ internal sealed class RegexTesterForm : Form
             Multiline = true,
             ScrollBars = ScrollBars.Both,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 9),
             BorderStyle = BorderStyle.FixedSingle,
             WordWrap = false,
@@ -106,11 +105,11 @@ internal sealed class RegexTesterForm : Form
             Width = 150,
             Height = 30,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             FlatStyle = FlatStyle.Flat,
             Font = new Font("Consolas", 9, FontStyle.Bold)
         };
-        btnTest.FlatAppearance.BorderColor = GreenText;
+        btnTest.FlatAppearance.BorderColor = AppConstants.AccentText;
         btnTest.Click += (_, _) => TestRegex();
 
         var btnClear = new Button
@@ -120,18 +119,18 @@ internal sealed class RegexTesterForm : Form
             Width = 120,
             Height = 30,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             FlatStyle = FlatStyle.Flat,
             Font = new Font("Consolas", 9, FontStyle.Bold)
         };
-        btnClear.FlatAppearance.BorderColor = GreenText;
-        btnClear.Click += (_, _) => 
-        { 
-            _txtPattern?.Clear(); 
-            _txtInput?.Clear(); 
-            _txtMatches?.Clear(); 
-            if (_lblStatus is not null) 
-                _lblStatus.Text = "Status: Ready"; 
+        btnClear.FlatAppearance.BorderColor = AppConstants.AccentText;
+        btnClear.Click += (_, _) =>
+        {
+            _txtPattern?.Clear();
+            _txtInput?.Clear();
+            _txtMatches?.Clear();
+            if (_lblStatus is not null)
+                _lblStatus.Text = "Status: Ready";
         };
 
         _lblStatus = new Label
@@ -140,7 +139,7 @@ internal sealed class RegexTesterForm : Form
             Location = new Point(20, 380),
             Width = 860,
             Height = 20,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 9),
             Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
         };
@@ -150,7 +149,7 @@ internal sealed class RegexTesterForm : Form
             Text = "Matches & Capture Groups:",
             Location = new Point(20, 410),
             AutoSize = true,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 10, FontStyle.Bold)
         };
 
@@ -163,7 +162,7 @@ internal sealed class RegexTesterForm : Form
             ReadOnly = true,
             ScrollBars = ScrollBars.Both,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 9),
             BorderStyle = BorderStyle.FixedSingle,
             WordWrap = false,
@@ -231,7 +230,7 @@ internal sealed class RegexTesterForm : Form
 
             _txtMatches.Text = result.ToString();
             _lblStatus.Text = $"Status: ✓ {matches.Count} eşleşme bulundu";
-            _lblStatus.ForeColor = GreenText;
+            _lblStatus.ForeColor = AppConstants.AccentText;
         }
         catch (Exception ex)
         {

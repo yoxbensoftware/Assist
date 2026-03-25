@@ -5,7 +5,6 @@ namespace Assist.Forms.DeveloperTools;
 /// </summary>
 internal sealed class UuidGeneratorForm : Form
 {
-    private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
 
     private readonly TextBox _txtUuid = null!;
     private readonly TextBox _txtBulk = null!;
@@ -21,7 +20,7 @@ internal sealed class UuidGeneratorForm : Form
         StartPosition = FormStartPosition.CenterParent;
         AutoScroll = true;
         BackColor = Color.Black;
-        ForeColor = GreenText;
+        ForeColor = AppConstants.AccentText;
         Font = new Font("Consolas", 10);
 
         var lblTitle = new Label
@@ -29,7 +28,7 @@ internal sealed class UuidGeneratorForm : Form
             Text = "=== UUID/GUID GENERATOR ===",
             Location = new Point(20, 20),
             AutoSize = true,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 12, FontStyle.Bold)
         };
 
@@ -38,7 +37,7 @@ internal sealed class UuidGeneratorForm : Form
             Text = "Format:",
             Location = new Point(20, 60),
             Width = 100,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 10, FontStyle.Bold)
         };
 
@@ -47,7 +46,7 @@ internal sealed class UuidGeneratorForm : Form
             Location = new Point(130, 57),
             Width = 250,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 10),
             DropDownStyle = ComboBoxStyle.DropDownList,
             FlatStyle = FlatStyle.Flat
@@ -62,11 +61,11 @@ internal sealed class UuidGeneratorForm : Form
             Width = 180,
             Height = 30,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             FlatStyle = FlatStyle.Flat,
             Font = new Font("Consolas", 9, FontStyle.Bold)
         };
-        btnGenerate.FlatAppearance.BorderColor = GreenText;
+        btnGenerate.FlatAppearance.BorderColor = AppConstants.AccentText;
         btnGenerate.Click += (_, _) => GenerateSingleUuid();
 
         _txtUuid = new TextBox
@@ -75,7 +74,7 @@ internal sealed class UuidGeneratorForm : Form
             Width = 660,
             Height = 30,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 11, FontStyle.Bold),
             BorderStyle = BorderStyle.FixedSingle,
             ReadOnly = true,
@@ -90,11 +89,11 @@ internal sealed class UuidGeneratorForm : Form
             Width = 100,
             Height = 30,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             FlatStyle = FlatStyle.Flat,
             Font = new Font("Consolas", 9, FontStyle.Bold)
         };
-        btnCopy.FlatAppearance.BorderColor = GreenText;
+        btnCopy.FlatAppearance.BorderColor = AppConstants.AccentText;
         btnCopy.Click += (_, _) => CopyToClipboard(_txtUuid.Text);
 
         var lblBulk = new Label
@@ -102,7 +101,7 @@ internal sealed class UuidGeneratorForm : Form
             Text = "Bulk Generation:",
             Location = new Point(20, 190),
             AutoSize = true,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 10, FontStyle.Bold)
         };
 
@@ -111,7 +110,7 @@ internal sealed class UuidGeneratorForm : Form
             Text = "Count:",
             Location = new Point(20, 220),
             Width = 80,
-            ForeColor = GreenText
+            ForeColor = AppConstants.AccentText
         };
 
         _numCount = new NumericUpDown
@@ -122,7 +121,7 @@ internal sealed class UuidGeneratorForm : Form
             Maximum = 1000,
             Value = 10,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             BorderStyle = BorderStyle.FixedSingle
         };
 
@@ -133,11 +132,11 @@ internal sealed class UuidGeneratorForm : Form
             Width = 180,
             Height = 25,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             FlatStyle = FlatStyle.Flat,
             Font = new Font("Consolas", 9, FontStyle.Bold)
         };
-        btnBulkGenerate.FlatAppearance.BorderColor = GreenText;
+        btnBulkGenerate.FlatAppearance.BorderColor = AppConstants.AccentText;
         btnBulkGenerate.Click += (_, _) => GenerateBulkUuids();
 
         var btnCopyBulk = new Button
@@ -147,11 +146,11 @@ internal sealed class UuidGeneratorForm : Form
             Width = 120,
             Height = 25,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             FlatStyle = FlatStyle.Flat,
             Font = new Font("Consolas", 9, FontStyle.Bold)
         };
-        btnCopyBulk.FlatAppearance.BorderColor = GreenText;
+        btnCopyBulk.FlatAppearance.BorderColor = AppConstants.AccentText;
         btnCopyBulk.Click += (_, _) => CopyToClipboard(_txtBulk?.Text ?? string.Empty);
 
         _txtBulk = new TextBox
@@ -163,7 +162,7 @@ internal sealed class UuidGeneratorForm : Form
             ReadOnly = true,
             ScrollBars = ScrollBars.Vertical,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 9),
             BorderStyle = BorderStyle.FixedSingle,
             WordWrap = false,
@@ -176,7 +175,7 @@ internal sealed class UuidGeneratorForm : Form
             Location = new Point(20, 515),
             Width = 660,
             Height = 20,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 9),
             Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom
         };
@@ -194,7 +193,7 @@ internal sealed class UuidGeneratorForm : Form
             var uuid = Guid.NewGuid();
             _txtUuid.Text = FormatUuid(uuid);
             _lblStatus.Text = "Status: ✓ UUID oluşturuldu";
-            _lblStatus.ForeColor = GreenText;
+            _lblStatus.ForeColor = AppConstants.AccentText;
         }
         catch (Exception ex)
         {
@@ -218,7 +217,7 @@ internal sealed class UuidGeneratorForm : Form
 
             _txtBulk.Text = result.ToString();
             _lblStatus.Text = $"Status: ✓ {count} UUID oluşturuldu";
-            _lblStatus.ForeColor = GreenText;
+            _lblStatus.ForeColor = AppConstants.AccentText;
         }
         catch (Exception ex)
         {

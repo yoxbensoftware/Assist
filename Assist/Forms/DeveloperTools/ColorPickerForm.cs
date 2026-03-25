@@ -1,13 +1,12 @@
-using System.Runtime.InteropServices;
-
 namespace Assist.Forms.DeveloperTools;
+
+using System.Runtime.InteropServices;
 
 /// <summary>
 /// Color picker tool to capture colors from screen with hex and RGB values.
 /// </summary>
 internal sealed class ColorPickerForm : Form
 {
-    private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
 
     private readonly Panel _colorPreview = null!;
     private readonly Label _lblHex = null!;
@@ -45,7 +44,7 @@ internal sealed class ColorPickerForm : Form
         StartPosition = FormStartPosition.CenterParent;
         AutoScroll = true;
         BackColor = Color.Black;
-        ForeColor = GreenText;
+        ForeColor = AppConstants.AccentText;
         Font = new Font("Consolas", 10);
 
         var lblTitle = new Label
@@ -53,7 +52,7 @@ internal sealed class ColorPickerForm : Form
             Text = "=== COLOR PICKER ===",
             Location = new Point(20, 20),
             AutoSize = true,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 12, FontStyle.Bold)
         };
 
@@ -74,12 +73,12 @@ internal sealed class ColorPickerForm : Form
             Width = 350,
             Height = 35,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             FlatStyle = FlatStyle.Flat,
             Font = new Font("Consolas", 9, FontStyle.Bold),
             Cursor = Cursors.Hand
         };
-        btnPick.FlatAppearance.BorderColor = GreenText;
+        btnPick.FlatAppearance.BorderColor = AppConstants.AccentText;
         btnPick.Click += (_, _) => TogglePicker();
 
         var lblInfo = new Label
@@ -96,7 +95,7 @@ internal sealed class ColorPickerForm : Form
             Text = "HEX:",
             Location = new Point(20, 310),
             Width = 100,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 10, FontStyle.Bold)
         };
 
@@ -105,7 +104,7 @@ internal sealed class ColorPickerForm : Form
             Location = new Point(130, 307),
             Width = 200,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 10),
             BorderStyle = BorderStyle.FixedSingle,
             ReadOnly = true
@@ -118,10 +117,10 @@ internal sealed class ColorPickerForm : Form
             Width = 80,
             Height = 25,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             FlatStyle = FlatStyle.Flat
         };
-        btnCopyHex.FlatAppearance.BorderColor = GreenText;
+        btnCopyHex.FlatAppearance.BorderColor = AppConstants.AccentText;
         btnCopyHex.Click += (_, _) => CopyToClipboard(_txtHex.Text);
 
         _lblRgb = new Label
@@ -129,7 +128,7 @@ internal sealed class ColorPickerForm : Form
             Text = "RGB:",
             Location = new Point(20, 350),
             Width = 100,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 10, FontStyle.Bold)
         };
 
@@ -138,7 +137,7 @@ internal sealed class ColorPickerForm : Form
             Location = new Point(130, 347),
             Width = 200,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 10),
             BorderStyle = BorderStyle.FixedSingle,
             ReadOnly = true
@@ -151,10 +150,10 @@ internal sealed class ColorPickerForm : Form
             Width = 80,
             Height = 25,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             FlatStyle = FlatStyle.Flat
         };
-        btnCopyRgb.FlatAppearance.BorderColor = GreenText;
+        btnCopyRgb.FlatAppearance.BorderColor = AppConstants.AccentText;
         btnCopyRgb.Click += (_, _) => CopyToClipboard(_txtRgb.Text);
 
         _lblHsv = new Label
@@ -162,7 +161,7 @@ internal sealed class ColorPickerForm : Form
             Text = "HSV: -",
             Location = new Point(20, 390),
             Width = 560,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 9),
             Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
         };
@@ -250,7 +249,7 @@ internal sealed class ColorPickerForm : Form
             TopMost = false;
             Text = "Color Picker - Color Captured!";
 
-            MessageBox.Show($"Renk yakalandı!\n\nHEX: {_txtHex.Text}\nRGB: {_txtRgb.Text}\n\nDeğerleri kopyalayabilirsiniz.", 
+            MessageBox.Show($"Renk yakalandı!\n\nHEX: {_txtHex.Text}\nRGB: {_txtRgb.Text}\n\nDeğerleri kopyalayabilirsiniz.",
                 "Başarılı", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
             Text = "Color Picker";

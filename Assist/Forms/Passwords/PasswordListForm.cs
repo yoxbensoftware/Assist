@@ -1,11 +1,10 @@
+namespace Assist.Forms.Passwords;
+
 using Assist.Models;
 using Assist.Services;
 
-namespace Assist.Forms.Passwords;
-
 internal partial class PasswordListForm : Form
 {
-    private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
 
     private DataGridView _dgv = null!;
     private TextBox _txtSearch = null!;
@@ -23,7 +22,7 @@ internal partial class PasswordListForm : Form
         Size = new Size(900, 500);
         MinimumSize = new Size(800, 400);
         BackColor = Color.Black;
-        ForeColor = GreenText;
+        ForeColor = AppConstants.AccentText;
         Font = new Font("Consolas", 10);
 
         // Find existing DataGridView from designer
@@ -39,7 +38,7 @@ internal partial class PasswordListForm : Form
             Dock = DockStyle.Top,
             PlaceholderText = "Ara (başlık, kullanıcı, not)...",
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 10)
         };
         _txtSearch.TextChanged += (_, _) => ApplyFilter();

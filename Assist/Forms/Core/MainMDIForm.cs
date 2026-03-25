@@ -1,3 +1,5 @@
+namespace Assist;
+
 using System.Diagnostics;
 using System.Net.NetworkInformation;
 using System.Text;
@@ -10,8 +12,6 @@ using Assist.Forms.Passwords;
 using Assist.Forms.SystemTools;
 using Assist.Models;
 using Assist.Services;
-
-namespace Assist;
 
 internal partial class MainMDIForm : Form
 {
@@ -37,16 +37,16 @@ internal partial class MainMDIForm : Form
 
     // Current-process monitor
     private readonly Process _selfProcess = Process.GetCurrentProcess();
-    private TimeSpan _lastCpuTime   = TimeSpan.Zero;
-    private DateTime _lastCpuCheck  = DateTime.MinValue;
-    private long     _lastNetRx;
-    private long     _lastNetTx;
-    private Label?   _lblProcBar;
+    private TimeSpan _lastCpuTime = TimeSpan.Zero;
+    private DateTime _lastCpuCheck = DateTime.MinValue;
+    private long _lastNetRx;
+    private long _lastNetTx;
+    private Label? _lblProcBar;
 
     // Dashboard panel refs for theme refresh
-    private Panel?   _topBorderPanel;
-    private Panel?   _procBarPanel;
-    private Label?   _lblVersion;
+    private Panel? _topBorderPanel;
+    private Panel? _procBarPanel;
+    private Label? _lblVersion;
 
     public MainMDIForm()
     {
@@ -531,9 +531,9 @@ internal partial class MainMDIForm : Form
         var p = UITheme.Palette;
         _dashboardPanel = new Panel
         {
-            Height      = 148,
-            Dock        = DockStyle.Bottom,
-            BackColor   = p.Surface,
+            Height = 148,
+            Dock = DockStyle.Bottom,
+            BackColor = p.Surface,
             BorderStyle = BorderStyle.None
         };
         typeof(Panel).InvokeMember("DoubleBuffered",
@@ -542,8 +542,8 @@ internal partial class MainMDIForm : Form
 
         _topBorderPanel = new Panel
         {
-            Dock      = DockStyle.Top,
-            Height    = 1,
+            Dock = DockStyle.Top,
+            Height = 1,
             BackColor = p.Accent
         };
         _dashboardPanel.Controls.Add(_topBorderPanel);
@@ -551,15 +551,15 @@ internal partial class MainMDIForm : Form
         // ── Process monitor bar ──
         _procBarPanel = new Panel
         {
-            Dock      = DockStyle.Top,
-            Height    = 24,
+            Dock = DockStyle.Top,
+            Height = 24,
             BackColor = p.Surface2
         };
         _lblProcBar = new Label
         {
-            Dock      = DockStyle.Fill,
-            Text      = "  \u25ba ASSIST  |  Monitoring...",
-            Font      = new Font("Consolas", 8, FontStyle.Regular),
+            Dock = DockStyle.Fill,
+            Text = "  \u25ba ASSIST  |  Monitoring...",
+            Font = new Font("Consolas", 8, FontStyle.Regular),
             ForeColor = Color.FromArgb(80, 180, 255),
             BackColor = p.Surface2,
             TextAlign = ContentAlignment.MiddleLeft
@@ -589,18 +589,18 @@ internal partial class MainMDIForm : Form
             table.RowStyles.Add(new RowStyle(SizeType.Percent, 16.67F));
 
         // ── Left column labels ──
-        _lblClock   = CreateDashboardLabel("⏰ --:--:--", 10, FontStyle.Bold);
+        _lblClock = CreateDashboardLabel("⏰ --:--:--", 10, FontStyle.Bold);
         _lblWeather = CreateDashboardLabel("🌤 Yükleniyor...");
-        _lblCpuRam  = CreateDashboardLabel("💻 CPU: --%  RAM: --/-- MB");
-        _lblDisk    = CreateDashboardLabel("💾 C: -- GB boş / -- GB");
+        _lblCpuRam = CreateDashboardLabel("💻 CPU: --%  RAM: --/-- MB");
+        _lblDisk = CreateDashboardLabel("💾 C: -- GB boş / -- GB");
         _lblBattery = CreateDashboardLabel("🔋 --");
-        _lblUptime  = CreateDashboardLabel("⬆ Uptime: --");
+        _lblUptime = CreateDashboardLabel("⬆ Uptime: --");
 
         // ── Right column labels ──
-        _lblIpInfo   = CreateDashboardLabel("🌐 Yükleniyor...");
-        _lblPing     = CreateDashboardLabel("📶 Kontrol ediliyor...");
+        _lblIpInfo = CreateDashboardLabel("🌐 Yükleniyor...");
+        _lblPing = CreateDashboardLabel("📶 Kontrol ediliyor...");
         _lblCurrency = CreateDashboardLabel("💱 Yükleniyor...");
-        _lblCrypto   = CreateDashboardLabel("₿ Yükleniyor...");
+        _lblCrypto = CreateDashboardLabel("₿ Yükleniyor...");
         _lblAppStats = CreateDashboardLabel("🔑 Şifre: -  📋 Pano: -");
 
         // Row 0: Clock | IP Info
@@ -738,10 +738,10 @@ internal partial class MainMDIForm : Form
             if (_lastCpuCheck != DateTime.MinValue)
             {
                 var cpuDelta = (_selfProcess.TotalProcessorTime - _lastCpuTime).TotalSeconds;
-                var elapsed  = (now - _lastCpuCheck).TotalSeconds;
+                var elapsed = (now - _lastCpuCheck).TotalSeconds;
                 cpu = elapsed > 0 ? cpuDelta / (elapsed * Environment.ProcessorCount) * 100.0 : 0;
             }
-            _lastCpuTime  = _selfProcess.TotalProcessorTime;
+            _lastCpuTime = _selfProcess.TotalProcessorTime;
             _lastCpuCheck = now;
 
             // System-wide network delta (KB/s)

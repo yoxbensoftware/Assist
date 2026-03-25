@@ -1,5 +1,3 @@
-using Assist.Services;
-
 namespace Assist.Forms.SystemTools;
 
 /// <summary>
@@ -8,7 +6,6 @@ namespace Assist.Forms.SystemTools;
 /// </summary>
 internal sealed class DiskCleanerForm : Form
 {
-    private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
 
     private readonly TextBox _txtLog = null!;
     private readonly Label _lblStatus = null!;
@@ -32,7 +29,7 @@ internal sealed class DiskCleanerForm : Form
         Text = "Disk Temizleyici";
         ClientSize = new Size(800, 600);
         BackColor = Color.Black;
-        ForeColor = GreenText;
+        ForeColor = AppConstants.AccentText;
         Font = new Font("Consolas", 10);
 
         var lblTitle = new Label
@@ -40,7 +37,7 @@ internal sealed class DiskCleanerForm : Form
             Text = "=== DİSK TEMİZLEYİCİ ===",
             Location = new Point(20, 15),
             AutoSize = true,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 12, FontStyle.Bold)
         };
 
@@ -58,7 +55,7 @@ internal sealed class DiskCleanerForm : Form
             Location = new Point(20, 75),
             Size = new Size(760, 100),
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 9),
             BorderStyle = BorderStyle.FixedSingle,
             CheckOnClick = true,
@@ -83,7 +80,7 @@ internal sealed class DiskCleanerForm : Form
             Location = new Point(20, 225),
             Size = new Size(760, 330),
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 9),
             Multiline = true,
             ScrollBars = ScrollBars.Vertical,
@@ -97,7 +94,7 @@ internal sealed class DiskCleanerForm : Form
             Text = "Taramaya hazır.",
             Location = new Point(20, 565),
             Width = 760,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 9),
             Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom
         };
@@ -350,11 +347,11 @@ internal sealed class DiskCleanerForm : Form
             Width = 160,
             Height = 30,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             FlatStyle = FlatStyle.Flat,
             Font = new Font("Consolas", 9, FontStyle.Bold)
         };
-        btn.FlatAppearance.BorderColor = GreenText;
+        btn.FlatAppearance.BorderColor = AppConstants.AccentText;
         return btn;
     }
 }

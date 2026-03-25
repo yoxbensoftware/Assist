@@ -1,15 +1,14 @@
+namespace Assist.Forms.DeveloperTools;
+
 using System.Text;
 using System.Xml;
 using System.Xml.Linq;
-
-namespace Assist.Forms.DeveloperTools;
 
 /// <summary>
 /// Pretty XML — format, minify, validate XML. Supports raw XML and Base64-encoded XML input.
 /// </summary>
 internal sealed class PrettyXmlForm : Form
 {
-    private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
 
     private readonly TextBox _txtInput;
     private readonly TextBox _txtOutput;
@@ -23,7 +22,7 @@ internal sealed class PrettyXmlForm : Form
         StartPosition = FormStartPosition.CenterParent;
         AutoScroll = true;
         BackColor = Color.Black;
-        ForeColor = GreenText;
+        ForeColor = AppConstants.AccentText;
         Font = new Font("Consolas", 10);
 
         int y = 12;
@@ -32,7 +31,7 @@ internal sealed class PrettyXmlForm : Form
             Text = "=== PRETTY XML ===",
             Location = new Point(20, y),
             AutoSize = true,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 12, FontStyle.Bold)
         };
 
@@ -57,7 +56,7 @@ internal sealed class PrettyXmlForm : Form
         btnCopy.Click += (_, _) => CopyOutput();
 
         var btnClear = Btn("Temizle", 675, y, 85);
-        btnClear.Click += (_, _) => { _txtInput.Clear(); _txtOutput.Clear(); Status("Hazır.", GreenText); };
+        btnClear.Click += (_, _) => { _txtInput.Clear(); _txtOutput.Clear(); Status("Hazır.", AppConstants.AccentText); };
 
         var btnLoad = Btn("Dosya Aç", 765, y, 80);
         btnLoad.Click += (_, _) => LoadFile();
@@ -69,7 +68,7 @@ internal sealed class PrettyXmlForm : Form
             Text = "XML Girişi (raw veya Base64):",
             Location = new Point(20, y),
             AutoSize = true,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 10, FontStyle.Bold)
         };
 
@@ -79,7 +78,7 @@ internal sealed class PrettyXmlForm : Form
             Location = new Point(20, y),
             Size = new Size(820, 210),
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 9),
             Multiline = true,
             ScrollBars = ScrollBars.Both,
@@ -94,7 +93,7 @@ internal sealed class PrettyXmlForm : Form
             Text = "Çıktı:",
             Location = new Point(20, y),
             AutoSize = true,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 10, FontStyle.Bold)
         };
 
@@ -104,7 +103,7 @@ internal sealed class PrettyXmlForm : Form
             Location = new Point(20, y),
             Size = new Size(820, 240),
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 9),
             Multiline = true,
             ScrollBars = ScrollBars.Both,
@@ -119,7 +118,7 @@ internal sealed class PrettyXmlForm : Form
             Text = "Hazır.",
             Location = new Point(20, 590),
             Size = new Size(820, 20),
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 9),
             Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom
         };
@@ -139,7 +138,7 @@ internal sealed class PrettyXmlForm : Form
         Location = new Point(x, y),
         Size = new Size(w, 28),
         BackColor = Color.FromArgb(30, 30, 30),
-        ForeColor = GreenText,
+        ForeColor = AppConstants.AccentText,
         FlatStyle = FlatStyle.Flat,
         Font = new Font("Consolas", 9),
         Cursor = Cursors.Hand
@@ -180,7 +179,7 @@ internal sealed class PrettyXmlForm : Form
         {
             var doc = XDocument.Parse(xml);
             _txtOutput.Text = doc.ToString();
-            Status("✓ XML güzelleştirildi (Pretty Print).", GreenText);
+            Status("✓ XML güzelleştirildi (Pretty Print).", AppConstants.AccentText);
         }
         catch (Exception ex) { Status($"✗ XML parse hatası: {ex.Message}", Color.Red); }
     }
@@ -194,7 +193,7 @@ internal sealed class PrettyXmlForm : Form
         {
             var doc = XDocument.Parse(xml);
             _txtOutput.Text = doc.ToString(SaveOptions.DisableFormatting);
-            Status("✓ XML minify edildi.", GreenText);
+            Status("✓ XML minify edildi.", AppConstants.AccentText);
         }
         catch (Exception ex) { Status($"✗ XML parse hatası: {ex.Message}", Color.Red); }
     }
@@ -213,7 +212,7 @@ internal sealed class PrettyXmlForm : Form
             int attrCount = doc.SelectNodes("//@*")?.Count ?? 0;
 
             _txtOutput.Text = $"XML geçerli (Valid).\n\nElement sayısı: {elemCount}\nAttribute sayısı: {attrCount}\nRoot element: <{doc.DocumentElement?.Name}>";
-            Status("✓ XML geçerli (Valid).", GreenText);
+            Status("✓ XML geçerli (Valid).", AppConstants.AccentText);
         }
         catch (Exception ex)
         {
@@ -232,7 +231,7 @@ internal sealed class PrettyXmlForm : Form
             var decoded = Encoding.UTF8.GetString(bytes);
             var doc = XDocument.Parse(decoded);
             _txtOutput.Text = doc.ToString();
-            Status($"✓ Base64 → XML decode + Pretty Print edildi ({bytes.Length:N0} byte).", GreenText);
+            Status($"✓ Base64 → XML decode + Pretty Print edildi ({bytes.Length:N0} byte).", AppConstants.AccentText);
         }
         catch (FormatException) { Status("Geçersiz Base64 formatı.", Color.Red); }
         catch (Exception ex) { Status($"✗ Hata: {ex.Message}", Color.Red); }
@@ -248,7 +247,7 @@ internal sealed class PrettyXmlForm : Form
             XDocument.Parse(_txtInput.Text);
             var bytes = Encoding.UTF8.GetBytes(_txtInput.Text);
             _txtOutput.Text = Convert.ToBase64String(bytes);
-            Status($"✓ XML → Base64 encode edildi ({bytes.Length:N0} byte → {_txtOutput.Text.Length:N0} karakter).", GreenText);
+            Status($"✓ XML → Base64 encode edildi ({bytes.Length:N0} byte → {_txtOutput.Text.Length:N0} karakter).", AppConstants.AccentText);
         }
         catch (Exception ex) { Status($"✗ Hata: {ex.Message}", Color.Red); }
     }

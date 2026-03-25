@@ -1,13 +1,12 @@
-using System.Diagnostics;
-
 namespace Assist.Forms.SystemTools;
+
+using System.Diagnostics;
 
 /// <summary>
 /// Internet speed test tool.
 /// </summary>
 internal sealed class SpeedTestForm : Form
 {
-    private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
     private static readonly HttpClient HttpClient = new();
 
     private readonly Label _lblDownload = null!;
@@ -22,7 +21,7 @@ internal sealed class SpeedTestForm : Form
         Text = "Speed Test";
         ClientSize = new Size(600, 450);
         BackColor = Color.Black;
-        ForeColor = GreenText;
+        ForeColor = AppConstants.AccentText;
         Font = new Font("Consolas", 10);
 
         var lblTitle = new Label
@@ -30,7 +29,7 @@ internal sealed class SpeedTestForm : Form
             Text = "=== INTERNET SPEED TEST ===",
             Location = new Point(20, 20),
             AutoSize = true,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 12, FontStyle.Bold)
         };
 
@@ -39,7 +38,7 @@ internal sealed class SpeedTestForm : Form
             Text = "Download: -- Mbps",
             Location = new Point(20, 70),
             Width = 560,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 11),
             Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
         };
@@ -49,7 +48,7 @@ internal sealed class SpeedTestForm : Form
             Text = "Upload: -- Mbps",
             Location = new Point(20, 100),
             Width = 560,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 11),
             Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
         };
@@ -59,7 +58,7 @@ internal sealed class SpeedTestForm : Form
             Text = "Ping: -- ms",
             Location = new Point(20, 130),
             Width = 560,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 11),
             Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
         };
@@ -80,12 +79,12 @@ internal sealed class SpeedTestForm : Form
             Width = 560,
             Height = 40,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             FlatStyle = FlatStyle.Flat,
             Font = new Font("Consolas", 11, FontStyle.Bold),
             Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
         };
-        _btnStart.FlatAppearance.BorderColor = GreenText;
+        _btnStart.FlatAppearance.BorderColor = AppConstants.AccentText;
         _btnStart.Click += async (_, _) => await RunSpeedTest();
 
         _txtLog = new TextBox
@@ -97,7 +96,7 @@ internal sealed class SpeedTestForm : Form
             ReadOnly = true,
             ScrollBars = ScrollBars.Vertical,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 9),
             BorderStyle = BorderStyle.FixedSingle,
             Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom

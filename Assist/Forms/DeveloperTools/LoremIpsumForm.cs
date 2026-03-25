@@ -1,13 +1,12 @@
-using System.Text;
-
 namespace Assist.Forms.DeveloperTools;
+
+using System.Text;
 
 /// <summary>
 /// Lorem Ipsum dummy text generator with customizable paragraphs and words.
 /// </summary>
 internal sealed class LoremIpsumForm : Form
 {
-    private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
 
     private readonly NumericUpDown _numParagraphs = null!;
     private readonly NumericUpDown _numWordsPerPara = null!;
@@ -15,7 +14,7 @@ internal sealed class LoremIpsumForm : Form
     private readonly TextBox _txtOutput = null!;
     private readonly Label _lblStatus = null!;
 
-    private static readonly string[] LoremWords = 
+    private static readonly string[] LoremWords =
     [
         "lorem", "ipsum", "dolor", "sit", "amet", "consectetur", "adipiscing", "elit",
         "sed", "do", "eiusmod", "tempor", "incididunt", "ut", "labore", "et", "dolore",
@@ -39,7 +38,7 @@ internal sealed class LoremIpsumForm : Form
         StartPosition = FormStartPosition.CenterParent;
         AutoScroll = true;
         BackColor = Color.Black;
-        ForeColor = GreenText;
+        ForeColor = AppConstants.AccentText;
         Font = new Font("Consolas", 10);
 
         var lblTitle = new Label
@@ -47,7 +46,7 @@ internal sealed class LoremIpsumForm : Form
             Text = "=== LOREM IPSUM GENERATOR ===",
             Location = new Point(20, 20),
             AutoSize = true,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 12, FontStyle.Bold)
         };
 
@@ -56,7 +55,7 @@ internal sealed class LoremIpsumForm : Form
             Text = "Paragraphs:",
             Location = new Point(20, 70),
             Width = 150,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 10, FontStyle.Bold)
         };
 
@@ -68,7 +67,7 @@ internal sealed class LoremIpsumForm : Form
             Maximum = 50,
             Value = 3,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             BorderStyle = BorderStyle.FixedSingle
         };
 
@@ -77,7 +76,7 @@ internal sealed class LoremIpsumForm : Form
             Text = "Words per Paragraph:",
             Location = new Point(20, 110),
             Width = 200,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 10, FontStyle.Bold)
         };
 
@@ -89,7 +88,7 @@ internal sealed class LoremIpsumForm : Form
             Maximum = 500,
             Value = 50,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             BorderStyle = BorderStyle.FixedSingle
         };
 
@@ -99,7 +98,7 @@ internal sealed class LoremIpsumForm : Form
             Location = new Point(20, 150),
             Width = 400,
             Checked = true,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 9)
         };
 
@@ -110,11 +109,11 @@ internal sealed class LoremIpsumForm : Form
             Width = 200,
             Height = 30,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             FlatStyle = FlatStyle.Flat,
             Font = new Font("Consolas", 9, FontStyle.Bold)
         };
-        btnGenerate.FlatAppearance.BorderColor = GreenText;
+        btnGenerate.FlatAppearance.BorderColor = AppConstants.AccentText;
         btnGenerate.Click += (_, _) => GenerateLoremIpsum();
 
         var btnCopy = new Button
@@ -124,11 +123,11 @@ internal sealed class LoremIpsumForm : Form
             Width = 180,
             Height = 30,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             FlatStyle = FlatStyle.Flat,
             Font = new Font("Consolas", 9, FontStyle.Bold)
         };
-        btnCopy.FlatAppearance.BorderColor = GreenText;
+        btnCopy.FlatAppearance.BorderColor = AppConstants.AccentText;
         btnCopy.Click += (_, _) => CopyToClipboard();
 
         var btnClear = new Button
@@ -138,16 +137,16 @@ internal sealed class LoremIpsumForm : Form
             Width = 100,
             Height = 30,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             FlatStyle = FlatStyle.Flat,
             Font = new Font("Consolas", 9, FontStyle.Bold)
         };
-        btnClear.FlatAppearance.BorderColor = GreenText;
-        btnClear.Click += (_, _) => 
-        { 
-            _txtOutput?.Clear(); 
-            if (_lblStatus is not null) 
-                _lblStatus.Text = "Status: Ready"; 
+        btnClear.FlatAppearance.BorderColor = AppConstants.AccentText;
+        btnClear.Click += (_, _) =>
+        {
+            _txtOutput?.Clear();
+            if (_lblStatus is not null)
+                _lblStatus.Text = "Status: Ready";
         };
 
         _lblStatus = new Label
@@ -156,7 +155,7 @@ internal sealed class LoremIpsumForm : Form
             Location = new Point(20, 235),
             Width = 760,
             Height = 20,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 9),
             Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
         };
@@ -169,7 +168,7 @@ internal sealed class LoremIpsumForm : Form
             Multiline = true,
             ScrollBars = ScrollBars.Both,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 9),
             BorderStyle = BorderStyle.FixedSingle,
             WordWrap = true,
@@ -194,12 +193,12 @@ internal sealed class LoremIpsumForm : Form
             for (int p = 0; p < paragraphCount; p++)
             {
                 var paragraph = new StringBuilder();
-                
+
                 // First paragraph starts with classic "Lorem ipsum dolor sit amet"
                 if (p == 0 && _chkStartWithLorem.Checked)
                 {
                     paragraph.Append("Lorem ipsum dolor sit amet, consectetur adipiscing elit");
-                    
+
                     // Add remaining words
                     for (int w = 8; w < wordsPerParagraph; w++)
                     {
@@ -240,7 +239,7 @@ internal sealed class LoremIpsumForm : Form
 
                 paragraph.Append('.');
                 result.AppendLine(paragraph.ToString());
-                
+
                 if (p < paragraphCount - 1)
                 {
                     result.AppendLine(); // Empty line between paragraphs
@@ -248,11 +247,11 @@ internal sealed class LoremIpsumForm : Form
             }
 
             _txtOutput.Text = result.ToString();
-            
+
             var wordCount = wordsPerParagraph * paragraphCount;
             var charCount = result.Length;
             _lblStatus.Text = $"Status: ✓ {paragraphCount} paragraphs, ~{wordCount} words, {charCount} characters generated";
-            _lblStatus.ForeColor = GreenText;
+            _lblStatus.ForeColor = AppConstants.AccentText;
         }
         catch (Exception ex)
         {

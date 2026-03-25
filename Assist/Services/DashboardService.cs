@@ -1,8 +1,7 @@
-﻿using System.Diagnostics;
+namespace Assist.Services;
+
 using System.Net.NetworkInformation;
 using System.Text.Json;
-
-namespace Assist.Services;
 
 /// <summary>
 /// Fetches and caches all dashboard data: weather, currency, crypto, IP,
@@ -119,6 +118,9 @@ internal static class DashboardService
         return _cryptoCache ?? "₿ Kripto bilgisi alınamadı";
     }
 
+    /// <summary>
+    /// Fetches BTC/ETH prices from the CoinGecko API.
+    /// </summary>
     private static async Task<string?> TryFetchCryptoFromCoinGeckoAsync()
     {
         try
@@ -152,6 +154,9 @@ internal static class DashboardService
         }
     }
 
+    /// <summary>
+    /// Fetches BTC/ETH prices from the CoinCap API as a fallback source.
+    /// </summary>
     private static async Task<string?> TryFetchCryptoFromCoinCapAsync()
     {
         try
@@ -191,6 +196,9 @@ internal static class DashboardService
         }
     }
 
+    /// <summary>
+    /// Formats BTC and ETH price data into a displayable string with TRY equivalents and 24h change.
+    /// </summary>
     private static string FormatCryptoResult(
         double btcUsd, double btcTry, double btcChange,
         double ethUsd, double ethTry, double ethChange)
@@ -356,6 +364,9 @@ internal static class DashboardService
 
     #region Helpers
 
+    /// <summary>
+    /// Reads current CPU usage percentage via WMI performance counter.
+    /// </summary>
     private static int GetCpuUsage()
     {
         try
@@ -373,6 +384,9 @@ internal static class DashboardService
         return -1;
     }
 
+    /// <summary>
+    /// Reads used and total physical memory via WMI and returns a formatted string.
+    /// </summary>
     private static string GetRamInfo()
     {
         try

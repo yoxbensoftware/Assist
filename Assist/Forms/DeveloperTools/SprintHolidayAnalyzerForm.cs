@@ -1,8 +1,8 @@
-﻿using System.Text;
+namespace Assist.Forms.DeveloperTools;
+
+using System.Text;
 using Assist.Models;
 using Assist.Services;
-
-namespace Assist.Forms.DeveloperTools;
 
 /// <summary>
 /// Sprint Holiday Risk Analyzer — analyzes sprint date ranges against
@@ -10,7 +10,6 @@ namespace Assist.Forms.DeveloperTools;
 /// </summary>
 internal sealed class SprintHolidayAnalyzerForm : Form
 {
-    private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
     private static readonly Color HighColor = Color.FromArgb(220, 50, 50);
     private static readonly Color MediumColor = Color.FromArgb(230, 160, 0);
     private static readonly Color LowColor = Color.FromArgb(0, 180, 80);
@@ -37,7 +36,7 @@ internal sealed class SprintHolidayAnalyzerForm : Form
         ForeColor = Color.White;
         Font = new Font("Segoe UI", 10);
 
-        // ── Top input panel ──
+        // ¦¦ Top input panel ¦¦
         var inputPanel = new Panel
         {
             Dock = DockStyle.Top,
@@ -54,7 +53,7 @@ internal sealed class SprintHolidayAnalyzerForm : Form
 
         var btnAnalyze = new Button
         {
-            Text = "🔍  Analiz Et",
+            Text = "??  Analiz Et",
             Location = new Point(700, 12),
             Size = new Size(140, 34),
             BackColor = Color.FromArgb(0, 120, 215),
@@ -68,7 +67,7 @@ internal sealed class SprintHolidayAnalyzerForm : Form
 
         var btnExport = new Button
         {
-            Text = "📥  Export CSV",
+            Text = "??  Export CSV",
             Location = new Point(852, 12),
             Size = new Size(140, 34),
             BackColor = Color.FromArgb(50, 50, 56),
@@ -82,7 +81,7 @@ internal sealed class SprintHolidayAnalyzerForm : Form
 
         inputPanel.Controls.AddRange([lblStart, _dtpStart, lblEnd, _dtpEnd, btnAnalyze, btnExport]);
 
-        // ── Summary panel (right side) ──
+        // ¦¦ Summary panel (right side) ¦¦
         _summaryPanel = new Panel
         {
             Dock = DockStyle.Right,
@@ -92,7 +91,7 @@ internal sealed class SprintHolidayAnalyzerForm : Form
         };
 
         int sy = 14;
-        _summaryPanel.Controls.Add(MakeSectionLabel("📊  ÖZET", 12, sy));
+        _summaryPanel.Controls.Add(MakeSectionLabel("??  ÖZET", 12, sy));
 
         sy += 40;
         _summaryPanel.Controls.Add(MakeDimLabel("Toplam Tatil:", 12, sy));
@@ -126,7 +125,7 @@ internal sealed class SprintHolidayAnalyzerForm : Form
         _summaryPanel.Controls.Add(MakeSeparator(sy));
 
         sy += 14;
-        _summaryPanel.Controls.Add(MakeSectionLabel("🎯  RİSK SEVİYESİ", 12, sy));
+        _summaryPanel.Controls.Add(MakeSectionLabel("??  RİSK SEVİYESİ", 12, sy));
 
         sy += 36;
         _lblRisk = new Label
@@ -140,16 +139,16 @@ internal sealed class SprintHolidayAnalyzerForm : Form
         };
         _summaryPanel.Controls.Add(_lblRisk);
 
-        // ── Country filter checkboxes ──
+        // ¦¦ Country filter checkboxes ¦¦
         sy += 80;
         _summaryPanel.Controls.Add(MakeSeparator(sy));
         sy += 14;
-        _summaryPanel.Controls.Add(MakeSectionLabel("🌍  FİLTRE", 12, sy));
+        _summaryPanel.Controls.Add(MakeSectionLabel("??  FİLTRE", 12, sy));
 
         sy += 36;
         var chkTR = new CheckBox
         {
-            Text = "🇹🇷 Türkiye",
+            Text = "???? Türkiye",
             Location = new Point(12, sy),
             AutoSize = true,
             Checked = true,
@@ -160,7 +159,7 @@ internal sealed class SprintHolidayAnalyzerForm : Form
 
         var chkDE = new CheckBox
         {
-            Text = "🇩🇪 Almanya",
+            Text = "???? Almanya",
             Location = new Point(130, sy),
             AutoSize = true,
             Checked = true,
@@ -174,10 +173,10 @@ internal sealed class SprintHolidayAnalyzerForm : Form
 
         _summaryPanel.Controls.AddRange([chkTR, chkDE]);
 
-        // ── Data grid (center) ──
+        // ¦¦ Data grid (center) ¦¦
         _dgv = CreateGrid();
 
-        // ── Layout assembly (order matters for Dock) ──
+        // ¦¦ Layout assembly (order matters for Dock) ¦¦
         Controls.Add(_dgv);
         Controls.Add(_summaryPanel);
         Controls.Add(inputPanel);
@@ -214,7 +213,7 @@ internal sealed class SprintHolidayAnalyzerForm : Form
 
         _lastResult = result;
 
-        // ── Populate grid ──
+        // ¦¦ Populate grid ¦¦
         _dgv.Rows.Clear();
         foreach (var a in filtered)
         {
@@ -235,7 +234,7 @@ internal sealed class SprintHolidayAnalyzerForm : Form
             };
         }
 
-        // ── Update summary ──
+        // ¦¦ Update summary ¦¦
         _lblTotalHolidays.Text = filtered.Count.ToString();
         _lblWeekdayHolidays.Text = weekdayFiltered.ToString();
         _lblWeekdayHolidays.ForeColor = weekdayFiltered > 0 ? HighColor : LowColor;
@@ -297,7 +296,7 @@ internal sealed class SprintHolidayAnalyzerForm : Form
             MessageBoxButtons.OK, MessageBoxIcon.Information);
     }
 
-    // ── Grid factory ──
+    // ¦¦ Grid factory ¦¦
 
     private static DataGridView CreateGrid()
     {
@@ -382,7 +381,7 @@ internal sealed class SprintHolidayAnalyzerForm : Form
         return dgv;
     }
 
-    // ── UI helpers ──
+    // ¦¦ UI helpers ¦¦
 
     private static Label MakeLabel(string text, int x, int y) => new()
     {

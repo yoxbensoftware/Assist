@@ -1,7 +1,10 @@
-using Assist.Services;
-
 namespace Assist.Forms.Core;
 
+using Assist.Services;
+
+/// <summary>
+/// Login form that authenticates the user against stored credentials.
+/// </summary>
 internal partial class LoginForm : Form
 {
     public bool IsAuthenticated { get; private set; }
@@ -11,12 +14,15 @@ internal partial class LoginForm : Form
         InitializeComponent();
         AcceptButton = btnLogin;
 
-        txtUsername.GotFocus  += (s, e) => pnlUsername.Invalidate();
+        txtUsername.GotFocus += (s, e) => pnlUsername.Invalidate();
         txtUsername.LostFocus += (s, e) => pnlUsername.Invalidate();
-        txtPassword.GotFocus  += (s, e) => pnlPassword.Invalidate();
+        txtPassword.GotFocus += (s, e) => pnlPassword.Invalidate();
         txtPassword.LostFocus += (s, e) => pnlPassword.Invalidate();
     }
 
+    /// <summary>
+    /// Draws a themed border around the text box panel, highlighting when focused.
+    /// </summary>
     private void PnlTextBox_Paint(object? sender, PaintEventArgs e)
     {
         if (sender is not Panel pnl) return;
@@ -26,6 +32,9 @@ internal partial class LoginForm : Form
         e.Graphics.DrawRectangle(pen, 0, 0, pnl.Width - 1, pnl.Height - 1);
     }
 
+    /// <summary>
+    /// Validates the entered credentials against the stored login and authenticates the user.
+    /// </summary>
     private void btnLogin_Click(object sender, EventArgs e)
     {
         var storedLogin = PasswordStore.LoadLogin();
@@ -44,6 +53,9 @@ internal partial class LoginForm : Form
         }
     }
 
+    /// <summary>
+    /// Sets the authentication flag and closes the form with a success result.
+    /// </summary>
     private void AuthenticateAndClose()
     {
         IsAuthenticated = true;
@@ -51,6 +63,9 @@ internal partial class LoginForm : Form
         Close();
     }
 
+    /// <summary>
+    /// Displays an authentication error message and clears the password field.
+    /// </summary>
     private void ShowAuthenticationError()
     {
         MessageBox.Show(

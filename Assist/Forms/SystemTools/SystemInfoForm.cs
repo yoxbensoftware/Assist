@@ -1,20 +1,20 @@
-using Assist.Services;
-
 namespace Assist.Forms.SystemTools;
+
+using Assist.Services;
 
 internal partial class SystemInfoForm : Form
 {
-        public SystemInfoForm()
-        {
-            InitializeComponent();
-            LoadSystemInfo();
-        }
+    public SystemInfoForm()
+    {
+        InitializeComponent();
+        LoadSystemInfo();
+    }
 
-        private void LoadSystemInfo()
-        {
-            var sysInfo = SystemInfoHelper.GetSystemInfo();
+    private void LoadSystemInfo()
+    {
+        var sysInfo = SystemInfoHelper.GetSystemInfo();
 
-            var info = $@"╔════════════════════════════════════════════════════════════════════════════════╗
+        var info = $@"╔════════════════════════════════════════════════════════════════════════════════╗
 ║                            SİSTEM BİLGİLERİ                                   ║
 ╚════════════════════════════════════════════════════════════════════════════════╝
 
@@ -59,104 +59,104 @@ Maksimum Hız:            {sysInfo.ProcessorSpeed}
 Toplam RAM:              {sysInfo.RAM}
 ";
 
-            if (sysInfo.RAMModules.Count > 0)
+        if (sysInfo.RAMModules.Count > 0)
+        {
+            info += "\nBellek Modülleri:\n";
+            foreach (var module in sysInfo.RAMModules)
             {
-                info += "\nBellek Modülleri:\n";
-                foreach (var module in sysInfo.RAMModules)
-                {
-                    info += $"  • {module}\n";
-                }
+                info += $"  • {module}\n";
             }
+        }
 
-            info += $@"
+        info += $@"
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 💿 DEPOLAMA CİHAZLARI
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ";
 
-            if (sysInfo.StorageDevices.Count > 0)
+        if (sysInfo.StorageDevices.Count > 0)
+        {
+            foreach (var device in sysInfo.StorageDevices)
             {
-                foreach (var device in sysInfo.StorageDevices)
-                {
-                    info += $"  • {device}\n";
-                }
+                info += $"  • {device}\n";
             }
-            else
-            {
-                info += "  Bilgi alınamadı\n";
-            }
+        }
+        else
+        {
+            info += "  Bilgi alınamadı\n";
+        }
 
-            info += $@"
+        info += $@"
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🎮 EKRAN KARTI (GPU)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ";
 
-            if (sysInfo.GraphicsCards.Count > 0)
+        if (sysInfo.GraphicsCards.Count > 0)
+        {
+            foreach (var gpu in sysInfo.GraphicsCards)
             {
-                foreach (var gpu in sysInfo.GraphicsCards)
-                {
-                    info += $"  • {gpu}\n";
-                }
+                info += $"  • {gpu}\n";
             }
-            else
-            {
-                info += "  Bilgi alınamadı\n";
-            }
+        }
+        else
+        {
+            info += "  Bilgi alınamadı\n";
+        }
 
-            info += $@"
+        info += $@"
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🌐 AĞ ADAPTÖRLERI
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ";
 
-            if (sysInfo.NetworkAdapters.Count > 0)
+        if (sysInfo.NetworkAdapters.Count > 0)
+        {
+            foreach (var adapter in sysInfo.NetworkAdapters)
             {
-                foreach (var adapter in sysInfo.NetworkAdapters)
-                {
-                    info += $"  • {adapter}\n";
-                }
+                info += $"  • {adapter}\n";
             }
-            else
-            {
-                info += "  Bilgi alınamadı\n";
-            }
+        }
+        else
+        {
+            info += "  Bilgi alınamadı\n";
+        }
 
-            info += $@"
+        info += $@"
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📺 MONITOR
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ";
 
-            if (sysInfo.Monitors.Count > 0)
+        if (sysInfo.Monitors.Count > 0)
+        {
+            foreach (var monitor in sysInfo.Monitors)
             {
-                foreach (var monitor in sysInfo.Monitors)
-                {
-                    info += $"  • {monitor}\n";
-                }
+                info += $"  • {monitor}\n";
             }
-            else
+        }
+        else
+        {
+            info += "  Bilgi alınamadı\n";
+        }
+        // Sensors (temperatures, fans, loads)
+        info += "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
+        info += "🔎 SENSÖRLER (Sıcaklık, Fan, Yük, Saat)\n";
+        info += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
+        if (sysInfo.Sensors != null && sysInfo.Sensors.Count > 0)
+        {
+            foreach (var s in sysInfo.Sensors)
             {
-                info += "  Bilgi alınamadı\n";
+                info += $"  • {s}\n";
             }
-            // Sensors (temperatures, fans, loads)
-            info += "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
-            info += "🔎 SENSÖRLER (Sıcaklık, Fan, Yük, Saat)\n";
-            info += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
-            if (sysInfo.Sensors != null && sysInfo.Sensors.Count > 0)
-            {
-                foreach (var s in sysInfo.Sensors)
-                {
-                    info += $"  • {s}\n";
-                }
-            }
-            else
-            {
-                info += "  Sensör bilgisi alınamadı veya yönetici yetkisi gerekli.\n";
-            }
+        }
+        else
+        {
+            info += "  Sensör bilgisi alınamadı veya yönetici yetkisi gerekli.\n";
+        }
 
 
-            info += $@"
+        info += $@"
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📅 TARİH VE SAATİ
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -164,6 +164,6 @@ Sistem Tarihi:           {DateTime.Now:dd.MM.yyyy}
 Sistem Saati:            {DateTime.Now:HH:mm:ss}
 ";
 
-            txtInfo.Text = info;
-        }
+        txtInfo.Text = info;
+    }
 }

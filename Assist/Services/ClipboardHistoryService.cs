@@ -1,4 +1,4 @@
-﻿namespace Assist.Services;
+namespace Assist.Services;
 
 /// <summary>
 /// Thread-safe clipboard history service that stores last N text entries.
@@ -25,6 +25,9 @@ internal sealed class ClipboardHistoryService : IDisposable
     private long _lastAppSetTicks;
     private bool _disposed;
 
+    /// <summary>
+    /// Initializes a new clipboard history service with the specified capacity and filtering options.
+    /// </summary>
     public ClipboardHistoryService(int capacity = 50, bool filterSensitive = true)
     {
         _capacity = capacity;
@@ -33,6 +36,9 @@ internal sealed class ClipboardHistoryService : IDisposable
         Instance = this;
     }
 
+    /// <summary>
+    /// Starts polling the clipboard for changes at the specified interval in milliseconds.
+    /// </summary>
     public void Start(int intervalMs)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
@@ -45,6 +51,9 @@ internal sealed class ClipboardHistoryService : IDisposable
             intervalMs);
     }
 
+    /// <summary>
+    /// Stops the clipboard polling timer.
+    /// </summary>
     public void Stop()
     {
         _pollTimer?.Dispose();
@@ -61,6 +70,9 @@ internal sealed class ClipboardHistoryService : IDisposable
         _lastAppSetTicks = DateTime.UtcNow.Ticks;
     }
 
+    /// <summary>
+    /// Updates the capacity, polling interval, and sensitivity filter settings, then restarts polling.
+    /// </summary>
     public void SetOptions(int capacity, int intervalMs, bool filterSensitive)
     {
         _capacity = capacity;
@@ -68,9 +80,15 @@ internal sealed class ClipboardHistoryService : IDisposable
         Start(intervalMs);
     }
 
+    /// <summary>
+    /// Returns the current capacity, polling interval, and sensitivity filter settings.
+    /// </summary>
     public (int capacity, int intervalMs, bool filterSensitive) GetOptions()
         => (_capacity, _intervalMs, _filterSensitive);
 
+    /// <summary>
+    /// Adds a text entry to the history, skipping consecutive duplicates and trimming excess entries.
+    /// </summary>
     public void Add(string text)
     {
         if (string.IsNullOrEmpty(text)) return;
@@ -88,6 +106,9 @@ internal sealed class ClipboardHistoryService : IDisposable
         }
     }
 
+    /// <summary>
+    /// Returns a snapshot of all clipboard history entries.
+    /// </summary>
     public List<string> GetAll()
     {
         lock (_lock)
@@ -96,6 +117,9 @@ internal sealed class ClipboardHistoryService : IDisposable
         }
     }
 
+    /// <summary>
+    /// Clears all clipboard history entries.
+    /// </summary>
     public void Clear()
     {
         lock (_lock)
@@ -104,6 +128,9 @@ internal sealed class ClipboardHistoryService : IDisposable
         }
     }
 
+    /// <summary>
+    /// Disposes the polling timer and clears the singleton instance.
+    /// </summary>
     public void Dispose()
     {
         if (_disposed) return;
@@ -118,6 +145,9 @@ internal sealed class ClipboardHistoryService : IDisposable
         }
     }
 
+    /// <summary>
+    /// Polls the clipboard for new text content and adds it to history if applicable.
+    /// </summary>
     private async Task PollClipboardAsync()
     {
         try
@@ -148,6 +178,9 @@ internal sealed class ClipboardHistoryService : IDisposable
         }
     }
 
+    /// <summary>
+    /// Reads clipboard text on the UI thread and returns it asynchronously.
+    /// </summary>
     private Task<string?> GetClipboardTextAsync()
     {
         var tcs = new TaskCompletionSource<string?>();
@@ -165,6 +198,9 @@ internal sealed class ClipboardHistoryService : IDisposable
         return tcs.Task;
     }
 
+    /// <summary>
+    /// Checks whether the given text was recently set by the application itself.
+    /// </summary>
     private bool IsRecentAppSet(string text)
     {
         if (string.IsNullOrEmpty(_lastAppSet) || text != _lastAppSet)
@@ -174,6 +210,9 @@ internal sealed class ClipboardHistoryService : IDisposable
         return age < AppSetCooldown;
     }
 
+    /// <summary>
+    /// Determines whether the text looks like a sensitive value such as a password or token.
+    /// </summary>
     private static bool IsSensitive(string text)
     {
         if (string.IsNullOrWhiteSpace(text) || text.Contains(' '))

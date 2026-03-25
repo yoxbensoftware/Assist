@@ -1,6 +1,6 @@
-using System.Text.Json;
-
 namespace Assist.Services;
+
+using System.Text.Json;
 
 internal enum AppTheme
 {
@@ -35,6 +35,9 @@ internal static class ThemeService
 
     public static AppTheme CurrentTheme { get; private set; } = AppTheme.Matrix;
 
+    /// <summary>
+    /// Loads the persisted theme selection from the settings file.
+    /// </summary>
     public static void Load()
     {
         try
@@ -55,6 +58,9 @@ internal static class ThemeService
         }
     }
 
+    /// <summary>
+    /// Changes the active theme, optionally persisting the selection, and raises the <see cref="ThemeChanged"/> event.
+    /// </summary>
     public static void SetTheme(AppTheme theme, bool persist = true)
     {
         if (CurrentTheme == theme)
@@ -68,6 +74,9 @@ internal static class ThemeService
         ThemeChanged?.Invoke(null, EventArgs.Empty);
     }
 
+    /// <summary>
+    /// Returns the color palette associated with the specified theme.
+    /// </summary>
     public static ThemePalette GetPalette(AppTheme theme) => theme switch
     {
         AppTheme.Amber => new ThemePalette(
@@ -124,6 +133,9 @@ internal static class ThemeService
             Color.FromArgb(0, 0, 0)),
     };
 
+    /// <summary>
+    /// Returns the list of available themes with their display names.
+    /// </summary>
     public static IReadOnlyList<(AppTheme Theme, string Name)> GetThemeOptions() =>
     [
         (AppTheme.Matrix, "Matrix Green"),
@@ -132,6 +144,9 @@ internal static class ThemeService
         (AppTheme.Violet, "Violet Neon"),
     ];
 
+    /// <summary>
+    /// Persists the current theme selection to the settings file.
+    /// </summary>
     public static void Save()
     {
         try

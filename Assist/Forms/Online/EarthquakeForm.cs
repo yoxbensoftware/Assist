@@ -1,12 +1,11 @@
-﻿using System.Net.Http.Json;
+namespace Assist.Forms.Online;
+
+using System.Net.Http.Json;
 using System.Text.Json;
 using Assist.Services;
 
-namespace Assist.Forms.Online;
-
 internal sealed class EarthquakeForm : Form
 {
-    private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
     private static readonly HttpClient Http = new();
 
     private readonly ComboBox _cmbRegion;
@@ -20,7 +19,7 @@ internal sealed class EarthquakeForm : Form
         Text = "Deprem Takibi";
         ClientSize = new Size(920, 640);
         BackColor = Color.Black;
-        ForeColor = GreenText;
+        ForeColor = AppConstants.AccentText;
         Font = new Font("Consolas", 10);
 
         var topPanel = new Panel { Dock = DockStyle.Top, Height = 44, BackColor = Color.Black };
@@ -30,7 +29,7 @@ internal sealed class EarthquakeForm : Form
             Text = "Bölge:",
             Location = new Point(10, 12),
             AutoSize = true,
-            ForeColor = GreenText
+            ForeColor = AppConstants.AccentText
         };
 
         _cmbRegion = new ComboBox
@@ -39,7 +38,7 @@ internal sealed class EarthquakeForm : Form
             Width = 110,
             Location = new Point(90, 8),
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             FlatStyle = FlatStyle.Flat
         };
         _cmbRegion.Items.AddRange(["Türkiye", "Dünya"]);
@@ -50,7 +49,7 @@ internal sealed class EarthquakeForm : Form
             Text = "Min Büyüklük:",
             Location = new Point(220, 12),
             AutoSize = true,
-            ForeColor = GreenText
+            ForeColor = AppConstants.AccentText
         };
 
         _cmbMag = new ComboBox
@@ -59,7 +58,7 @@ internal sealed class EarthquakeForm : Form
             Width = 70,
             Location = new Point(368, 8),
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             FlatStyle = FlatStyle.Flat
         };
         _cmbMag.Items.AddRange(["1.0", "2.0", "2.5", "3.0", "4.0", "5.0"]);
@@ -72,11 +71,11 @@ internal sealed class EarthquakeForm : Form
             Width = 120,
             Height = 30,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             FlatStyle = FlatStyle.Flat,
             Font = new Font("Consolas", 10, FontStyle.Bold)
         };
-        _btnFetch.FlatAppearance.BorderColor = GreenText;
+        _btnFetch.FlatAppearance.BorderColor = AppConstants.AccentText;
 
         _lblCount = new Label
         {
@@ -192,7 +191,7 @@ internal sealed class EarthquakeForm : Form
         var lblPlace = new Label
         {
             Text = place,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 10, FontStyle.Bold),
             AutoSize = false,
             Width = width - 100,
@@ -202,7 +201,7 @@ internal sealed class EarthquakeForm : Form
 
         var lblDetails = new Label
         {
-            Text = $"📅 {quakeTime:dd.MM.yyyy HH:mm}   |   📏 Derinlik: {depth:F1} km",
+            Text = $"?? {quakeTime:dd.MM.yyyy HH:mm}   |   ?? Derinlik: {depth:F1} km",
             ForeColor = Color.LightGray,
             AutoSize = false,
             Width = width - 100,

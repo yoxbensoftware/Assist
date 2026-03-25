@@ -1,9 +1,9 @@
+namespace Assist.Services;
+
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Assist.Models;
-
-namespace Assist.Services;
 
 /// <summary>
 /// Manages password storage with DPAPI encryption.
@@ -14,6 +14,9 @@ internal static class PasswordStore
 
     public static IReadOnlyList<PasswordEntry> Entries => _entries.AsReadOnly();
 
+    /// <summary>
+    /// Adds a new password entry and persists the store to disk.
+    /// </summary>
     public static void Add(PasswordEntry entry)
     {
         ArgumentNullException.ThrowIfNull(entry);
@@ -21,6 +24,9 @@ internal static class PasswordStore
         SaveToFile();
     }
 
+    /// <summary>
+    /// Loads all password entries from the encrypted file on disk.
+    /// </summary>
     public static void LoadFromFile()
     {
         EnsureAppDataDirectory();
@@ -47,6 +53,9 @@ internal static class PasswordStore
         }
     }
 
+    /// <summary>
+    /// Encrypts and saves all password entries to disk using DPAPI.
+    /// </summary>
     public static void SaveToFile()
     {
         EnsureAppDataDirectory();
@@ -60,6 +69,9 @@ internal static class PasswordStore
         File.WriteAllBytes(AppConstants.PasswordsFilePath, encrypted);
     }
 
+    /// <summary>
+    /// Saves login credentials (username and password) encrypted to disk.
+    /// </summary>
     public static void SaveLogin(string username, string password)
     {
         if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
@@ -76,6 +88,10 @@ internal static class PasswordStore
         File.WriteAllBytes(AppConstants.LoginFilePath, encrypted);
     }
 
+    /// <summary>
+    /// Loads and decrypts saved login credentials from disk.
+    /// Returns <c>null</c> if no credentials are stored or decryption fails.
+    /// </summary>
     public static (string username, string password)? LoadLogin()
     {
         if (!File.Exists(AppConstants.LoginFilePath))
@@ -101,6 +117,9 @@ internal static class PasswordStore
         }
     }
 
+    /// <summary>
+    /// Deletes a password entry by title and persists the change.
+    /// </summary>
     public static void DeleteEntry(string? title)
     {
         if (string.IsNullOrEmpty(title)) return;
@@ -113,6 +132,9 @@ internal static class PasswordStore
         }
     }
 
+    /// <summary>
+    /// Ensures the application data directory exists, creating it if necessary.
+    /// </summary>
     private static void EnsureAppDataDirectory()
     {
         if (!Directory.Exists(AppConstants.AppDataPath))

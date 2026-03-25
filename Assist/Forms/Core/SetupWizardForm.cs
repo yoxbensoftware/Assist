@@ -1,10 +1,12 @@
-using Assist.Services;
-
 namespace Assist.Forms.Core;
 
+using Assist.Services;
+
+/// <summary>
+/// First-run setup wizard that guides the user through initial credential creation.
+/// </summary>
 internal sealed class SetupWizardForm : Form
 {
-    private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
     private static readonly Color DarkBg = Color.FromArgb(15, 15, 15);
     private static readonly Color PanelBg = Color.FromArgb(25, 25, 25);
 
@@ -32,7 +34,7 @@ internal sealed class SetupWizardForm : Form
         MinimizeBox = false;
         StartPosition = FormStartPosition.CenterScreen;
         BackColor = DarkBg;
-        ForeColor = GreenText;
+        ForeColor = AppConstants.AccentText;
         ShowIcon = false;
 
         BuildWelcomePanel();
@@ -43,6 +45,9 @@ internal sealed class SetupWizardForm : Form
         Controls.AddRange([_welcomePanel, _credentialsPanel]);
     }
 
+    /// <summary>
+    /// Builds the welcome step panel with branding and a next button.
+    /// </summary>
     private void BuildWelcomePanel()
     {
         _welcomePanel.Dock = DockStyle.Fill;
@@ -54,7 +59,7 @@ internal sealed class SetupWizardForm : Form
             Text = "🔒",
             Font = new Font("Segoe UI Emoji", 44f),
             AutoSize = true,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Location = new Point(250, 15)
         };
 
@@ -62,7 +67,7 @@ internal sealed class SetupWizardForm : Form
         {
             Text = "Assist",
             Font = new Font("Consolas", 36f, FontStyle.Bold),
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             AutoSize = true,
             Location = new Point(205, 100)
         };
@@ -87,7 +92,7 @@ internal sealed class SetupWizardForm : Form
         {
             Text = "Hoş Geldiniz!",
             Font = new Font("Consolas", 18f, FontStyle.Bold),
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             AutoSize = true,
             Location = new Point(190, 205)
         };
@@ -125,15 +130,18 @@ internal sealed class SetupWizardForm : Form
             Location = new Point(390, 482),
             FlatStyle = FlatStyle.Flat,
             BackColor = Color.FromArgb(20, 60, 20),
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Cursor = Cursors.Hand
         };
-        btnNext.FlatAppearance.BorderColor = GreenText;
+        btnNext.FlatAppearance.BorderColor = AppConstants.AccentText;
         btnNext.Click += (_, _) => ShowStep(1);
 
         _welcomePanel.Controls.AddRange([lblIcon, lblTitle, lblVersion, separator1, lblWelcome, lblDesc, separator2, lblDev, btnNext]);
     }
 
+    /// <summary>
+    /// Builds the credentials step panel with username and password input fields.
+    /// </summary>
     private void BuildCredentialsPanel()
     {
         _credentialsPanel.Dock = DockStyle.Fill;
@@ -143,7 +151,7 @@ internal sealed class SetupWizardForm : Form
         {
             Text = "🔑  Hesap Oluşturma",
             Font = new Font("Consolas", 20f, FontStyle.Bold),
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             AutoSize = true,
             Location = new Point(40, 30)
         };
@@ -168,7 +176,7 @@ internal sealed class SetupWizardForm : Form
         {
             Text = "Kullanıcı Adı:",
             Font = new Font("Consolas", 12f),
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             AutoSize = true,
             Location = new Point(40, 160)
         };
@@ -177,14 +185,14 @@ internal sealed class SetupWizardForm : Form
         _txtUsername.Size = new Size(520, 34);
         _txtUsername.Location = new Point(40, 192);
         _txtUsername.BackColor = PanelBg;
-        _txtUsername.ForeColor = GreenText;
+        _txtUsername.ForeColor = AppConstants.AccentText;
         _txtUsername.BorderStyle = BorderStyle.FixedSingle;
 
         var lblPass = new Label
         {
             Text = "Şifre:",
             Font = new Font("Consolas", 12f),
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             AutoSize = true,
             Location = new Point(40, 248)
         };
@@ -193,7 +201,7 @@ internal sealed class SetupWizardForm : Form
         _txtPassword.Size = new Size(520, 34);
         _txtPassword.Location = new Point(40, 280);
         _txtPassword.BackColor = PanelBg;
-        _txtPassword.ForeColor = GreenText;
+        _txtPassword.ForeColor = AppConstants.AccentText;
         _txtPassword.BorderStyle = BorderStyle.FixedSingle;
         _txtPassword.PasswordChar = '●';
 
@@ -201,7 +209,7 @@ internal sealed class SetupWizardForm : Form
         {
             Text = "Şifre Tekrar:",
             Font = new Font("Consolas", 12f),
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             AutoSize = true,
             Location = new Point(40, 336)
         };
@@ -210,7 +218,7 @@ internal sealed class SetupWizardForm : Form
         _txtPasswordConfirm.Size = new Size(520, 34);
         _txtPasswordConfirm.Location = new Point(40, 368);
         _txtPasswordConfirm.BackColor = PanelBg;
-        _txtPasswordConfirm.ForeColor = GreenText;
+        _txtPasswordConfirm.ForeColor = AppConstants.AccentText;
         _txtPasswordConfirm.BorderStyle = BorderStyle.FixedSingle;
         _txtPasswordConfirm.PasswordChar = '●';
 
@@ -249,10 +257,10 @@ internal sealed class SetupWizardForm : Form
             Location = new Point(370, 482),
             FlatStyle = FlatStyle.Flat,
             BackColor = Color.FromArgb(20, 60, 20),
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Cursor = Cursors.Hand
         };
-        btnFinish.FlatAppearance.BorderColor = GreenText;
+        btnFinish.FlatAppearance.BorderColor = AppConstants.AccentText;
         btnFinish.Click += (_, _) => FinishSetup();
 
         AcceptButton = btnFinish;
@@ -266,6 +274,9 @@ internal sealed class SetupWizardForm : Form
         ]);
     }
 
+    /// <summary>
+    /// Switches the wizard to the specified step panel.
+    /// </summary>
     private void ShowStep(int step)
     {
         _welcomePanel.Visible = step == 0;
@@ -275,6 +286,9 @@ internal sealed class SetupWizardForm : Form
             _txtUsername.Focus();
     }
 
+    /// <summary>
+    /// Validates the entered credentials and saves them to complete the setup.
+    /// </summary>
     private void FinishSetup()
     {
         var username = _txtUsername.Text.Trim();
@@ -330,6 +344,9 @@ internal sealed class SetupWizardForm : Form
         }
     }
 
+    /// <summary>
+    /// Displays a validation error message on the credentials panel.
+    /// </summary>
     private void ShowError(string message)
     {
         _lblError.Text = $"⚠ {message}";

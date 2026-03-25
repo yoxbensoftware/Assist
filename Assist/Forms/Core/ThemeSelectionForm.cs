@@ -1,7 +1,10 @@
-using Assist.Services;
-
 namespace Assist.Forms.Core;
 
+using Assist.Services;
+
+/// <summary>
+/// Dialog for selecting and previewing application themes.
+/// </summary>
 internal sealed class ThemeSelectionForm : Form
 {
     private readonly ListBox _lstThemes = new();
@@ -29,6 +32,9 @@ internal sealed class ThemeSelectionForm : Form
         Load += (_, _) => RefreshSelection();
     }
 
+    /// <summary>
+    /// Builds the theme list, preview panel, and action buttons.
+    /// </summary>
     private void BuildUi()
     {
         var left = new Panel
@@ -158,6 +164,9 @@ internal sealed class ThemeSelectionForm : Form
         RefreshSelection();
     }
 
+    /// <summary>
+    /// Selects the currently active theme in the list box.
+    /// </summary>
     private void RefreshSelection()
     {
         for (int i = 0; i < _lstThemes.Items.Count; i++)
@@ -170,6 +179,9 @@ internal sealed class ThemeSelectionForm : Form
         }
     }
 
+    /// <summary>
+    /// Updates the preview panel colors and labels to reflect the selected theme.
+    /// </summary>
     private void ApplyPreview(AppTheme theme)
     {
         var p = ThemeService.GetPalette(theme);
@@ -183,9 +195,15 @@ internal sealed class ThemeSelectionForm : Form
         ForeColor = p.Text;
     }
 
+    /// <summary>
+    /// Returns the display name for the specified theme.
+    /// </summary>
     private static string GetThemeName(AppTheme theme)
         => ThemeService.GetThemeOptions().First(x => x.Theme == theme).Name;
 
+    /// <summary>
+    /// Refreshes the selected item in the list when the theme changes externally.
+    /// </summary>
     private void OnThemeChanged(object? sender, EventArgs e)
     {
         if (IsDisposed) return;

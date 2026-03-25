@@ -1,13 +1,12 @@
-using System.Drawing.Imaging;
-
 namespace Assist.Forms.DeveloperTools;
+
+using System.Drawing.Imaging;
 
 /// <summary>
 /// QR Code generator using Google Charts API and simple decoder.
 /// </summary>
 internal sealed class QrCodeForm : Form
 {
-    private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
     private static readonly HttpClient HttpClient = new();
 
     private readonly TextBox _txtInput = null!;
@@ -23,7 +22,7 @@ internal sealed class QrCodeForm : Form
         StartPosition = FormStartPosition.CenterParent;
         AutoScroll = true;
         BackColor = Color.Black;
-        ForeColor = GreenText;
+        ForeColor = AppConstants.AccentText;
         Font = new Font("Consolas", 10);
 
         var lblTitle = new Label
@@ -31,7 +30,7 @@ internal sealed class QrCodeForm : Form
             Text = "=== QR CODE GENERATOR ===",
             Location = new Point(20, 20),
             AutoSize = true,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 12, FontStyle.Bold)
         };
 
@@ -40,7 +39,7 @@ internal sealed class QrCodeForm : Form
             Text = "Text/URL to Encode:",
             Location = new Point(20, 60),
             AutoSize = true,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 10, FontStyle.Bold)
         };
 
@@ -52,7 +51,7 @@ internal sealed class QrCodeForm : Form
             Multiline = true,
             ScrollBars = ScrollBars.Vertical,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 9),
             BorderStyle = BorderStyle.FixedSingle,
             Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
@@ -65,11 +64,11 @@ internal sealed class QrCodeForm : Form
             Width = 180,
             Height = 30,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             FlatStyle = FlatStyle.Flat,
             Font = new Font("Consolas", 9, FontStyle.Bold)
         };
-        btnGenerate.FlatAppearance.BorderColor = GreenText;
+        btnGenerate.FlatAppearance.BorderColor = AppConstants.AccentText;
         btnGenerate.Click += async (_, _) => await GenerateQrCodeAsync();
 
         var btnSave = new Button
@@ -79,11 +78,11 @@ internal sealed class QrCodeForm : Form
             Width = 150,
             Height = 30,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             FlatStyle = FlatStyle.Flat,
             Font = new Font("Consolas", 9, FontStyle.Bold)
         };
-        btnSave.FlatAppearance.BorderColor = GreenText;
+        btnSave.FlatAppearance.BorderColor = AppConstants.AccentText;
         btnSave.Click += (_, _) => SaveQrCode();
 
         var btnCopy = new Button
@@ -93,11 +92,11 @@ internal sealed class QrCodeForm : Form
             Width = 200,
             Height = 30,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             FlatStyle = FlatStyle.Flat,
             Font = new Font("Consolas", 9, FontStyle.Bold)
         };
-        btnCopy.FlatAppearance.BorderColor = GreenText;
+        btnCopy.FlatAppearance.BorderColor = AppConstants.AccentText;
         btnCopy.Click += (_, _) => CopyQrToClipboard();
 
         _lblStatus = new Label
@@ -106,7 +105,7 @@ internal sealed class QrCodeForm : Form
             Location = new Point(20, 195),
             Width = 760,
             Height = 20,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 9),
             Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
         };
@@ -126,7 +125,7 @@ internal sealed class QrCodeForm : Form
             Text = "QR Code Info:",
             Location = new Point(390, 225),
             AutoSize = true,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 10, FontStyle.Bold)
         };
 
@@ -139,7 +138,7 @@ internal sealed class QrCodeForm : Form
             ReadOnly = true,
             ScrollBars = ScrollBars.Both,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 9),
             BorderStyle = BorderStyle.FixedSingle,
             WordWrap = true,
@@ -219,7 +218,7 @@ internal sealed class QrCodeForm : Form
                 """;
 
             _lblStatus.Text = "Status: ✓ QR kod oluşturuldu";
-            _lblStatus.ForeColor = GreenText;
+            _lblStatus.ForeColor = AppConstants.AccentText;
         }
         catch (Exception ex)
         {
@@ -257,7 +256,7 @@ internal sealed class QrCodeForm : Form
 
                 _pictureBox.Image.Save(sfd.FileName, format);
                 _lblStatus.Text = $"Status: ✓ QR kod kaydedildi";
-                _lblStatus.ForeColor = GreenText;
+                _lblStatus.ForeColor = AppConstants.AccentText;
                 MessageBox.Show($"QR kod kaydedildi:\n{sfd.FileName}", "Başarılı", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
@@ -281,7 +280,7 @@ internal sealed class QrCodeForm : Form
 
             Clipboard.SetImage(_pictureBox.Image);
             _lblStatus.Text = "Status: ✓ QR kod panoya kopyalandı";
-            _lblStatus.ForeColor = GreenText;
+            _lblStatus.ForeColor = AppConstants.AccentText;
             MessageBox.Show("QR kod panoya kopyalandı!", "Başarılı", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
         catch (Exception ex)

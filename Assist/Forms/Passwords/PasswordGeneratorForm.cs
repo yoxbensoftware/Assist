@@ -1,14 +1,13 @@
+namespace Assist.Forms.Passwords;
+
 using System.Security.Cryptography;
 using System.Text;
-
-namespace Assist.Forms.Passwords;
 
 /// <summary>
 /// Complex password generator with strength indicator.
 /// </summary>
 internal sealed class PasswordGeneratorForm : Form
 {
-    private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
     private static readonly string UpperCase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     private static readonly string LowerCase = "abcdefghijklmnopqrstuvwxyz";
     private static readonly string Digits = "0123456789";
@@ -30,7 +29,7 @@ internal sealed class PasswordGeneratorForm : Form
         Text = "Password Generator";
         ClientSize = new Size(500, 350);
         BackColor = Color.Black;
-        ForeColor = GreenText;
+        ForeColor = AppConstants.AccentText;
         Font = new Font("Consolas", 10);
 
         var lblTitle = new Label
@@ -38,7 +37,7 @@ internal sealed class PasswordGeneratorForm : Form
             Text = "=== PASSWORD GENERATOR ===",
             Location = new Point(20, 20),
             AutoSize = true,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 12, FontStyle.Bold)
         };
 
@@ -48,7 +47,7 @@ internal sealed class PasswordGeneratorForm : Form
             Width = 460,
             Height = 30,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 14),
             ReadOnly = true,
             BorderStyle = BorderStyle.FixedSingle,
@@ -60,7 +59,7 @@ internal sealed class PasswordGeneratorForm : Form
             Text = "Uzunluk: 16",
             Location = new Point(20, 110),
             AutoSize = true,
-            ForeColor = GreenText
+            ForeColor = AppConstants.AccentText
         };
 
         _lengthSlider = new TrackBar
@@ -80,7 +79,7 @@ internal sealed class PasswordGeneratorForm : Form
             Text = "Büyük Harf (A-Z)",
             Location = new Point(20, 190),
             AutoSize = true,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Checked = true
         };
 
@@ -89,7 +88,7 @@ internal sealed class PasswordGeneratorForm : Form
             Text = "Küçük Harf (a-z)",
             Location = new Point(200, 190),
             AutoSize = true,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Checked = true
         };
 
@@ -98,7 +97,7 @@ internal sealed class PasswordGeneratorForm : Form
             Text = "Rakam (0-9)",
             Location = new Point(20, 220),
             AutoSize = true,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Checked = true
         };
 
@@ -107,7 +106,7 @@ internal sealed class PasswordGeneratorForm : Form
             Text = "Özel Karakter (!@#$...)",
             Location = new Point(200, 220),
             AutoSize = true,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Checked = true
         };
 
@@ -116,7 +115,7 @@ internal sealed class PasswordGeneratorForm : Form
             Text = "Güç: -",
             Location = new Point(20, 260),
             AutoSize = true,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 11, FontStyle.Bold)
         };
 
@@ -127,10 +126,10 @@ internal sealed class PasswordGeneratorForm : Form
             Width = 220,
             Height = 35,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             FlatStyle = FlatStyle.Flat
         };
-        _btnGenerate.FlatAppearance.BorderColor = GreenText;
+        _btnGenerate.FlatAppearance.BorderColor = AppConstants.AccentText;
         _btnGenerate.Click += (_, _) => GeneratePassword();
 
         _btnCopy = new Button
@@ -140,11 +139,11 @@ internal sealed class PasswordGeneratorForm : Form
             Width = 220,
             Height = 35,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             FlatStyle = FlatStyle.Flat,
             Enabled = false
         };
-        _btnCopy.FlatAppearance.BorderColor = GreenText;
+        _btnCopy.FlatAppearance.BorderColor = AppConstants.AccentText;
         _btnCopy.Click += (_, _) => CopyPassword();
 
         Controls.AddRange(new Control[]
@@ -196,7 +195,7 @@ internal sealed class PasswordGeneratorForm : Form
         if (string.IsNullOrEmpty(pwd))
         {
             _strengthLabel.Text = "Güç: -";
-            _strengthLabel.ForeColor = GreenText;
+            _strengthLabel.ForeColor = AppConstants.AccentText;
             return;
         }
 
@@ -217,7 +216,7 @@ internal sealed class PasswordGeneratorForm : Form
         else if (score >= 4)
         {
             _strengthLabel.Text = "Güç: ██████░░ (GÜÇLÜ)";
-            _strengthLabel.ForeColor = GreenText;
+            _strengthLabel.ForeColor = AppConstants.AccentText;
         }
         else if (score >= 2)
         {

@@ -5,7 +5,6 @@ namespace Assist.Forms.SystemTools;
 /// </summary>
 internal sealed class HostsFileEditorForm : Form
 {
-    private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
     private static readonly string HostsPath = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.System),
         "drivers", "etc", "hosts");
@@ -20,7 +19,7 @@ internal sealed class HostsFileEditorForm : Form
         Text = "Hosts File Editor";
         ClientSize = new Size(800, 600);
         BackColor = Color.Black;
-        ForeColor = GreenText;
+        ForeColor = AppConstants.AccentText;
         Font = new Font("Consolas", 10);
 
         var lblTitle = new Label
@@ -28,7 +27,7 @@ internal sealed class HostsFileEditorForm : Form
             Text = "=== HOSTS FILE EDITOR ===",
             Location = new Point(20, 15),
             AutoSize = true,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 12, FontStyle.Bold)
         };
 
@@ -46,7 +45,7 @@ internal sealed class HostsFileEditorForm : Form
             Location = new Point(20, 65),
             Size = new Size(760, 370),
             BackColor = Color.FromArgb(10, 10, 10),
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 10),
             BorderStyle = BorderStyle.FixedSingle,
             WordWrap = false,
@@ -61,7 +60,7 @@ internal sealed class HostsFileEditorForm : Form
             Text = "Hızlı Ekle:",
             Location = new Point(20, 445),
             AutoSize = true,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 10, FontStyle.Bold)
         };
 
@@ -70,7 +69,7 @@ internal sealed class HostsFileEditorForm : Form
             Text = "IP:",
             Location = new Point(20, 475),
             Width = 30,
-            ForeColor = GreenText
+            ForeColor = AppConstants.AccentText
         };
 
         _txtIp = new TextBox
@@ -78,7 +77,7 @@ internal sealed class HostsFileEditorForm : Form
             Location = new Point(55, 472),
             Width = 180,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 10),
             BorderStyle = BorderStyle.FixedSingle,
             Text = "127.0.0.1"
@@ -89,7 +88,7 @@ internal sealed class HostsFileEditorForm : Form
             Text = "Hostname:",
             Location = new Point(250, 475),
             Width = 90,
-            ForeColor = GreenText
+            ForeColor = AppConstants.AccentText
         };
 
         _txtHostname = new TextBox
@@ -97,7 +96,7 @@ internal sealed class HostsFileEditorForm : Form
             Location = new Point(345, 472),
             Width = 250,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 10),
             BorderStyle = BorderStyle.FixedSingle
         };
@@ -123,7 +122,7 @@ internal sealed class HostsFileEditorForm : Form
             Text = "",
             Location = new Point(20, 560),
             Width = 760,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 9)
         };
 
@@ -242,7 +241,7 @@ internal sealed class HostsFileEditorForm : Form
         _txtEditor.SuspendLayout();
 
         _txtEditor.SelectAll();
-        _txtEditor.SelectionColor = GreenText;
+        _txtEditor.SelectionColor = AppConstants.AccentText;
 
         var lines = _txtEditor.Text.Split('\n');
         var pos = 0;
@@ -273,11 +272,11 @@ internal sealed class HostsFileEditorForm : Form
             Width = 160,
             Height = 32,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             FlatStyle = FlatStyle.Flat,
             Font = new Font("Consolas", 9, FontStyle.Bold)
         };
-        btn.FlatAppearance.BorderColor = GreenText;
+        btn.FlatAppearance.BorderColor = AppConstants.AccentText;
         return btn;
     }
 }

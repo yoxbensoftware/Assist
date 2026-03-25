@@ -1,14 +1,13 @@
+namespace Assist.Forms.DeveloperTools;
+
 using System.Xml;
 using System.Xml.Linq;
-
-namespace Assist.Forms.DeveloperTools;
 
 /// <summary>
 /// XML formatter and validator with pretty print support.
 /// </summary>
 internal sealed class XmlFormatterForm : Form
 {
-    private static readonly Color GreenText = Color.FromArgb(0, 255, 0);
 
     private readonly TextBox _txtInput = null!;
     private readonly TextBox _txtOutput = null!;
@@ -22,7 +21,7 @@ internal sealed class XmlFormatterForm : Form
         StartPosition = FormStartPosition.CenterParent;
         AutoScroll = true;
         BackColor = Color.Black;
-        ForeColor = GreenText;
+        ForeColor = AppConstants.AccentText;
         Font = new Font("Consolas", 10);
 
         var lblTitle = new Label
@@ -30,7 +29,7 @@ internal sealed class XmlFormatterForm : Form
             Text = "=== XML FORMATTER ===",
             Location = new Point(20, 20),
             AutoSize = true,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 12, FontStyle.Bold)
         };
 
@@ -39,7 +38,7 @@ internal sealed class XmlFormatterForm : Form
             Text = "XML Girişi:",
             Location = new Point(20, 60),
             AutoSize = true,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 10, FontStyle.Bold)
         };
 
@@ -51,7 +50,7 @@ internal sealed class XmlFormatterForm : Form
             Multiline = true,
             ScrollBars = ScrollBars.Both,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 9),
             BorderStyle = BorderStyle.FixedSingle,
             WordWrap = false,
@@ -65,11 +64,11 @@ internal sealed class XmlFormatterForm : Form
             Width = 200,
             Height = 30,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             FlatStyle = FlatStyle.Flat,
             Font = new Font("Consolas", 9, FontStyle.Bold)
         };
-        btnFormat.FlatAppearance.BorderColor = GreenText;
+        btnFormat.FlatAppearance.BorderColor = AppConstants.AccentText;
         btnFormat.Click += (_, _) => FormatXml();
 
         var btnValidate = new Button
@@ -79,11 +78,11 @@ internal sealed class XmlFormatterForm : Form
             Width = 150,
             Height = 30,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             FlatStyle = FlatStyle.Flat,
             Font = new Font("Consolas", 9, FontStyle.Bold)
         };
-        btnValidate.FlatAppearance.BorderColor = GreenText;
+        btnValidate.FlatAppearance.BorderColor = AppConstants.AccentText;
         btnValidate.Click += (_, _) => ValidateXml();
 
         var btnMinify = new Button
@@ -93,11 +92,11 @@ internal sealed class XmlFormatterForm : Form
             Width = 150,
             Height = 30,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             FlatStyle = FlatStyle.Flat,
             Font = new Font("Consolas", 9, FontStyle.Bold)
         };
-        btnMinify.FlatAppearance.BorderColor = GreenText;
+        btnMinify.FlatAppearance.BorderColor = AppConstants.AccentText;
         btnMinify.Click += (_, _) => MinifyXml();
 
         var btnClear = new Button
@@ -107,17 +106,17 @@ internal sealed class XmlFormatterForm : Form
             Width = 100,
             Height = 30,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             FlatStyle = FlatStyle.Flat,
             Font = new Font("Consolas", 9, FontStyle.Bold)
         };
-        btnClear.FlatAppearance.BorderColor = GreenText;
-        btnClear.Click += (_, _) => 
-        { 
-            _txtInput?.Clear(); 
-            _txtOutput?.Clear(); 
-            if (_lblStatus is not null) 
-                _lblStatus.Text = "Status: Ready"; 
+        btnClear.FlatAppearance.BorderColor = AppConstants.AccentText;
+        btnClear.Click += (_, _) =>
+        {
+            _txtInput?.Clear();
+            _txtOutput?.Clear();
+            if (_lblStatus is not null)
+                _lblStatus.Text = "Status: Ready";
         };
 
         _lblStatus = new Label
@@ -126,7 +125,7 @@ internal sealed class XmlFormatterForm : Form
             Location = new Point(20, 335),
             Width = 960,
             Height = 20,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 9),
             Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
         };
@@ -136,7 +135,7 @@ internal sealed class XmlFormatterForm : Form
             Text = "XML Çıktısı:",
             Location = new Point(20, 365),
             AutoSize = true,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 10, FontStyle.Bold)
         };
 
@@ -149,7 +148,7 @@ internal sealed class XmlFormatterForm : Form
             ReadOnly = true,
             ScrollBars = ScrollBars.Both,
             BackColor = Color.Black,
-            ForeColor = GreenText,
+            ForeColor = AppConstants.AccentText,
             Font = new Font("Consolas", 9),
             BorderStyle = BorderStyle.FixedSingle,
             WordWrap = false,
@@ -173,7 +172,7 @@ internal sealed class XmlFormatterForm : Form
             var doc = XDocument.Parse(_txtInput.Text);
             _txtOutput.Text = doc.ToString();
             _lblStatus.Text = "Status: ✓ XML başarıyla formatlandı";
-            _lblStatus.ForeColor = GreenText;
+            _lblStatus.ForeColor = AppConstants.AccentText;
         }
         catch (Exception ex)
         {
@@ -197,7 +196,7 @@ internal sealed class XmlFormatterForm : Form
             doc.LoadXml(_txtInput.Text);
 
             _lblStatus.Text = "Status: ✓ XML geçerli (Valid)";
-            _lblStatus.ForeColor = GreenText;
+            _lblStatus.ForeColor = AppConstants.AccentText;
             _txtOutput.Text = "XML syntax'ı doğru.";
         }
         catch (Exception ex)
@@ -222,7 +221,7 @@ internal sealed class XmlFormatterForm : Form
             var doc = XDocument.Parse(_txtInput.Text);
             _txtOutput.Text = doc.ToString(SaveOptions.DisableFormatting);
             _lblStatus.Text = "Status: ✓ XML minify edildi";
-            _lblStatus.ForeColor = GreenText;
+            _lblStatus.ForeColor = AppConstants.AccentText;
         }
         catch (Exception ex)
         {
