@@ -174,6 +174,7 @@ internal partial class MainMDIForm : Form
         menu.DropDownItems.Add(CreateMenuItem("Sistem Bilgisi", () => ShowMdiChild(new SystemInfoForm())));
         menu.DropDownItems.Add(CreateMenuItem("Performance Monitor", () => ShowMdiChild(new PerformanceMonitorForm())));
         menu.DropDownItems.Add(CreateMenuItem("Speed Test", () => ShowMdiChild(new SpeedTestForm())));
+        menu.DropDownItems.Add(CreateMenuItem("Bağlantı Monitörü", () => new ConnectionMonitorForm().Show()));
 
         menu.DropDownItems.Add(new ToolStripSeparator());
 

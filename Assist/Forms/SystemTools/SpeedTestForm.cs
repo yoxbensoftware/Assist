@@ -87,11 +87,29 @@ internal sealed class SpeedTestForm : Form
         _btnStart.FlatAppearance.BorderColor = AppConstants.AccentText;
         _btnStart.Click += async (_, _) => await RunSpeedTest();
 
+        var btnMonitor = new Button
+        {
+            Text = "🔌 Bağlantı Monitörü (Matrix)",
+            Location = new Point(20, 258),
+            Width = 560,
+            Height = 35,
+            BackColor = Color.Black,
+            ForeColor = AppConstants.AccentText,
+            FlatStyle = FlatStyle.Flat,
+            Font = new Font("Consolas", 10, FontStyle.Bold),
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
+        };
+        btnMonitor.FlatAppearance.BorderColor = AppConstants.AccentText;
+        btnMonitor.Click += (_, _) =>
+        {
+            new ConnectionMonitorForm().Show();
+        };
+
         _txtLog = new TextBox
         {
-            Location = new Point(20, 270),
+            Location = new Point(20, 300),
             Width = 560,
-            Height = 160,
+            Height = 130,
             Multiline = true,
             ReadOnly = true,
             ScrollBars = ScrollBars.Vertical,
@@ -105,7 +123,7 @@ internal sealed class SpeedTestForm : Form
         Controls.AddRange(new Control[]
         {
             lblTitle, _lblDownload, _lblUpload, _lblPing,
-            _progressBar, _btnStart, _txtLog
+            _progressBar, _btnStart, btnMonitor, _txtLog
         });
     }
 
