@@ -51,7 +51,6 @@ internal sealed class ConnectionMonitorForm : Form
 
     // ── State ──
     private bool _isConnected = true;
-    private bool _wasConnected = true;
     private long _lastPingMs;
     private string _pingTarget = "8.8.8.8";
     private int _totalChecks;
@@ -397,7 +396,6 @@ internal sealed class ConnectionMonitorForm : Form
             _isConnected = false;
         }
 
-        _wasConnected = _isConnected;
         UpdateStatusUi();
         UpdateStatsUi();
     }

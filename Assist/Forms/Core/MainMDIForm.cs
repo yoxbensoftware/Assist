@@ -57,9 +57,9 @@ internal partial class MainMDIForm : Form
 
     // Watermark fields
     private MdiClient? _mdiClient;
-    private Label? _lblWatermarkAssist;
-    private Label? _lblWatermarkBy;
-    private Label? _lblWatermarkOz;
+    private Rectangle _rcAssist, _rcBy, _rcOz;
+    private Color _watermarkAccent;
+    private Color _watermarkMuted;
     private static readonly Font WatermarkLargeFont = new("Consolas", 60, FontStyle.Bold);
     private static readonly Font WatermarkSmallFont = new("Consolas", 22);
 
@@ -199,6 +199,7 @@ internal partial class MainMDIForm : Form
         menu.DropDownItems.Add(CreateMenuItem("Hosts File Editor", () => ShowMdiChild(new HostsFileEditorForm())));
         menu.DropDownItems.Add(CreateMenuItem("Donanım Sorun Giderici", () => ShowMdiChild(new HardwareDiagnosticsForm())));
         menu.DropDownItems.Add(CreateMenuItem("Wi-Fi Şifreleri", () => ShowMdiChild(new WifiPasswordForm())));
+        menu.DropDownItems.Add(CreateMenuItem("VPN Yöneticisi", () => ShowMdiChild(new VpnSwitcherForm())));
 
         menu.DropDownItems.Add(new ToolStripSeparator());
 
@@ -233,6 +234,7 @@ internal partial class MainMDIForm : Form
         // Online tools
         menu.DropDownItems.Add(CreateMenuItem("Wikipedia Arama", () => ShowMdiChild(new WikipediaSearchForm())));
         menu.DropDownItems.Add(CreateMenuItem("Sözlük (EN)", () => ShowMdiChild(new DictionaryForm())));
+        menu.DropDownItems.Add(CreateMenuItem("Sözlük (EN ↔ TR)", () => ShowMdiChild(new TranslationDictionaryForm())));
         menu.DropDownItems.Add(CreateMenuItem("IP / Domain Sorgula", () => ShowMdiChild(new IpDomainQueryForm())));
         menu.DropDownItems.Add(CreateMenuItem("WHOIS / Alan Adı", () => ShowMdiChild(new WhoisForm())));
         menu.DropDownItems.Add(CreateMenuItem("Deprem Takibi", () => ShowMdiChild(new EarthquakeForm())));
@@ -977,83 +979,49 @@ internal partial class MainMDIForm : Form
 
     private void InitializeWatermark()
     {
-        // Find MdiClient control
-        foreach (Control c in Controls)
-        {
-            if (c is MdiClient mc)
-            {
-                _mdiClient = mc;
-                break;
-            }
-        }
-
+        // _mdiClient is already assigned by ApplyTheme() which runs before this
         if (_mdiClient is null) return;
 
         var p = UITheme.Palette;
-        var dimAccent = BlendColor(p.Accent, p.Back, 0.12);
-        var dimMuted = BlendColor(p.Muted, p.Back, 0.08);
+        _watermarkAccent = BlendColor(p.Accent, p.Back, 0.12);
+        _watermarkMuted  = BlendColor(p.Muted,  p.Back, 0.08);
 
-        _lblWatermarkAssist = new Label
-        {
-            Text = "Assist",
-            Font = WatermarkLargeFont,
-            ForeColor = dimAccent,
-            BackColor = p.Back,
-            AutoSize = true,
-            Cursor = Cursors.Hand
-        };
-        _lblWatermarkAssist.Click += (_, _) => OnAssistClick();
-
-        _lblWatermarkBy = new Label
-        {
-            Text = "By",
-            Font = WatermarkSmallFont,
-            ForeColor = dimMuted,
-            BackColor = p.Back,
-            AutoSize = true
-        };
-
-        _lblWatermarkOz = new Label
-        {
-            Text = "Oz",
-            Font = WatermarkLargeFont,
-            ForeColor = dimAccent,
-            BackColor = p.Back,
-            AutoSize = true,
-            Cursor = Cursors.Hand
-        };
-        _lblWatermarkOz.Click += (_, _) => OnOzClick();
-
-        _mdiClient.Controls.Add(_lblWatermarkAssist);
-        _mdiClient.Controls.Add(_lblWatermarkBy);
-        _mdiClient.Controls.Add(_lblWatermarkOz);
-
-        _mdiClient.Resize += (_, _) => CenterWatermark();
-        CenterWatermark();
+        _mdiClient.Paint      += MdiClient_Paint;
+        _mdiClient.Resize     += (_, _) => _mdiClient.Invalidate();
+        _mdiClient.MouseClick += MdiClient_MouseClick;
     }
 
-    private void CenterWatermark()
+    private void MdiClient_Paint(object? sender, PaintEventArgs e)
     {
-        if (_mdiClient is null || _lblWatermarkAssist is null || _lblWatermarkBy is null || _lblWatermarkOz is null)
-            return;
+        if (_mdiClient is null) return;
+        var g = e.Graphics;
 
         var cw = _mdiClient.ClientSize.Width;
         var ch = _mdiClient.ClientSize.Height;
 
-        // Measure sizes
-        var sAssist = TextRenderer.MeasureText(_lblWatermarkAssist.Text, _lblWatermarkAssist.Font);
-        var sBy = TextRenderer.MeasureText(_lblWatermarkBy.Text, _lblWatermarkBy.Font);
-        var sOz = TextRenderer.MeasureText(_lblWatermarkOz.Text, _lblWatermarkOz.Font);
+        var sAssist = TextRenderer.MeasureText(g, "Assist", WatermarkLargeFont);
+        var sBy     = TextRenderer.MeasureText(g, "By",     WatermarkSmallFont);
+        var sOz     = TextRenderer.MeasureText(g, "Oz",     WatermarkLargeFont);
 
         var totalWidth = sAssist.Width + sBy.Width + sOz.Width + 8;
-        var maxHeight = Math.Max(sAssist.Height, Math.Max(sBy.Height, sOz.Height));
+        var maxHeight  = Math.Max(sAssist.Height, Math.Max(sBy.Height, sOz.Height));
 
-        var startX = (cw - totalWidth) / 2;
-        var centerY = (ch - maxHeight) / 2;
+        var startX  = (cw - totalWidth) / 2;
+        var centerY = (ch - maxHeight)  / 2;
 
-        _lblWatermarkAssist.Location = new Point(startX, centerY);
-        _lblWatermarkBy.Location = new Point(startX + sAssist.Width + 4, centerY + sAssist.Height - sBy.Height);
-        _lblWatermarkOz.Location = new Point(startX + sAssist.Width + sBy.Width + 8, centerY);
+        _rcAssist = new Rectangle(startX, centerY, sAssist.Width, sAssist.Height);
+        _rcBy     = new Rectangle(startX + sAssist.Width + 4, centerY + sAssist.Height - sBy.Height, sBy.Width, sBy.Height);
+        _rcOz     = new Rectangle(startX + sAssist.Width + sBy.Width + 8, centerY, sOz.Width, sOz.Height);
+
+        TextRenderer.DrawText(g, "Assist", WatermarkLargeFont, _rcAssist.Location, _watermarkAccent);
+        TextRenderer.DrawText(g, "By",     WatermarkSmallFont, _rcBy.Location,     _watermarkMuted);
+        TextRenderer.DrawText(g, "Oz",     WatermarkLargeFont, _rcOz.Location,     _watermarkAccent);
+    }
+
+    private void MdiClient_MouseClick(object? sender, MouseEventArgs e)
+    {
+        if (_rcAssist.Contains(e.Location)) OnAssistClick();
+        else if (_rcOz.Contains(e.Location)) OnOzClick();
     }
 
     private void ApplyWatermarkTheme()
@@ -1061,13 +1029,9 @@ internal partial class MainMDIForm : Form
         if (_mdiClient is null) return;
         var p = UITheme.Palette;
         _mdiClient.BackColor = p.Back;
-
-        var dimAccent = BlendColor(p.Accent, p.Back, 0.12);
-        var dimMuted = BlendColor(p.Muted, p.Back, 0.08);
-
-        if (_lblWatermarkAssist is not null) { _lblWatermarkAssist.ForeColor = dimAccent; _lblWatermarkAssist.BackColor = p.Back; }
-        if (_lblWatermarkBy is not null) { _lblWatermarkBy.ForeColor = dimMuted; _lblWatermarkBy.BackColor = p.Back; }
-        if (_lblWatermarkOz is not null) { _lblWatermarkOz.ForeColor = dimAccent; _lblWatermarkOz.BackColor = p.Back; }
+        _watermarkAccent = BlendColor(p.Accent, p.Back, 0.12);
+        _watermarkMuted  = BlendColor(p.Muted,  p.Back, 0.08);
+        _mdiClient.Invalidate();
     }
 
     private static Color BlendColor(Color fg, Color bg, double factor)
