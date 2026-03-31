@@ -2,6 +2,7 @@ namespace Assist;
 
 using System.Diagnostics;
 using System.Net.NetworkInformation;
+using System.Runtime.InteropServices;
 using System.Text;
 using Assist.Forms.ClipboardTools;
 using Assist.Forms.Core;
@@ -50,6 +51,18 @@ internal partial class MainMDIForm : Form
     private Panel? _procBarPanel;
     private Label? _lblVersion;
 
+    // DWM dark title bar
+    [DllImport("dwmapi.dll")]
+    private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int attrValue, int attrSize);
+
+    // Watermark fields
+    private MdiClient? _mdiClient;
+    private Label? _lblWatermarkAssist;
+    private Label? _lblWatermarkBy;
+    private Label? _lblWatermarkOz;
+    private static readonly Font WatermarkLargeFont = new("Consolas", 60, FontStyle.Bold);
+    private static readonly Font WatermarkSmallFont = new("Consolas", 22);
+
     public MainMDIForm()
     {
         InitializeComponent();
@@ -61,6 +74,8 @@ internal partial class MainMDIForm : Form
         EnsureClipboardHistory();
         LoadIcon();
         InitializeDashboardPanel();
+        InitializeWatermark();
+        HandleCreated += (_, _) => ApplyDarkTitleBar(this);
         Shown += async (_, _) => await CheckForUpdateAsync(silent: true);
     }
 
@@ -198,11 +213,6 @@ internal partial class MainMDIForm : Form
 
         menu.DropDownItems.Add(new ToolStripSeparator());
 
-        // EV Charger Finder
-        menu.DropDownItems.Add(CreateMenuItem("EV Şarj İstasyonu Bulucu", () => ShowMdiChild(new EvChargerFinderForm())));
-
-        menu.DropDownItems.Add(new ToolStripSeparator());
-
         // Wiggle Mouse
         menu.DropDownItems.Add(CreateMenuItem("Wiggle Mouse", () => ShowMdiChild(new WiggleMouseForm())));
 
@@ -325,6 +335,11 @@ internal partial class MainMDIForm : Form
         // Close all
         menu.DropDownItems.Add(CreateMenuItem("Tümünü Kapat", CloseAllMdiChildren));
 
+        menu.DropDownItems.Add(new ToolStripSeparator());
+
+        // Detach
+        menu.DropDownItems.Add(CreateMenuItem("📌 Pencereyi Ayır", DetachActiveChild));
+
         return menu;
     }
 
@@ -365,6 +380,7 @@ internal partial class MainMDIForm : Form
         {
             UITheme.ApplyToOpenForms();
             ApplyDashboardTheme();
+            ApplyWatermarkTheme();
         }));
     }
 
@@ -402,6 +418,7 @@ internal partial class MainMDIForm : Form
             if (control is MdiClient mdiClient)
             {
                 mdiClient.BackColor = p.Back;
+                _mdiClient = mdiClient;
                 break;
             }
         }
@@ -412,7 +429,50 @@ internal partial class MainMDIForm : Form
         form.MdiParent = this;
         form.WindowState = FormWindowState.Maximized;
         UITheme.Apply(form);
+        EnsureDarkTitleBar(form);
         form.Show();
+    }
+
+    private static void EnsureDarkTitleBar(Form form)
+    {
+        if (form.IsHandleCreated)
+        {
+            ApplyDarkTitleBar(form);
+        }
+        else
+        {
+            form.HandleCreated += (_, _) => ApplyDarkTitleBar(form);
+        }
+    }
+
+    private static void ApplyDarkTitleBar(Form form)
+    {
+        if (form.IsDisposed || !form.IsHandleCreated) return;
+        var val = 1;
+        // Attr 20 = Win11+, attr 19 = Win10 fallback
+        if (DwmSetWindowAttribute(form.Handle, 20, ref val, sizeof(int)) != 0)
+            DwmSetWindowAttribute(form.Handle, 19, ref val, sizeof(int));
+    }
+
+    private void DetachActiveChild()
+    {
+        var child = ActiveMdiChild;
+        if (child is null)
+        {
+            MessageBox.Show("Ayırılacak aktif pencere yok.", "Bilgi", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return;
+        }
+
+        var bounds = child.RectangleToScreen(child.ClientRectangle);
+        child.Hide();
+        child.MdiParent = null!;
+        child.FormBorderStyle = FormBorderStyle.Sizable;
+        child.StartPosition = FormStartPosition.Manual;
+        child.Location = bounds.Location;
+        child.Size = bounds.Size;
+        child.WindowState = FormWindowState.Normal;
+        EnsureDarkTitleBar(child);
+        child.Show();
     }
 
     private async Task ShowNewsAsync(Func<Task<List<NewsItem>>> fetcher, string title)
@@ -907,6 +967,142 @@ internal partial class MainMDIForm : Form
             }
 
             if (InvokeRequired) Invoke(Update); else Update();
+        }
+        catch { }
+    }
+
+    #endregion
+
+    #region Watermark
+
+    private void InitializeWatermark()
+    {
+        // Find MdiClient control
+        foreach (Control c in Controls)
+        {
+            if (c is MdiClient mc)
+            {
+                _mdiClient = mc;
+                break;
+            }
+        }
+
+        if (_mdiClient is null) return;
+
+        var p = UITheme.Palette;
+        var dimAccent = BlendColor(p.Accent, p.Back, 0.12);
+        var dimMuted = BlendColor(p.Muted, p.Back, 0.08);
+
+        _lblWatermarkAssist = new Label
+        {
+            Text = "Assist",
+            Font = WatermarkLargeFont,
+            ForeColor = dimAccent,
+            BackColor = p.Back,
+            AutoSize = true,
+            Cursor = Cursors.Hand
+        };
+        _lblWatermarkAssist.Click += (_, _) => OnAssistClick();
+
+        _lblWatermarkBy = new Label
+        {
+            Text = "By",
+            Font = WatermarkSmallFont,
+            ForeColor = dimMuted,
+            BackColor = p.Back,
+            AutoSize = true
+        };
+
+        _lblWatermarkOz = new Label
+        {
+            Text = "Oz",
+            Font = WatermarkLargeFont,
+            ForeColor = dimAccent,
+            BackColor = p.Back,
+            AutoSize = true,
+            Cursor = Cursors.Hand
+        };
+        _lblWatermarkOz.Click += (_, _) => OnOzClick();
+
+        _mdiClient.Controls.Add(_lblWatermarkAssist);
+        _mdiClient.Controls.Add(_lblWatermarkBy);
+        _mdiClient.Controls.Add(_lblWatermarkOz);
+
+        _mdiClient.Resize += (_, _) => CenterWatermark();
+        CenterWatermark();
+    }
+
+    private void CenterWatermark()
+    {
+        if (_mdiClient is null || _lblWatermarkAssist is null || _lblWatermarkBy is null || _lblWatermarkOz is null)
+            return;
+
+        var cw = _mdiClient.ClientSize.Width;
+        var ch = _mdiClient.ClientSize.Height;
+
+        // Measure sizes
+        var sAssist = TextRenderer.MeasureText(_lblWatermarkAssist.Text, _lblWatermarkAssist.Font);
+        var sBy = TextRenderer.MeasureText(_lblWatermarkBy.Text, _lblWatermarkBy.Font);
+        var sOz = TextRenderer.MeasureText(_lblWatermarkOz.Text, _lblWatermarkOz.Font);
+
+        var totalWidth = sAssist.Width + sBy.Width + sOz.Width + 8;
+        var maxHeight = Math.Max(sAssist.Height, Math.Max(sBy.Height, sOz.Height));
+
+        var startX = (cw - totalWidth) / 2;
+        var centerY = (ch - maxHeight) / 2;
+
+        _lblWatermarkAssist.Location = new Point(startX, centerY);
+        _lblWatermarkBy.Location = new Point(startX + sAssist.Width + 4, centerY + sAssist.Height - sBy.Height);
+        _lblWatermarkOz.Location = new Point(startX + sAssist.Width + sBy.Width + 8, centerY);
+    }
+
+    private void ApplyWatermarkTheme()
+    {
+        if (_mdiClient is null) return;
+        var p = UITheme.Palette;
+        _mdiClient.BackColor = p.Back;
+
+        var dimAccent = BlendColor(p.Accent, p.Back, 0.12);
+        var dimMuted = BlendColor(p.Muted, p.Back, 0.08);
+
+        if (_lblWatermarkAssist is not null) { _lblWatermarkAssist.ForeColor = dimAccent; _lblWatermarkAssist.BackColor = p.Back; }
+        if (_lblWatermarkBy is not null) { _lblWatermarkBy.ForeColor = dimMuted; _lblWatermarkBy.BackColor = p.Back; }
+        if (_lblWatermarkOz is not null) { _lblWatermarkOz.ForeColor = dimAccent; _lblWatermarkOz.BackColor = p.Back; }
+    }
+
+    private static Color BlendColor(Color fg, Color bg, double factor)
+    {
+        return Color.FromArgb(
+            (int)(fg.R * factor + bg.R * (1 - factor)),
+            (int)(fg.G * factor + bg.G * (1 - factor)),
+            (int)(fg.B * factor + bg.B * (1 - factor)));
+    }
+
+    private static void OnAssistClick()
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo("https://www.google.com") { UseShellExecute = true });
+            Process.Start(new ProcessStartInfo("https://chat.openai.com") { UseShellExecute = true });
+        }
+        catch { }
+    }
+
+    private void OnOzClick()
+    {
+        try
+        {
+            // Turkey Top 30 news
+            _ = ShowNewsAsync(() => new NewsService().GetTopTrAsync(30), "TR - En Önemli Haberler (Top 30)");
+
+            // Connection Monitor
+            new ConnectionMonitorForm().Show();
+
+            // Wiggle Mouse
+            ShowMdiChild(new WiggleMouseForm());
+
+            // Performance Monitor
+            ShowMdiChild(new PerformanceMonitorForm());
         }
         catch { }
     }
