@@ -235,7 +235,6 @@ internal partial class MainMDIForm : Form
         menu.DropDownItems.Add(CreateMenuItem("Wikipedia Arama", () => ShowMdiChild(new WikipediaSearchForm())));
         menu.DropDownItems.Add(CreateMenuItem("Sözlük (EN)", () => ShowMdiChild(new DictionaryForm())));
         menu.DropDownItems.Add(CreateMenuItem("Sözlük (EN ↔ TR)", () => ShowMdiChild(new TranslationDictionaryForm())));
-        menu.DropDownItems.Add(CreateMenuItem("Karar Optimizasyonu (Belirsizlik)", () => ShowMdiChild(new DecisionOptimizerForm())));
         menu.DropDownItems.Add(CreateMenuItem("IP / Domain Sorgula", () => ShowMdiChild(new IpDomainQueryForm())));
         menu.DropDownItems.Add(CreateMenuItem("WHOIS / Alan Adı", () => ShowMdiChild(new WhoisForm())));
         menu.DropDownItems.Add(CreateMenuItem("Deprem Takibi", () => ShowMdiChild(new EarthquakeForm())));
