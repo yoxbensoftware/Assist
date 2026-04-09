@@ -52,6 +52,18 @@ internal static class Program
         if (!AppInstallerService.IsInstalled)
             AppInstallerService.Install();
 
+        if (System.Diagnostics.Debugger.IsAttached)
+        {
+            using var splash = new SplashForm();
+            splash.Show();
+            Application.DoEvents();
+
+            var mainForm = new MainMDIForm();
+            mainForm.Shown += (_, _) => splash.Close();
+            Application.Run(mainForm);
+            return;
+        }
+
         using var loginForm = new LoginForm();
         UITheme.Apply(loginForm);
         if (loginForm.ShowDialog() == DialogResult.OK && loginForm.IsAuthenticated)

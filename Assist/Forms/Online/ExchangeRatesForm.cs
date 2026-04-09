@@ -23,38 +23,40 @@ internal sealed class ExchangeRatesForm : Form
         public DoubleBufferedPanel() => DoubleBuffered = true;
     }
 
-    private sealed record AssetDef(string Ticker, string Name, string PairLabel, string Emoji, string Currency, double Multiplier = 1.0);
+    private sealed record AssetDef(string Ticker, string Name, string PairLabel, string Emoji, string Currency, double Multiplier = 1.0, string? ComputeFrom = null);
 
     private sealed record PeriodDef(string Label, string Range, string Interval, string TimeFormat);
 
     private sealed record AssetPrice(double Current, double ChangePct, string Currency, IReadOnlyList<(DateTime Dt, double Price)> History);
 
-    private static readonly AssetDef[] Assets =
-    [
-        // Real assets / forex / commodities
-        new("USDTRY=X", "ABD Doları", "USD / TRY", "🇺🇸", "TRY"),
-        new("EURTRY=X", "Euro", "EUR / TRY", "🇪🇺", "TRY"),
-        new("GBPTRY=X", "İngiliz Sterlini", "GBP / TRY", "🇬🇧", "TRY"),
-        new("JPYTRY=X", "Japon Yeni", "100 JPY / TRY", "🇯🇵", "TRY", 100.0),
-        new("CHFTRY=X", "İsviçre Frangı", "CHF / TRY", "🇨🇭", "TRY"),
-        new("GC=F", "Altın", "XAU / USD", "🥇", "USD"),
-        new("SI=F", "Gümüş", "XAG / USD", "🥈", "USD"),
-        new("CL=F", "Ham Petrol", "WTI / USD", "🛢️", "USD"),
-        new("PL=F", "Platin", "XPT / USD", "⚪", "USD"),
-        new("PA=F", "Paladyum", "XPD / USD", "⚫", "USD"),
+private static readonly AssetDef[] Assets =
+[
+    // ALTIN / TL her zaman en üstte
+    new("GC_TRY", "Altın", "ALTIN / TL", "🥇", "TRY", 1.0, "GC=F,USDTRY=X"),
+    // Real assets / forex / commodities
+    new("USDTRY=X", "ABD Doları", "USD / TRY", "🇺🇸", "TRY"),
+    new("EURTRY=X", "Euro", "EUR / TRY", "🇪🇺", "TRY"),
+    new("GBPTRY=X", "İngiliz Sterlini", "GBP / TRY", "🇬🇧", "TRY"),
+    new("JPYTRY=X", "Japon Yeni", "100 JPY / TRY", "🇯🇵", "TRY", 100.0),
+    new("CHFTRY=X", "İsviçre Frangı", "CHF / TRY", "🇨🇭", "TRY"),
+    new("GC=F", "Altın", "XAU / USD", "🥇", "USD"),
+    new("SI=F", "Gümüş", "XAG / USD", "🥈", "USD"),
+    new("CL=F", "Ham Petrol", "WTI / USD", "🛢️", "USD"),
+    new("PL=F", "Platin", "XPT / USD", "⚪", "USD"),
+    new("PA=F", "Paladyum", "XPD / USD", "⚫", "USD"),
 
-        // Coins
-        new("BTC-USD", "Bitcoin", "BTC / USD", "₿", "USD"),
-        new("ETH-USD", "Ethereum", "ETH / USD", "Ξ", "USD"),
-        new("BNB-USD", "BNB", "BNB / USD", "◆", "USD"),
-        new("SOL-USD", "Solana", "SOL / USD", "◎", "USD"),
-        new("XRP-USD", "XRP", "XRP / USD", "◈", "USD"),
-        new("ADA-USD", "Cardano", "ADA / USD", "A", "USD"),
-        new("DOGE-USD", "Dogecoin", "DOGE / USD", "Ð", "USD"),
-        new("TRX-USD", "Tron", "TRX / USD", "T", "USD"),
-        new("AVAX-USD", "Avalanche", "AVAX / USD", "A", "USD"),
-        new("LTC-USD", "Litecoin", "LTC / USD", "Ł", "USD"),
-    ];
+    // Coins
+    new("BTC-USD", "Bitcoin", "BTC / USD", "₿", "USD"),
+    new("ETH-USD", "Ethereum", "ETH / USD", "Ξ", "USD"),
+    new("BNB-USD", "BNB", "BNB / USD", "◆", "USD"),
+    new("SOL-USD", "Solana", "SOL / USD", "◎", "USD"),
+    new("XRP-USD", "XRP", "XRP / USD", "◈", "USD"),
+    new("ADA-USD", "Cardano", "ADA / USD", "A", "USD"),
+    new("DOGE-USD", "Dogecoin", "DOGE / USD", "Ð", "USD"),
+    new("TRX-USD", "Tron", "TRX / USD", "T", "USD"),
+    new("AVAX-USD", "Avalanche", "AVAX / USD", "A", "USD"),
+    new("LTC-USD", "Litecoin", "LTC / USD", "Ł", "USD"),
+];
 
     private static readonly PeriodDef[] Periods =
     [
@@ -74,7 +76,7 @@ internal sealed class ExchangeRatesForm : Form
     private readonly Dictionary<string, AssetPrice> _prices = [];
     private readonly Dictionary<string, Panel> _cards = [];
 
-    private AssetDef _selectedAsset = Assets[0];
+    private AssetDef _selectedAsset = Assets[0]; // ALTIN / TL varsayılan
     private PeriodDef _selectedPeriod = Periods[0];
     private Point _hoverPoint = Point.Empty;
     private bool _isLoading;
@@ -93,6 +95,15 @@ internal sealed class ExchangeRatesForm : Form
     private Label _headerPair = null!;
     private DoubleBufferedPanel _chartCanvas = null!;
 
+    // ALTIN/TL yatırım bilgileri
+    private Panel? _investmentPanel;
+    private TextBox? _txtBuyPrice;
+    private TextBox? _txtBuyAmount;
+    private TextBox? _txtBuyTotal;
+    private Label? _profitLabel;
+    private double _buyPrice = 6947.5370;
+    private double _buyAmount = 72.04;
+
     public ExchangeRatesForm()
     {
         Text = "📊 Piyasa 20";
@@ -103,7 +114,32 @@ internal sealed class ExchangeRatesForm : Form
         ForeColor = CText;
         DoubleBuffered = true;
 
-        BuildUi();
+        // Ana layout
+        var mainLayout = new TableLayoutPanel
+        {
+            Dock = DockStyle.Fill,
+            ColumnCount = 2,
+            RowCount = 1,
+            BackColor = CBack,
+        };
+        mainLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 286)); // Sol panel sabit genişlik
+        mainLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f)); // Sağ panel esnek
+        Controls.Add(mainLayout);
+
+        // Sol ve sağ panelleri oluştur
+        BuildLeftPane();
+        BuildRightPane();
+
+        // Sol paneli ekle
+        mainLayout.Controls.Add(_cardList.Parent, 0, 0); // BuildLeftPane sol paneli ekler
+        // Sağ paneli ekle
+        mainLayout.Controls.Add(_rightPanel, 1, 0); // BuildRightPane sağ paneli ekler
+
+        BuildTopBar(); // Üst barı en sona ekle
+        Controls.Add(_topBar);
+
+        _selectedAsset = Assets[0]; // ALTIN / TL varsayılan
+        UpdateHeader();
         Shown += async (_, _) => await RefreshAllAsync();
     }
 
@@ -217,7 +253,7 @@ internal sealed class ExchangeRatesForm : Form
     {
         var left = new Panel
         {
-            Dock = DockStyle.Left,
+            Dock = DockStyle.Fill,
             Width = 286,
             BackColor = CPanel,
         };
@@ -251,8 +287,10 @@ internal sealed class ExchangeRatesForm : Form
 
         left.Controls.Add(new Panel { Dock = DockStyle.Right, Width = 1, BackColor = CBorder });
         left.Controls.Add(_cardList);
-        Controls.Add(left);
+        // Sol paneli ana layout'a eklemek için parent olarak expose et
+        _cardList.Parent.Tag = left;
     }
+    
 
     private Panel CreateCard(AssetDef asset)
     {
@@ -270,9 +308,10 @@ internal sealed class ExchangeRatesForm : Form
         return card;
     }
 
+    private Panel _rightPanel;
     private void BuildRightPane()
     {
-        var right = new Panel
+        _rightPanel = new Panel
         {
             Dock = DockStyle.Fill,
             BackColor = CBack,
@@ -316,9 +355,39 @@ internal sealed class ExchangeRatesForm : Form
             Location = new Point(20, 60),
         };
 
+
         header.Controls.AddRange([_headerAsset, _headerPrice, _headerChange, _headerPair]);
         header.Controls.Add(new Panel { Dock = DockStyle.Bottom, Height = 1, BackColor = CGrid });
-        right.Controls.Add(header);
+        _rightPanel.Controls.Add(header);
+
+        // ALTIN/TL yatırım paneli
+        _investmentPanel = new Panel
+        {
+            Dock = DockStyle.Top,
+            Height = 38,
+            BackColor = Color.FromArgb(18, 18, 18),
+            Padding = new Padding(20, 2, 20, 2),
+            Visible = false,
+        };
+        var lbl1 = new Label { Text = "Alış Fiyatı:", ForeColor = CMuted, Location = new Point(0, 8), Width = 70 };
+        _txtBuyPrice = new TextBox { Width = 80, Location = new Point(75, 5), Text = _buyPrice.ToString("F4") };
+        var lbl2 = new Label { Text = "Miktar (gr):", ForeColor = CMuted, Location = new Point(160, 8), Width = 80 };
+        _txtBuyAmount = new TextBox { Width = 60, Location = new Point(245, 5), Text = _buyAmount.ToString("F2") };
+        var lbl3 = new Label { Text = "Yatırım (TL):", ForeColor = CMuted, Location = new Point(320, 8), Width = 80 };
+        _txtBuyTotal = new TextBox { Width = 90, Location = new Point(405, 5), Enabled = false };
+        var btnSet = new Button { Text = "Kaydet", Width = 60, Location = new Point(500, 3), Height = 28 };
+        btnSet.Click += (_, _) => SaveInvestment();
+        // Kar/zarar label
+        _profitLabel = new Label
+        {
+            Location = new Point(570, 7),
+            AutoSize = true,
+            Font = new Font("Segoe UI", 12f, FontStyle.Bold),
+            ForeColor = CGreen,
+            Text = "",
+        };
+        _investmentPanel.Controls.AddRange([lbl1, _txtBuyPrice, lbl2, _txtBuyAmount, lbl3, _txtBuyTotal, btnSet, _profitLabel]);
+        _rightPanel.Controls.Add(_investmentPanel);
 
         _chartCanvas = new DoubleBufferedPanel
         {
@@ -328,10 +397,12 @@ internal sealed class ExchangeRatesForm : Form
         _chartCanvas.Paint += OnChartPaint;
         _chartCanvas.MouseMove += (_, e) => { _hoverPoint = e.Location; _chartCanvas.Invalidate(); };
         _chartCanvas.MouseLeave += (_, _) => { _hoverPoint = Point.Empty; _chartCanvas.Invalidate(); };
-        right.Controls.Add(_chartCanvas);
+        _rightPanel.Controls.Add(_chartCanvas);
 
-        Controls.Add(right);
+        // Controls.Add(right); // Artık ana layout'a eklenecek
         UpdateHeader();
+        // ALTIN / TL varsayılan olarak seçili olsun
+        _selectedAsset = Assets[0];
     }
 
     private void PaintCard(Graphics g, Panel card, AssetDef asset)
@@ -390,6 +461,15 @@ internal sealed class ExchangeRatesForm : Form
 
         _headerAsset.Text = $"{_selectedAsset.Emoji}  {_selectedAsset.Name}  ·  {_selectedPeriod.Label}";
 
+        if (_selectedAsset.Ticker == "GC_TRY")
+        {
+            if (_investmentPanel != null) _investmentPanel.Visible = true;
+        }
+        else
+        {
+            if (_investmentPanel != null) _investmentPanel.Visible = false;
+        }
+
         if (_prices.TryGetValue(_selectedAsset.Ticker, out var price))
         {
             _headerPrice.Text = FormatPrice(price.Current * _selectedAsset.Multiplier, price.Currency);
@@ -404,6 +484,52 @@ internal sealed class ExchangeRatesForm : Form
             _headerPrice.Text = "—";
             _headerChange.Text = string.Empty;
             _headerPair.Text = _selectedAsset.PairLabel;
+        }
+    }
+
+    private void SaveInvestment()
+    {
+        if (_txtBuyPrice != null && double.TryParse(_txtBuyPrice.Text.Replace(',', '.'), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var bp))
+            _buyPrice = bp;
+        if (_txtBuyAmount != null && double.TryParse(_txtBuyAmount.Text.Replace(',', '.'), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var ba))
+            _buyAmount = ba;
+        // Yatırım otomatik hesaplanır
+        if (_txtBuyTotal != null)
+            _txtBuyTotal.Text = (_buyPrice * _buyAmount).ToString("F2");
+        UpdateProfitLabel();
+        _chartCanvas.Invalidate();
+    }
+
+    private void UpdateProfitLabel()
+    {
+        if (_selectedAsset.Ticker != "GC_TRY" || _profitLabel == null)
+        {
+            if (_profitLabel != null) _profitLabel.Text = "";
+            return;
+        }
+        if (_prices.TryGetValue("GC_TRY", out var price) && _buyPrice > 0 && _buyAmount > 0)
+        {
+            double currentPrice = price.Current * _selectedAsset.Multiplier;
+            double yatirim = _buyPrice * _buyAmount;
+            double profit = (currentPrice - _buyPrice) * _buyAmount;
+            double profitPct = (yatirim > 0) ? (profit / yatirim * 100.0) : 0;
+
+            // Günlük kar
+            string extra = "";
+            if (_selectedPeriod.Label == "Günlük" && price.History.Count > 0)
+            {
+                double dayOpen = price.History[0].Price * _selectedAsset.Multiplier;
+                double dayProfit = (currentPrice - dayOpen) * _buyAmount;
+                extra = $" | Günlük Kâr: {dayProfit:F2} TL";
+            }
+
+            string profitStr = profit >= 0 ? $"KAR: {profit:F2} TL (%{profitPct:F2}){extra}" : $"ZARAR: {profit:F2} TL (%{profitPct:F2}){extra}";
+            _profitLabel.Text = profitStr;
+            _profitLabel.ForeColor = profit >= 0 ? CGreen : CRed;
+        }
+        else
+        {
+            _profitLabel.Text = "";
         }
     }
 
@@ -480,6 +606,26 @@ internal sealed class ExchangeRatesForm : Form
         bool isUp = price.ChangePct >= 0;
         var lineColor = isUp ? CGreen : CRed;
 
+        // ALTIN/TL için alış fiyatı çizgisi ve anlık fiyat çizgisi
+        if (_selectedAsset.Ticker == "GC_TRY" && _buyPrice > 0 && _buyAmount > 0)
+        {
+            // Alış fiyatı çizgisi (turuncu)
+            float yBuy = (float)ToY(_buyPrice);
+            using var buyPen = new Pen(Color.Orange, 2) { DashStyle = DashStyle.Dash };
+            g.DrawLine(buyPen, padL, yBuy, padL + chartW, yBuy);
+            using var buyFont = new Font("Segoe UI", 8.5f, FontStyle.Bold);
+            using var buyBrush = new SolidBrush(Color.Orange);
+            g.DrawString($"Alış: {FormatPrice(_buyPrice, "TRY")}", buyFont, buyBrush, padL + 6, yBuy - 18);
+
+            // Anlık fiyat çizgisi (yeşil)
+            float yCurrent = (float)ToY(price.Current * mult);
+            using var curPen = new Pen(CGreen, 2) { DashStyle = DashStyle.Dot };
+            g.DrawLine(curPen, padL, yCurrent, padL + chartW, yCurrent);
+            using var curFont = new Font("Segoe UI", 8.5f, FontStyle.Bold);
+            using var curBrush = new SolidBrush(CGreen);
+            g.DrawString($"Anlık: {FormatPrice(price.Current * mult, "TRY")}", curFont, curBrush, padL + 120, yCurrent - 18);
+        }
+
         using (var fill = new LinearGradientBrush(new Point(0, padT), new Point(0, padT + chartH), Color.FromArgb(55, lineColor), Color.FromArgb(4, CBack)))
         {
             var poly = points.ToList();
@@ -547,8 +693,15 @@ internal sealed class ExchangeRatesForm : Form
 
         await Loading.RunAsync(this, async () =>
         {
-            var tasks = Assets.Select(asset => FetchAssetAsync(asset, _selectedPeriod));
+            var baseAssets = Assets.Where(a => a.ComputeFrom == null);
+            var computedAssets = Assets.Where(a => a.ComputeFrom != null);
+
+            var tasks = baseAssets.Select(asset => FetchAssetAsync(asset, _selectedPeriod));
             await Task.WhenAll(tasks);
+
+            foreach (var asset in computedAssets)
+                ComputeAsset(asset);
+
             _lastUpdated = DateTime.Now;
         }, "Piyasa verileri yükleniyor...");
 
@@ -592,6 +745,12 @@ internal sealed class ExchangeRatesForm : Form
     {
         try
         {
+            if (asset.ComputeFrom != null)
+            {
+                ComputeAsset(asset);
+                return;
+            }
+
             var url = $"https://query1.finance.yahoo.com/v8/finance/chart/{Uri.EscapeDataString(asset.Ticker)}?interval={period.Interval}&range={period.Range}";
             var json = await Http.GetStringAsync(url);
             using var doc = JsonDocument.Parse(json);
@@ -623,6 +782,55 @@ internal sealed class ExchangeRatesForm : Form
         catch
         {
             // keep last known value if fetch fails
+        }
+    }
+
+    private void ComputeAsset(AssetDef asset)
+    {
+        if (asset.ComputeFrom == null)
+            return;
+
+        var parts = asset.ComputeFrom.Split(',');
+        if (parts.Length < 2)
+            return;
+
+        string source1 = parts[0];
+        string source2 = parts[1];
+
+        lock (_prices)
+        {
+            if (!_prices.TryGetValue(source1, out var price1) || price1 == null ||
+                !_prices.TryGetValue(source2, out var price2) || price2 == null)
+                return;
+
+            // Zaman serilerini tarihe göre eşleştir
+            var dict1 = price1.History.ToDictionary(x => x.Dt, x => x.Price);
+            var dict2 = price2.History.ToDictionary(x => x.Dt, x => x.Price);
+            var commonDates = dict1.Keys.Intersect(dict2.Keys).OrderBy(x => x).ToList();
+
+            if (commonDates.Count == 0)
+            {
+                // Hiç ortak tarih yoksa, eski veri varsa dokunma
+                if (_prices.ContainsKey(asset.Ticker))
+                    return;
+                // Yoksa hiç ekleme
+                return;
+            }
+
+            var history = new List<(DateTime Dt, double Price)>();
+            foreach (var dt in commonDates)
+            {
+                double p1 = dict1[dt];
+                double p2 = dict2[dt];
+                history.Add((dt, p1 * p2));
+            }
+
+            double current = history[^1].Price;
+            double changePct = 0;
+            if (history.Count > 0 && history[0].Price > 0.0000001)
+                changePct = (current - history[0].Price) / history[0].Price * 100.0;
+
+            _prices[asset.Ticker] = new AssetPrice(current, changePct, asset.Currency, history);
         }
     }
 
