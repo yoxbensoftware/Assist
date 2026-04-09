@@ -162,12 +162,31 @@ internal static class AutoUpdateService
     /// </summary>
     private static int NormalizeVersion(string tag)
     {
-        var cleaned = tag
-            .Replace("v.", "", StringComparison.OrdinalIgnoreCase)
-            .Replace("v", "", StringComparison.OrdinalIgnoreCase)
-            .Trim();
+        // Normalize various tag formats into a comparable integer.
+        // Supported forms:
+        // - "v.0019" or "v0019" -> parsed as integer 19
+        // - "v1.19" or "1.19" or "v1.1.0" -> parsed using System.Version and converted to integer
+        // The conversion for dotted versions is: major*10000 + minor*100 + patch (if present).
+        var cleaned = tag.Replace("v.", "", StringComparison.OrdinalIgnoreCase)
+                         .Replace("v", "", StringComparison.OrdinalIgnoreCase)
+                         .Trim();
 
-        return int.TryParse(cleaned, out var version) ? version : 0;
+        // Try plain integer first (old-style tags like "0019")
+        if (int.TryParse(cleaned, out var plain))
+            return plain;
+
+        // Try to parse as a semantic version (dotted)
+        if (System.Version.TryParse(cleaned, out var ver))
+        {
+            var major = ver.Major;
+            var minor = ver.Minor >= 0 ? ver.Minor : 0;
+            var build = ver.Build >= 0 ? ver.Build : 0;
+            return major * 10000 + minor * 100 + build;
+        }
+
+        // Fallback: extract leading digits sequence
+        var digits = new string(cleaned.TakeWhile(c => char.IsDigit(c)).ToArray());
+        return int.TryParse(digits, out var d) ? d : 0;
     }
 
     /// <summary>
