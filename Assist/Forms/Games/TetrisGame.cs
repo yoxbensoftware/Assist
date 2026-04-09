@@ -78,6 +78,9 @@ internal sealed class TetrisGame : Form
         MaximizeBox = false;
         KeyPreview = true;
 
+        // Oyun başladığında odağı kendine al
+        Shown += (_, _) => { this.ActiveControl = null; this.Focus(); };
+
         _lblScore = new Label
         {
             Text = "Skor: 0",
@@ -131,7 +134,9 @@ internal sealed class TetrisGame : Form
         _gameTimer = new System.Windows.Forms.Timer { Interval = InitialSpeed };
         _gameTimer.Tick += OnGameTick;
 
+
         KeyDown += OnKeyDown;
+        PreviewKeyDown += OnPreviewKeyDown;
         Paint += OnPaint;
 
         StartNewGame();
@@ -388,6 +393,16 @@ internal sealed class TetrisGame : Form
         using var highlight = new Pen(Color.FromArgb(60, 255, 255, 255));
         g.DrawLine(highlight, rect.Left, rect.Top, rect.Right, rect.Top);
         g.DrawLine(highlight, rect.Left, rect.Top, rect.Left, rect.Bottom);
+    }
+    // Ok tuşlarının ve space'in input key olarak algılanmasını sağlar
+    private void OnPreviewKeyDown(object sender, PreviewKeyDownEventArgs e)
+    {
+        if (e.KeyCode == Keys.Left || e.KeyCode == Keys.Right ||
+            e.KeyCode == Keys.Up || e.KeyCode == Keys.Down ||
+            e.KeyCode == Keys.Space)
+        {
+            e.IsInputKey = true;
+        }
     }
 
     protected override void Dispose(bool disposing)
