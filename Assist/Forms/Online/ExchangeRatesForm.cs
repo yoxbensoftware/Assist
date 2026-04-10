@@ -849,25 +849,31 @@ private static readonly AssetDef[] Assets =
                 !_prices.TryGetValue(source2, out var price2) || price2 == null)
                 return;
 
-            // Zaman serilerini tarihe göre eşleştir
-            var dict1 = price1.History.ToDictionary(x => x.Dt, x => x.Price);
-            var dict2 = price2.History.ToDictionary(x => x.Dt, x => x.Price);
+            // Decide normalization based on selected period's interval.
+            // For daily and higher resolutions ("1d"), normalize to Date to align monthly/yearly series.
+            var interval = _selectedPeriod?.Interval ?? "1d";
+            bool normalizeToDate = interval == "1d";
+
+            // Build dictionaries with normalized keys so time series can be matched across sources
+            var dict1 = price1.History.ToDictionary(x => normalizeToDate ? x.Dt.Date : x.Dt, x => x.Price);
+            var dict2 = price2.History.ToDictionary(x => normalizeToDate ? x.Dt.Date : x.Dt, x => x.Price);
             var commonDates = dict1.Keys.Intersect(dict2.Keys).OrderBy(x => x).ToList();
 
             if (commonDates.Count == 0)
             {
-                // Hiç ortak tarih yoksa, eski veri varsa dokunma
+                // No overlapping points; keep existing computed price if present
                 if (_prices.ContainsKey(asset.Ticker))
                     return;
-                // Yoksa hiç ekleme
                 return;
             }
 
             var history = new List<(DateTime Dt, double Price)>();
-            foreach (var dt in commonDates)
+            foreach (var key in commonDates)
             {
-                double p1 = dict1[dt];
-                double p2 = dict2[dt];
+                double p1 = dict1[key];
+                double p2 = dict2[key];
+                // If normalized to date, keep the Date as DateTime (midnight) for plotting
+                var dt = normalizeToDate ? key.Date : key;
                 history.Add((dt, p1 * p2));
             }
 
