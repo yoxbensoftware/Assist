@@ -100,12 +100,14 @@ private static readonly AssetDef[] Assets =
     private TextBox? _txtBuyPrice;
     private TextBox? _txtBuyAmount;
     private TextBox? _txtBuyTotal;
+    private TextBox? _txtSellPrice;
     private Label? _lblInvested;
     private Label? _lblCurrentValue;
     private Label? _profitLabel;
     private double _buyPrice = 6947.5370;
     private double _buyAmount = 72.04;
     private double _buyTotal = 6947.5370 * 72.04;
+    private double _sellPrice = 0;
 
     public ExchangeRatesForm()
     {
@@ -364,14 +366,16 @@ private static readonly AssetDef[] Assets =
             Padding = new Padding(20, 6, 20, 6),
             Visible = false,
         };
-        var lbl1 = new Label { Text = "Alış Fiyatı:", ForeColor = CMuted, Location = new Point(0, 8), Width = 70 };
-        _txtBuyPrice = new TextBox { Width = 80, Location = new Point(75, 5), Text = _buyPrice.ToString("F4") };
-        var lbl2 = new Label { Text = "Miktar (gr):", ForeColor = CMuted, Location = new Point(160, 8), Width = 80 };
-        _txtBuyAmount = new TextBox { Width = 60, Location = new Point(245, 5), Text = _buyAmount.ToString("F2") };
-        var lbl3 = new Label { Text = "Yatırım (TL):", ForeColor = CMuted, Location = new Point(320, 8), Width = 80 };
+        var lbl1 = new Label { Text = "Alış:", ForeColor = CMuted, Location = new Point(0, 8), AutoSize = true };
+        _txtBuyPrice = new TextBox { Width = 72, Location = new Point(40, 5), Text = _buyPrice.ToString("F4") };
+        var lblSell = new Label { Text = "G.Satış:", ForeColor = CMuted, Location = new Point(118, 8), AutoSize = true };
+        _txtSellPrice = new TextBox { Width = 72, Location = new Point(170, 5), Text = _sellPrice > 0 ? _sellPrice.ToString("F4") : "", PlaceholderText = "opsiyonel" };
+        var lbl2 = new Label { Text = "Miktar:", ForeColor = CMuted, Location = new Point(248, 8), AutoSize = true };
+        _txtBuyAmount = new TextBox { Width = 58, Location = new Point(300, 5), Text = _buyAmount.ToString("F2") };
+        var lbl3 = new Label { Text = "Yatırım:", ForeColor = CMuted, Location = new Point(364, 8), AutoSize = true };
         // Allow user to input total invested TL as well as unit amount/price; SaveInvestment will reconcile values
-        _txtBuyTotal = new TextBox { Width = 90, Location = new Point(405, 5), Enabled = true, Text = (_buyPrice * _buyAmount).ToString("F2") };
-        var btnSet = new Button { Text = "Kaydet", Width = 60, Location = new Point(500, 3), Height = 28 };
+        _txtBuyTotal = new TextBox { Width = 82, Location = new Point(420, 5), Enabled = true, Text = (_buyPrice * _buyAmount).ToString("F2") };
+        var btnSet = new Button { Text = "Kay", Width = 46, Location = new Point(506, 3), Height = 28 };
         btnSet.Click += (_, _) => SaveInvestment();
         // Kar/zarar label
         _lblInvested = new Label
@@ -400,7 +404,7 @@ private static readonly AssetDef[] Assets =
             ForeColor = CGreen,
             Text = "",
         };
-        _investmentPanel.Controls.AddRange([lbl1, _txtBuyPrice, lbl2, _txtBuyAmount, lbl3, _txtBuyTotal, btnSet, _lblInvested, _lblCurrentValue, _profitLabel]);
+        _investmentPanel.Controls.AddRange([lbl1, _txtBuyPrice, lblSell, _txtSellPrice, lbl2, _txtBuyAmount, lbl3, _txtBuyTotal, btnSet, _lblInvested, _lblCurrentValue, _profitLabel]);
         _rightPanel.Controls.Add(_investmentPanel);
 
         _chartCanvas = new DoubleBufferedPanel
@@ -511,6 +515,10 @@ private static readonly AssetDef[] Assets =
             ba = parsedBa;
         if (_txtBuyTotal != null && double.TryParse(_txtBuyTotal.Text.Replace(',', '.'), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var parsedBt))
             bt = parsedBt;
+        if (_txtSellPrice != null && double.TryParse(_txtSellPrice.Text.Replace(',', '.'), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var parsedSp) && parsedSp > 0)
+            _sellPrice = parsedSp;
+        else if (_txtSellPrice != null && string.IsNullOrWhiteSpace(_txtSellPrice.Text))
+            _sellPrice = 0;
 
         // Reconcile values: prefer explicit fields, compute missing one
         // Cases:
@@ -551,11 +559,13 @@ private static readonly AssetDef[] Assets =
         if (_txtBuyTotal != null) _txtBuyTotal.Text = _buyTotal.ToString("F2");
         // Update invested label
         if (_lblInvested != null)
-            _lblInvested.Text = $"Yatırım: {_buyTotal:F2} TL";
+            _lblInvested.Text = $"Yatırım: {_buyTotal:N2} TL";
         if (_lblCurrentValue != null && _prices.TryGetValue("GC_TRY", out var p))
         {
-            var cur = (p.Current * _selectedAsset.Multiplier) * _buyAmount;
-            _lblCurrentValue.Text = $"Anlık: {cur:F2} TL";
+            var midPrice = p.Current * _selectedAsset.Multiplier;
+            var priceToUse = _sellPrice > 0 ? _sellPrice : midPrice;
+            var cur = priceToUse * _buyAmount;
+            _lblCurrentValue.Text = _sellPrice > 0 ? $"Satış: {cur:N2} TL" : $"Anlık: {cur:N2} TL";
         }
         UpdateProfitLabel();
         _chartCanvas.Invalidate();
@@ -570,8 +580,9 @@ private static readonly AssetDef[] Assets =
         }
         if (_prices.TryGetValue("GC_TRY", out var price) && _buyPrice > 0 && _buyAmount > 0)
         {
-            double currentPrice = price.Current * _selectedAsset.Multiplier;
-            // Current TL value of user's position
+            double midPrice = price.Current * _selectedAsset.Multiplier;
+            double currentPrice = _sellPrice > 0 ? _sellPrice : midPrice;
+            // Current TL value of user's position (uses Garanti sell price if set, else Yahoo mid)
             double currentValueTL = currentPrice * _buyAmount;
             // Invested TL (use _buyTotal if available)
             double investedTL = _buyTotal > 0 ? _buyTotal : (_buyPrice * _buyAmount);
@@ -586,7 +597,7 @@ private static readonly AssetDef[] Assets =
             if (_lblInvested != null)
                 _lblInvested.Text = $"Yatırım: {investedTL:N2} TL";
             if (_lblCurrentValue != null)
-                _lblCurrentValue.Text = $"Anlık: {currentValueTL:N2} TL";
+                _lblCurrentValue.Text = _sellPrice > 0 ? $"Satış: {currentValueTL:N2} TL" : $"Anlık: {currentValueTL:N2} TL";
         }
         else
         {
