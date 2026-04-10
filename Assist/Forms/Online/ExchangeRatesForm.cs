@@ -32,7 +32,7 @@ internal sealed class ExchangeRatesForm : Form
 private static readonly AssetDef[] Assets =
 [
     // ALTIN / TL her zaman en üstte
-    new("GC_TRY", "Altın", "ALTIN / TL", "🥇", "TRY", 1.0, "GC=F,USDTRY=X"),
+    new("GC_TRY", "Altın", "ALTIN / TL", "🥇", "TRY", 1.0 / 31.1035, "GC=F,USDTRY=X"),
     // Real assets / forex / commodities
     new("USDTRY=X", "ABD Doları", "USD / TRY", "🇺🇸", "TRY"),
     new("EURTRY=X", "Euro", "EUR / TRY", "🇪🇺", "TRY"),
@@ -358,8 +358,8 @@ private static readonly AssetDef[] Assets =
         _investmentPanel = new Panel
         {
             Dock = DockStyle.Top,
-            // Increase height to fit inputs and summary labels without overlap
-            Height = 74,
+            // Row 1: giriş alanları (y≈5), Row 2: özet label'lar (y≈46)
+            Height = 78,
             BackColor = Color.FromArgb(18, 18, 18),
             Padding = new Padding(20, 6, 20, 6),
             Visible = false,
@@ -376,33 +376,31 @@ private static readonly AssetDef[] Assets =
         // Kar/zarar label
         _lblInvested = new Label
         {
-            Location = new Point(570, 4),
+            Location = new Point(0, 46),
             AutoSize = true,
             Font = new Font("Segoe UI", 8.5f, FontStyle.Regular),
-            ForeColor = CText,
+            ForeColor = CMuted,
             Text = "Yatırım: -",
         };
 
         _lblCurrentValue = new Label
         {
-            Location = new Point(570, 20),
+            Location = new Point(200, 46),
             AutoSize = true,
-            Font = new Font("Segoe UI", 8.5f, FontStyle.Regular),
+            Font = new Font("Segoe UI", 9f, FontStyle.Bold),
             ForeColor = CText,
             Text = "Anlık: -",
         };
 
         _profitLabel = new Label
         {
-            Location = new Point(570, 36),
+            Location = new Point(400, 44),
             AutoSize = true,
-            Font = new Font("Segoe UI", 12f, FontStyle.Bold),
+            Font = new Font("Segoe UI", 9f, FontStyle.Bold),
             ForeColor = CGreen,
             Text = "",
         };
-        _investmentPanel.Controls.AddRange([lbl1, _txtBuyPrice, lbl2, _txtBuyAmount, lbl3, _txtBuyTotal, btnSet, _profitLabel]);
-        // add invested/current labels as well
-        _investmentPanel.Controls.AddRange([_lblInvested, _lblCurrentValue]);
+        _investmentPanel.Controls.AddRange([lbl1, _txtBuyPrice, lbl2, _txtBuyAmount, lbl3, _txtBuyTotal, btnSet, _lblInvested, _lblCurrentValue, _profitLabel]);
         _rightPanel.Controls.Add(_investmentPanel);
 
         _chartCanvas = new DoubleBufferedPanel
@@ -580,24 +578,15 @@ private static readonly AssetDef[] Assets =
             double profit = currentValueTL - investedTL;
             double profitPct = (investedTL > 0) ? (profit / investedTL * 100.0) : 0;
 
-            // Günlük kar
-            string extra = "";
-            if (price.History.Count > 0)
-            {
-                // Use first history price as period open depending on selected period
-                double dayOpen = price.History[0].Price * _selectedAsset.Multiplier;
-                double dayOpenValueTL = dayOpen * _buyAmount;
-                double dayProfit = currentValueTL - dayOpenValueTL;
-                extra = $" | Günlük Kâr: {dayProfit:F2} TL";
-            }
-
-            string profitStr = profit >= 0 ? $"KAR: {profit:F2} TL (%{profitPct:F2}){extra}" : $"ZARAR: {profit:F2} TL (%{profitPct:F2}){extra}";
+            string profitStr = profit >= 0
+                ? $"▲ +{profit:N2} TL  (+%{profitPct:F2})"
+                : $"▼ -{Math.Abs(profit):N2} TL  (-%{Math.Abs(profitPct):F2})";
             _profitLabel.Text = profitStr;
             _profitLabel.ForeColor = profit >= 0 ? CGreen : CRed;
             if (_lblInvested != null)
-                _lblInvested.Text = $"Yatırım: {investedTL:F2} TL";
+                _lblInvested.Text = $"Yatırım: {investedTL:N2} TL";
             if (_lblCurrentValue != null)
-                _lblCurrentValue.Text = $"Anlık: {currentValueTL:F2} TL";
+                _lblCurrentValue.Text = $"Anlık: {currentValueTL:N2} TL";
         }
         else
         {
