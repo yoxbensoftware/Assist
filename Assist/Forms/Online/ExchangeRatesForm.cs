@@ -366,16 +366,13 @@ private static readonly AssetDef[] Assets =
             Padding = new Padding(20, 6, 20, 6),
             Visible = false,
         };
-        var lbl1 = new Label { Text = "Alış:", ForeColor = CMuted, Location = new Point(0, 8), AutoSize = true };
-        _txtBuyPrice = new TextBox { Width = 72, Location = new Point(40, 5), Text = _buyPrice.ToString("F4") };
-        var lblSell = new Label { Text = "G.Satış:", ForeColor = CMuted, Location = new Point(118, 8), AutoSize = true };
-        _txtSellPrice = new TextBox { Width = 72, Location = new Point(170, 5), Text = _sellPrice > 0 ? _sellPrice.ToString("F4") : "", PlaceholderText = "opsiyonel" };
-        var lbl2 = new Label { Text = "Miktar:", ForeColor = CMuted, Location = new Point(248, 8), AutoSize = true };
-        _txtBuyAmount = new TextBox { Width = 58, Location = new Point(300, 5), Text = _buyAmount.ToString("F2") };
-        var lbl3 = new Label { Text = "Yatırım:", ForeColor = CMuted, Location = new Point(364, 8), AutoSize = true };
+        // Row 1: label'sız, PlaceholderText ile ipucu — textbox'lar geniş, çakışma yok
+        _txtBuyPrice = new TextBox { Width = 110, Location = new Point(0, 5), Text = _buyPrice.ToString("F4"), PlaceholderText = "Alış fiy. (TL/gr)" };
+        _txtSellPrice = new TextBox { Width = 110, Location = new Point(115, 5), Text = _sellPrice > 0 ? _sellPrice.ToString("F4") : "", PlaceholderText = "G.Satış (TL/gr)" };
+        _txtBuyAmount = new TextBox { Width = 82, Location = new Point(230, 5), Text = _buyAmount.ToString("F2"), PlaceholderText = "Miktar (gr)" };
         // Allow user to input total invested TL as well as unit amount/price; SaveInvestment will reconcile values
-        _txtBuyTotal = new TextBox { Width = 82, Location = new Point(420, 5), Enabled = true, Text = (_buyPrice * _buyAmount).ToString("F2") };
-        var btnSet = new Button { Text = "Kay", Width = 46, Location = new Point(506, 3), Height = 28 };
+        _txtBuyTotal = new TextBox { Width = 110, Location = new Point(317, 5), Enabled = true, Text = (_buyPrice * _buyAmount).ToString("F2"), PlaceholderText = "Yatırım (TL)" };
+        var btnSet = new Button { Text = "Kaydet", Width = 65, Location = new Point(432, 3), Height = 28 };
         btnSet.Click += (_, _) => SaveInvestment();
         // Kar/zarar label
         _lblInvested = new Label
@@ -404,7 +401,7 @@ private static readonly AssetDef[] Assets =
             ForeColor = CGreen,
             Text = "",
         };
-        _investmentPanel.Controls.AddRange([lbl1, _txtBuyPrice, lblSell, _txtSellPrice, lbl2, _txtBuyAmount, lbl3, _txtBuyTotal, btnSet, _lblInvested, _lblCurrentValue, _profitLabel]);
+        _investmentPanel.Controls.AddRange([_txtBuyPrice, _txtSellPrice, _txtBuyAmount, _txtBuyTotal, btnSet, _lblInvested, _lblCurrentValue, _profitLabel]);
         _rightPanel.Controls.Add(_investmentPanel);
 
         _chartCanvas = new DoubleBufferedPanel
