@@ -100,6 +100,8 @@ private static readonly AssetDef[] Assets =
     private TextBox? _txtBuyPrice;
     private TextBox? _txtBuyAmount;
     private TextBox? _txtBuyTotal;
+    private Label? _lblInvested;
+    private Label? _lblCurrentValue;
     private Label? _profitLabel;
     private double _buyPrice = 6947.5370;
     private double _buyAmount = 72.04;
@@ -380,15 +382,35 @@ private static readonly AssetDef[] Assets =
         var btnSet = new Button { Text = "Kaydet", Width = 60, Location = new Point(500, 3), Height = 28 };
         btnSet.Click += (_, _) => SaveInvestment();
         // Kar/zarar label
+        _lblInvested = new Label
+        {
+            Location = new Point(570, 4),
+            AutoSize = true,
+            Font = new Font("Segoe UI", 8.5f, FontStyle.Regular),
+            ForeColor = CText,
+            Text = "Yatırım: -",
+        };
+
+        _lblCurrentValue = new Label
+        {
+            Location = new Point(570, 20),
+            AutoSize = true,
+            Font = new Font("Segoe UI", 8.5f, FontStyle.Regular),
+            ForeColor = CText,
+            Text = "Anlık: -",
+        };
+
         _profitLabel = new Label
         {
-            Location = new Point(570, 7),
+            Location = new Point(570, 36),
             AutoSize = true,
             Font = new Font("Segoe UI", 12f, FontStyle.Bold),
             ForeColor = CGreen,
             Text = "",
         };
         _investmentPanel.Controls.AddRange([lbl1, _txtBuyPrice, lbl2, _txtBuyAmount, lbl3, _txtBuyTotal, btnSet, _profitLabel]);
+        // add invested/current labels as well
+        _investmentPanel.Controls.AddRange([_lblInvested, _lblCurrentValue]);
         _rightPanel.Controls.Add(_investmentPanel);
 
         _chartCanvas = new DoubleBufferedPanel
@@ -537,6 +559,14 @@ private static readonly AssetDef[] Assets =
         if (_txtBuyPrice != null) _txtBuyPrice.Text = _buyPrice.ToString("F4");
         if (_txtBuyAmount != null) _txtBuyAmount.Text = _buyAmount.ToString("F2");
         if (_txtBuyTotal != null) _txtBuyTotal.Text = _buyTotal.ToString("F2");
+        // Update invested label
+        if (_lblInvested != null)
+            _lblInvested.Text = $"Yatırım: {_buyTotal:F2} TL";
+        if (_lblCurrentValue != null && _prices.TryGetValue("GC_TRY", out var p))
+        {
+            var cur = (p.Current * _selectedAsset.Multiplier) * _buyAmount;
+            _lblCurrentValue.Text = $"Anlık: {cur:F2} TL";
+        }
         UpdateProfitLabel();
         _chartCanvas.Invalidate();
     }
@@ -572,6 +602,10 @@ private static readonly AssetDef[] Assets =
             string profitStr = profit >= 0 ? $"KAR: {profit:F2} TL (%{profitPct:F2}){extra}" : $"ZARAR: {profit:F2} TL (%{profitPct:F2}){extra}";
             _profitLabel.Text = profitStr;
             _profitLabel.ForeColor = profit >= 0 ? CGreen : CRed;
+            if (_lblInvested != null)
+                _lblInvested.Text = $"Yatırım: {investedTL:F2} TL";
+            if (_lblCurrentValue != null)
+                _lblCurrentValue.Text = $"Anlık: {currentValueTL:F2} TL";
         }
         else
         {
