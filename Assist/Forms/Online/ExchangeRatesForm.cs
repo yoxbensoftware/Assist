@@ -103,6 +103,7 @@ private static readonly AssetDef[] Assets =
     private Label? _profitLabel;
     private double _buyPrice = 6947.5370;
     private double _buyAmount = 72.04;
+    private double _buyTotal = 6947.5370 * 72.04;
 
     public ExchangeRatesForm()
     {
@@ -374,7 +375,8 @@ private static readonly AssetDef[] Assets =
         var lbl2 = new Label { Text = "Miktar (gr):", ForeColor = CMuted, Location = new Point(160, 8), Width = 80 };
         _txtBuyAmount = new TextBox { Width = 60, Location = new Point(245, 5), Text = _buyAmount.ToString("F2") };
         var lbl3 = new Label { Text = "Yatırım (TL):", ForeColor = CMuted, Location = new Point(320, 8), Width = 80 };
-        _txtBuyTotal = new TextBox { Width = 90, Location = new Point(405, 5), Enabled = false };
+        // Allow user to input total invested TL as well as unit amount/price; SaveInvestment will reconcile values
+        _txtBuyTotal = new TextBox { Width = 90, Location = new Point(405, 5), Enabled = true, Text = (_buyPrice * _buyAmount).ToString("F2") };
         var btnSet = new Button { Text = "Kaydet", Width = 60, Location = new Point(500, 3), Height = 28 };
         btnSet.Click += (_, _) => SaveInvestment();
         // Kar/zarar label
@@ -489,13 +491,52 @@ private static readonly AssetDef[] Assets =
 
     private void SaveInvestment()
     {
-        if (_txtBuyPrice != null && double.TryParse(_txtBuyPrice.Text.Replace(',', '.'), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var bp))
-            _buyPrice = bp;
-        if (_txtBuyAmount != null && double.TryParse(_txtBuyAmount.Text.Replace(',', '.'), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var ba))
-            _buyAmount = ba;
-        // Yatırım otomatik hesaplanır
-        if (_txtBuyTotal != null)
-            _txtBuyTotal.Text = (_buyPrice * _buyAmount).ToString("F2");
+        // Parse inputs (user may fill any of the three fields). Use invariant culture and accept comma.
+        double? bp = null, ba = null, bt = null;
+        if (_txtBuyPrice != null && double.TryParse(_txtBuyPrice.Text.Replace(',', '.'), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var parsedBp))
+            bp = parsedBp;
+        if (_txtBuyAmount != null && double.TryParse(_txtBuyAmount.Text.Replace(',', '.'), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var parsedBa))
+            ba = parsedBa;
+        if (_txtBuyTotal != null && double.TryParse(_txtBuyTotal.Text.Replace(',', '.'), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var parsedBt))
+            bt = parsedBt;
+
+        // Reconcile values: prefer explicit fields, compute missing one
+        // Cases:
+        // - bp && ba => bt = bp * ba
+        // - bp && bt => ba = bt / bp
+        // - ba && bt => bp = bt / ba
+        if (bp.HasValue && ba.HasValue)
+        {
+            _buyPrice = bp.Value;
+            _buyAmount = ba.Value;
+            _buyTotal = _buyPrice * _buyAmount;
+        }
+        else if (bp.HasValue && bt.HasValue)
+        {
+            _buyPrice = bp.Value;
+            _buyTotal = bt.Value;
+            _buyAmount = _buyPrice > 0 ? _buyTotal / _buyPrice : 0;
+        }
+        else if (ba.HasValue && bt.HasValue)
+        {
+            _buyAmount = ba.Value;
+            _buyTotal = bt.Value;
+            _buyPrice = _buyAmount > 0 ? _buyTotal / _buyAmount : 0;
+        }
+        else
+        {
+            // Fallback: use any provided values, otherwise keep existing
+            if (bp.HasValue) _buyPrice = bp.Value;
+            if (ba.HasValue) _buyAmount = ba.Value;
+            if (bt.HasValue) _buyTotal = bt.Value;
+            // ensure consistency
+            _buyTotal = _buyPrice * _buyAmount;
+        }
+
+        // Update UI fields to show reconciled values
+        if (_txtBuyPrice != null) _txtBuyPrice.Text = _buyPrice.ToString("F4");
+        if (_txtBuyAmount != null) _txtBuyAmount.Text = _buyAmount.ToString("F2");
+        if (_txtBuyTotal != null) _txtBuyTotal.Text = _buyTotal.ToString("F2");
         UpdateProfitLabel();
         _chartCanvas.Invalidate();
     }
@@ -510,16 +551,21 @@ private static readonly AssetDef[] Assets =
         if (_prices.TryGetValue("GC_TRY", out var price) && _buyPrice > 0 && _buyAmount > 0)
         {
             double currentPrice = price.Current * _selectedAsset.Multiplier;
-            double yatirim = _buyPrice * _buyAmount;
-            double profit = (currentPrice - _buyPrice) * _buyAmount;
-            double profitPct = (yatirim > 0) ? (profit / yatirim * 100.0) : 0;
+            // Current TL value of user's position
+            double currentValueTL = currentPrice * _buyAmount;
+            // Invested TL (use _buyTotal if available)
+            double investedTL = _buyTotal > 0 ? _buyTotal : (_buyPrice * _buyAmount);
+            double profit = currentValueTL - investedTL;
+            double profitPct = (investedTL > 0) ? (profit / investedTL * 100.0) : 0;
 
             // Günlük kar
             string extra = "";
-            if (_selectedPeriod.Label == "Günlük" && price.History.Count > 0)
+            if (price.History.Count > 0)
             {
+                // Use first history price as period open depending on selected period
                 double dayOpen = price.History[0].Price * _selectedAsset.Multiplier;
-                double dayProfit = (currentPrice - dayOpen) * _buyAmount;
+                double dayOpenValueTL = dayOpen * _buyAmount;
+                double dayProfit = currentValueTL - dayOpenValueTL;
                 extra = $" | Günlük Kâr: {dayProfit:F2} TL";
             }
 
