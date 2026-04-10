@@ -146,15 +146,6 @@ private static readonly AssetDef[] Assets =
         Shown += async (_, _) => await RefreshAllAsync();
     }
 
-    private void BuildUi()
-    {
-        SuspendLayout();
-        BuildTopBar();
-        BuildLeftPane();
-        BuildRightPane();
-        ResumeLayout(performLayout: true);
-    }
-
     private void BuildTopBar()
     {
         _topBar = new Panel
@@ -552,8 +543,8 @@ private static readonly AssetDef[] Assets =
             if (bp.HasValue) _buyPrice = bp.Value;
             if (ba.HasValue) _buyAmount = ba.Value;
             if (bt.HasValue) _buyTotal = bt.Value;
-            // ensure consistency
-            _buyTotal = _buyPrice * _buyAmount;
+            // Only recompute total when the user did NOT explicitly supply it
+            else _buyTotal = _buyPrice * _buyAmount;
         }
 
         // Update UI fields to show reconciled values
@@ -895,12 +886,7 @@ private static readonly AssetDef[] Assets =
             var commonDates = dict1.Keys.Intersect(dict2.Keys).OrderBy(x => x).ToList();
 
             if (commonDates.Count == 0)
-            {
-                // No overlapping points; keep existing computed price if present
-                if (_prices.ContainsKey(asset.Ticker))
-                    return;
                 return;
-            }
 
             var history = new List<(DateTime Dt, double Price)>();
             foreach (var key in commonDates)
