@@ -367,9 +367,10 @@ private static readonly AssetDef[] Assets =
         _investmentPanel = new Panel
         {
             Dock = DockStyle.Top,
-            Height = 38,
+            // Increase height to fit inputs and summary labels without overlap
+            Height = 74,
             BackColor = Color.FromArgb(18, 18, 18),
-            Padding = new Padding(20, 2, 20, 2),
+            Padding = new Padding(20, 6, 20, 6),
             Visible = false,
         };
         var lbl1 = new Label { Text = "Alış Fiyatı:", ForeColor = CMuted, Location = new Point(0, 8), Width = 70 };
