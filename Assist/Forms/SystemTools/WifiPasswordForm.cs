@@ -122,16 +122,16 @@ internal sealed partial class WifiPasswordForm : Form
 
     private static async Task<string> RunNetshAsync(string args)
     {
-        var oemEncoding = System.Text.Encoding.GetEncoding(
-            System.Globalization.CultureInfo.CurrentCulture.TextInfo.OEMCodePage);
-
+        // chcp 65001 forces UTF-8 output before netsh runs.
+        // This avoids System.NotSupportedException for OEM code pages (e.g. 857 Turkish)
+        // that are not available in .NET's default encoding set.
         using var proc = new Process();
-        proc.StartInfo = new ProcessStartInfo("netsh", args)
+        proc.StartInfo = new ProcessStartInfo("cmd.exe", $"/c chcp 65001 >nul && netsh {args}")
         {
             RedirectStandardOutput = true,
             UseShellExecute = false,
             CreateNoWindow = true,
-            StandardOutputEncoding = oemEncoding
+            StandardOutputEncoding = System.Text.Encoding.UTF8
         };
         proc.Start();
         var output = await proc.StandardOutput.ReadToEndAsync();
