@@ -10,6 +10,9 @@
     <!-- Application Icon -->
     <ApplicationIcon>Resources\assist_icon.ico</ApplicationIcon>
 
+    <!-- UAC manifest: requireAdministrator (netsh key=clear requires admin) -->
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+
     <!-- Code Analysis Settings -->
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <AnalysisLevel>latest</AnalysisLevel>

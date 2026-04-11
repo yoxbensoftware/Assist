@@ -66,16 +66,16 @@ internal sealed partial class WifiPasswordForm : Form
         Load += async (_, _) => await LoadProfilesAsync();
     }
 
-    [GeneratedRegex(@"All User Profile\s*:\s*(.+)", RegexOptions.IgnoreCase)]
+    [GeneratedRegex(@"(?:All User Profile|Tüm Kullanıcı Profili)\s*:\s*(.+)", RegexOptions.IgnoreCase)]
     private static partial Regex ProfileNameRegex();
 
-    [GeneratedRegex(@"Key Content\s*:\s*(.+)", RegexOptions.IgnoreCase)]
+    [GeneratedRegex(@"(?:Key Content|Anahtar [İi]çeri[ğg]i)\s*:\s*(.+)", RegexOptions.IgnoreCase)]
     private static partial Regex KeyContentRegex();
 
-    [GeneratedRegex(@"Authentication\s*:\s*(.+)", RegexOptions.IgnoreCase)]
+    [GeneratedRegex(@"(?:Authentication|Kimlik\s+Do[ğg]rulama\S*)\s*:\s*(.+)", RegexOptions.IgnoreCase)]
     private static partial Regex AuthRegex();
 
-    [GeneratedRegex(@"Cipher\s*:\s*(.+)", RegexOptions.IgnoreCase)]
+    [GeneratedRegex(@"(?:Cipher|Şifre)\s*:\s*(.+)", RegexOptions.IgnoreCase)]
     private static partial Regex CipherRegex();
 
     private async Task LoadProfilesAsync()
@@ -122,13 +122,16 @@ internal sealed partial class WifiPasswordForm : Form
 
     private static async Task<string> RunNetshAsync(string args)
     {
+        var oemEncoding = System.Text.Encoding.GetEncoding(
+            System.Globalization.CultureInfo.CurrentCulture.TextInfo.OEMCodePage);
+
         using var proc = new Process();
         proc.StartInfo = new ProcessStartInfo("netsh", args)
         {
             RedirectStandardOutput = true,
             UseShellExecute = false,
             CreateNoWindow = true,
-            StandardOutputEncoding = System.Text.Encoding.UTF8
+            StandardOutputEncoding = oemEncoding
         };
         proc.Start();
         var output = await proc.StandardOutput.ReadToEndAsync();
