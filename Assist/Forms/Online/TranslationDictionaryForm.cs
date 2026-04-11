@@ -1,6 +1,5 @@
 namespace Assist.Forms.Online;
 
-using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 using Assist.Services;
@@ -250,8 +249,16 @@ internal sealed class TranslationDictionaryForm : Form
                 if (_history.Count > 30) _history.RemoveAt(_history.Count - 1);
                 RefreshHistory();
 
-                var url = $"https://api.mymemory.translated.net/get?q={Uri.EscapeDataString(word)}&langpair={langPair}";
-                var response = await Http.GetFromJsonAsync<JsonElement>(url);
+                var url = $"https://api.mymemory.translated.net/get?q={Uri.EscapeDataString(word)}&langpair={Uri.EscapeDataString(langPair)}";
+                using var httpResp = await Http.GetAsync(url);
+                if (!httpResp.IsSuccessStatusCode)
+                {
+                    ShowError(word, $"API yan\u0131t vermedi (HTTP {(int)httpResp.StatusCode}). L\u00FCtfen tekrar deneyin.");
+                    return;
+                }
+                var jsonStr = await httpResp.Content.ReadAsStringAsync();
+                var doc = JsonDocument.Parse(jsonStr);
+                var response = doc.RootElement;
 
                 if (response.ValueKind == JsonValueKind.Undefined)
                 {
@@ -359,9 +366,14 @@ internal sealed class TranslationDictionaryForm : Form
 
                 AppendLine("\n", new Font("Segoe UI", 9), CText);
             }
-            catch (HttpRequestException)
+            catch (TaskCanceledException)
             {
-                ShowError(word, "API'ye eri\u015Filemedi. \u0130nternet ba\u011Flant\u0131n\u0131z\u0131 kontrol edin.");
+                ShowError(word, "\u0130stek zaman a\u015F\u0131m\u0131na u\u011Frad\u0131. L\u00FCtfen tekrar deneyin.");
+            }
+            catch (HttpRequestException ex)
+            {
+                var detail = ex.StatusCode.HasValue ? $" (HTTP {(int)ex.StatusCode})" : "";
+                ShowError(word, $"API'ye eri\u015Filemedi{detail}. \u0130nternet ba\u011Flant\u0131n\u0131z\u0131 kontrol edin.");
             }
             catch (Exception ex)
             {
