@@ -86,12 +86,15 @@ internal static class TranslationService
     /// <summary>
     /// Attempts to translate text using the MyMemory free translation API as a fallback.
     /// </summary>
+    private static string? MyMemoryEmail => Environment.GetEnvironmentVariable("ASSIST_MYMEMORY_EMAIL");
+
     private static async Task<string?> TryMyMemoryTranslateAsync(string text, string toLanguage)
     {
         try
         {
             var encodedText = Uri.EscapeDataString(text);
-            var url = $"{MyMemoryEndpoint}?q={encodedText}&langpair=en|{toLanguage}";
+            var email = string.IsNullOrEmpty(MyMemoryEmail) ? "" : $"&de={Uri.EscapeDataString(MyMemoryEmail)}";
+            var url = $"{MyMemoryEndpoint}?q={encodedText}&langpair=en|{toLanguage}{email}";
 
             var response = await HttpClient.GetStringAsync(url).ConfigureAwait(false);
             using var doc = JsonDocument.Parse(response);

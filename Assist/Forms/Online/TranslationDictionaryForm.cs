@@ -253,7 +253,11 @@ internal sealed class TranslationDictionaryForm : Form
                 using var httpResp = await Http.GetAsync(url);
                 if (!httpResp.IsSuccessStatusCode)
                 {
-                    ShowError(word, $"API yan\u0131t vermedi (HTTP {(int)httpResp.StatusCode}). L\u00FCtfen tekrar deneyin.");
+                    var statusCode = (int)httpResp.StatusCode;
+                    var errorMsg = statusCode == 429
+                        ? "Günlük çeviri limiti aşıldı (HTTP 429). Yarın tekrar deneyin veya ASSIST_MYMEMORY_EMAIL ortam değişkenini ayarlayarak limiti artırın."
+                        : $"API yanıt vermedi (HTTP {statusCode}). Lütfen tekrar deneyin.";
+                    ShowError(word, errorMsg);
                     return;
                 }
                 var jsonStr = await httpResp.Content.ReadAsStringAsync();
