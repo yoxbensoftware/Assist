@@ -1,5 +1,6 @@
 namespace Assist.Forms.SystemTools;
 
+using System.Diagnostics;
 using Microsoft.Win32;
 
 /// <summary>
@@ -49,18 +50,22 @@ internal sealed class StartupManagerForm : Form
         _listView.Columns.Add("Ad", 200);
         _listView.Columns.Add("Komut", 500);
 
-        var btnEnable = CreateButton("✅ Etkinleştir", new Point(20, 470));
+        var btnStart = CreateButton("▶ Başlat", new Point(20, 470), Color.LimeGreen);
+        btnStart.Click += (_, _) => StartSelectedProcess();
+
+        var btnStop = CreateButton("⏹ Durdur", new Point(148, 470), Color.OrangeRed);
+        btnStop.Click += (_, _) => StopSelectedProcess();
+
+        var btnEnable = CreateButton("✅ Etkinleştir", new Point(276, 470));
         btnEnable.Click += (_, _) => SetEntryEnabled(true);
 
-        var btnDisable = CreateButton("❌ Devre Dışı", new Point(200, 470));
+        var btnDisable = CreateButton("❌ Devre Dışı", new Point(404, 470));
         btnDisable.Click += (_, _) => SetEntryEnabled(false);
 
-        var btnRefresh = CreateButton("🔄 Yenile", new Point(380, 470));
+        var btnRefresh = CreateButton("🔄 Yenile", new Point(532, 470));
         btnRefresh.Click += (_, _) => LoadStartupItems();
 
-        var btnDelete = CreateButton("🗑️ Sil", new Point(560, 470));
-        btnDelete.ForeColor = Color.OrangeRed;
-        btnDelete.FlatAppearance.BorderColor = Color.OrangeRed;
+        var btnDelete = CreateButton("🗑️ Sil", new Point(660, 470), Color.OrangeRed);
         btnDelete.Click += (_, _) => DeleteEntry();
 
         _lblStatus = new Label
@@ -73,7 +78,7 @@ internal sealed class StartupManagerForm : Form
             Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom
         };
 
-        Controls.AddRange([lblTitle, _listView, btnEnable, btnDisable, btnRefresh, btnDelete, _lblStatus]);
+        Controls.AddRange([lblTitle, _listView, btnStart, btnStop, btnEnable, btnDisable, btnRefresh, btnDelete, _lblStatus]);
 
         LoadStartupItems();
     }
@@ -206,21 +211,123 @@ internal sealed class StartupManagerForm : Form
         }
     }
 
-    private static Button CreateButton(string text, Point location)
+    private static Button CreateButton(string text, Point location, Color? foreColor = null)
     {
+        var color = foreColor ?? AppConstants.AccentText;
         var btn = new Button
         {
             Text = text,
             Location = location,
-            Width = 160,
+            Width = 120,
             Height = 30,
             BackColor = Color.Black,
-            ForeColor = AppConstants.AccentText,
+            ForeColor = color,
             FlatStyle = FlatStyle.Flat,
             Font = new Font("Consolas", 9, FontStyle.Bold)
         };
-        btn.FlatAppearance.BorderColor = AppConstants.AccentText;
+        btn.FlatAppearance.BorderColor = color;
         return btn;
+    }
+
+    private void StartSelectedProcess()
+    {
+        if (_listView.SelectedItems.Count == 0)
+        {
+            _lblStatus.Text = "Lütfen bir öğe seçin.";
+            return;
+        }
+
+        if (_listView.SelectedItems[0].Tag is not StartupEntry entry) return;
+
+        var (exePath, args) = ParseCommand(entry.Command);
+
+        if (!File.Exists(exePath))
+        {
+            _lblStatus.Text = $"Dosya bulunamadı: {exePath}";
+            return;
+        }
+
+        try
+        {
+            Process.Start(new ProcessStartInfo(exePath, args) { UseShellExecute = true });
+            _lblStatus.Text = $"'{entry.Name}' başlatıldı.";
+        }
+        catch (Exception ex)
+        {
+            _lblStatus.Text = $"Başlatma hatası: {ex.Message}";
+        }
+    }
+
+    private void StopSelectedProcess()
+    {
+        if (_listView.SelectedItems.Count == 0)
+        {
+            _lblStatus.Text = "Lütfen bir öğe seçin.";
+            return;
+        }
+
+        if (_listView.SelectedItems[0].Tag is not StartupEntry entry) return;
+
+        var (exePath, _) = ParseCommand(entry.Command);
+        var exeName = Path.GetFileNameWithoutExtension(exePath);
+
+        string[] protectedExes = ["explorer", "svchost", "winlogon", "csrss", "smss", "lsass", "services"];
+        if (protectedExes.Contains(exeName.ToLowerInvariant()))
+        {
+            _lblStatus.Text = $"'{exeName}' kritik sistem işlemi, durdurulamaz.";
+            return;
+        }
+
+        var processes = Process.GetProcessesByName(exeName);
+        if (processes.Length == 0)
+        {
+            _lblStatus.Text = $"'{exeName}' şu an çalışmıyor.";
+            return;
+        }
+
+        var confirm = MessageBox.Show(
+            $"'{exeName}' ({processes.Length} işlem) durdurulacak. Onaylıyor musunuz?",
+            "İşlemi Durdur", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+
+        if (confirm != DialogResult.Yes)
+        {
+            foreach (var p in processes) p.Dispose();
+            return;
+        }
+
+        var killed = 0;
+        foreach (var proc in processes)
+        {
+            try { proc.Kill(entireProcessTree: true); killed++; }
+            catch { }
+            finally { proc.Dispose(); }
+        }
+
+        _lblStatus.Text = $"'{exeName}' durduruldu ({killed}/{processes.Length} işlem).";
+    }
+
+    private static (string exePath, string args) ParseCommand(string command)
+    {
+        var cmd = command.Trim();
+
+        if (cmd.StartsWith('"'))
+        {
+            var closeQuote = cmd.IndexOf('"', 1);
+            if (closeQuote >= 0)
+            {
+                var exe = cmd[1..closeQuote];
+                var args = closeQuote + 1 < cmd.Length ? cmd[(closeQuote + 1)..].TrimStart() : string.Empty;
+                return (Environment.ExpandEnvironmentVariables(exe), args);
+            }
+            return (Environment.ExpandEnvironmentVariables(cmd.Trim('"')), string.Empty);
+        }
+        else
+        {
+            var spaceIdx = cmd.IndexOf(' ');
+            if (spaceIdx >= 0)
+                return (Environment.ExpandEnvironmentVariables(cmd[..spaceIdx]), cmd[(spaceIdx + 1)..]);
+            return (Environment.ExpandEnvironmentVariables(cmd), string.Empty);
+        }
     }
 
     private sealed record StartupEntry(RegistryKey Root, string Name, string Command, bool IsEnabled, string RootLabel);
