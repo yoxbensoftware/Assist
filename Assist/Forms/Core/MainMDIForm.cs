@@ -7,10 +7,23 @@ using System.Text;
 using Assist.Forms.ClipboardTools;
 using Assist.Forms.Core;
 using Assist.Forms.DeveloperTools;
+using Assist.Forms.DeveloperTools.Converters;
+using Assist.Forms.DeveloperTools.Formatters;
+using Assist.Forms.DeveloperTools.Generators;
+using Assist.Forms.DeveloperTools.Testing;
 using Assist.Forms.Games;
 using Assist.Forms.Online;
+using Assist.Forms.Online.Finance;
+using Assist.Forms.Online.News;
+using Assist.Forms.Online.Queries;
+using Assist.Forms.Online.Reference;
 using Assist.Forms.Passwords;
 using Assist.Forms.SystemTools;
+using Assist.Forms.SystemTools.Maintenance;
+using Assist.Forms.SystemTools.Monitoring;
+using Assist.Forms.SystemTools.Network;
+using Assist.Forms.SystemTools.Security;
+using Assist.Forms.SystemTools.Troubleshooting;
 using Assist.Models;
 using Assist.Services;
 
@@ -185,42 +198,47 @@ internal partial class MainMDIForm : Form
     {
         var menu = new ToolStripMenuItem("Sistem Araçları");
 
-        // System information
-        menu.DropDownItems.Add(CreateMenuItem("Sistem Bilgisi", () => ShowMdiChild(new SystemInfoForm())));
-        menu.DropDownItems.Add(CreateMenuItem("Performance Monitor", () => ShowMdiChild(new PerformanceMonitorForm())));
-        menu.DropDownItems.Add(CreateMenuItem("Speed Test", () => ShowMdiChild(new SpeedTestForm())));
-        menu.DropDownItems.Add(CreateMenuItem("Bağlantı Monitörü", () =>
+        // ── 📊 İzleme ────────────────────────────────
+        var monitoring = new ToolStripMenuItem("📊 İzleme");
+        monitoring.DropDownItems.Add(CreateMenuItem("Sistem Bilgisi", () => ShowMdiChild(new SystemInfoForm())));
+        monitoring.DropDownItems.Add(CreateMenuItem("Performance Monitor", () => ShowMdiChild(new PerformanceMonitorForm())));
+        monitoring.DropDownItems.Add(CreateMenuItem("Bağlantı Monitörü", () =>
         {
             var existing = Application.OpenForms.OfType<ConnectionMonitorForm>().FirstOrDefault();
             if (existing is not null) { existing.BringToFront(); return; }
             new ConnectionMonitorForm().Show();
         }));
+        menu.DropDownItems.Add(monitoring);
+
+        // ── 🔧 Bakım & Yönetim ──────────────────────
+        var maintenance = new ToolStripMenuItem("🔧 Bakım & Yönetim");
+        maintenance.DropDownItems.Add(CreateMenuItem("Startup Manager", () => ShowMdiChild(new StartupManagerForm())));
+        maintenance.DropDownItems.Add(CreateMenuItem("Disk Temizleyici", () => ShowMdiChild(new DiskCleanerForm())));
+        maintenance.DropDownItems.Add(CreateMenuItem("Hosts File Editor", () => ShowMdiChild(new HostsFileEditorForm())));
+        menu.DropDownItems.Add(maintenance);
+
+        // ── 🛠 Sorun Giderme ─────────────────────────
+        var troubleshoot = new ToolStripMenuItem("🛠 Sorun Giderme");
+        troubleshoot.DropDownItems.Add(CreateMenuItem("Donanım Sorun Giderici", () => ShowMdiChild(new HardwareDiagnosticsForm())));
+        troubleshoot.DropDownItems.Add(CreateMenuItem("Sistem Kurtarma", () => ShowMdiChild(new SystemRecoveryForm())));
+        menu.DropDownItems.Add(troubleshoot);
+
+        // ── 🌐 Ağ Araçları ───────────────────────────
+        var network = new ToolStripMenuItem("🌐 Ağ Araçları");
+        network.DropDownItems.Add(CreateMenuItem("Speed Test", () => ShowMdiChild(new SpeedTestForm())));
+        network.DropDownItems.Add(CreateMenuItem("Ağ Bağlantı Tarayıcı", () => ShowMdiChild(new NetworkScannerForm())));
+        network.DropDownItems.Add(CreateAsyncMenuItem("DNS Reset", RunDnsResetAsync));
+        network.DropDownItems.Add(CreateMenuItem("Wi-Fi Şifreleri", () => ShowMdiChild(new WifiPasswordForm())));
+        menu.DropDownItems.Add(network);
+
+        // ── 🔒 Güvenlik ──────────────────────────────
+        var security = new ToolStripMenuItem("🔒 Güvenlik");
+        security.DropDownItems.Add(CreateMenuItem("Tehdit Tarayıcı", () => ShowMdiChild(new ThreatScannerForm())));
+        menu.DropDownItems.Add(security);
 
         menu.DropDownItems.Add(new ToolStripSeparator());
 
-        // Management tools
-        menu.DropDownItems.Add(CreateMenuItem("Startup Manager", () => ShowMdiChild(new StartupManagerForm())));
-        menu.DropDownItems.Add(CreateMenuItem("Disk Temizleyici", () => ShowMdiChild(new DiskCleanerForm())));
-        menu.DropDownItems.Add(CreateMenuItem("Hosts File Editor", () => ShowMdiChild(new HostsFileEditorForm())));
-        menu.DropDownItems.Add(CreateMenuItem("Donanım Sorun Giderici", () => ShowMdiChild(new HardwareDiagnosticsForm())));
-        menu.DropDownItems.Add(CreateMenuItem("System Recovery", () => ShowMdiChild(new SystemRecoveryForm())));
-        menu.DropDownItems.Add(CreateMenuItem("Wi-Fi Şifreleri", () => ShowMdiChild(new WifiPasswordForm())));
-
-        menu.DropDownItems.Add(new ToolStripSeparator());
-
-        // Network tools
-        menu.DropDownItems.Add(CreateAsyncMenuItem("DNS Reset", RunDnsResetAsync));
-        menu.DropDownItems.Add(CreateMenuItem("Ağ Bağlantı Tarayıcı", () => ShowMdiChild(new NetworkScannerForm())));
-
-        menu.DropDownItems.Add(new ToolStripSeparator());
-
-        // Security
-        menu.DropDownItems.Add(CreateMenuItem("Tehdit Tarayıcı", () => ShowMdiChild(new ThreatScannerForm())));
-
-        menu.DropDownItems.Add(new ToolStripSeparator());
-
-        // Wiggle Mouse
-        menu.DropDownItems.Add(CreateMenuItem("Wiggle Mouse", () => ShowMdiChild(new WiggleMouseForm())));
+        menu.DropDownItems.Add(CreateMenuItem("🖱 Wiggle Mouse", () => ShowMdiChild(new WiggleMouseForm())));
 
         return menu;
     }
@@ -229,26 +247,36 @@ internal partial class MainMDIForm : Form
     {
         var menu = new ToolStripMenuItem("Online İşlemler");
 
-        // News
-        menu.DropDownItems.Add(CreateAsyncMenuItem("TR - Top 30", () => ShowNewsAsync(() => new NewsService().GetTopTrAsync(30), "TR - En Önemli Haberler (Top 30)")));
-        menu.DropDownItems.Add(CreateAsyncMenuItem("Global - Top 30 (Türkçe)", () => ShowNewsAsync(() => new NewsService().GetTopGlobalAsync(30), "Global - Top 30 (Türkçe)")));
-        menu.DropDownItems.Add(CreateAsyncMenuItem("Teknoloji - Top 30", () => ShowNewsAsync(() => new NewsService().GetTopTechAsync(30), "Teknoloji - Top 30 (Türkçe)")));
+        // ── 📰 Haberler ──────────────────────────────
+        var news = new ToolStripMenuItem("📰 Haberler");
+        news.DropDownItems.Add(CreateAsyncMenuItem("TR - Top 30", () => ShowNewsAsync(() => new NewsService().GetTopTrAsync(30), "TR - En Önemli Haberler (Top 30)")));
+        news.DropDownItems.Add(CreateAsyncMenuItem("Global - Top 30 (Türkçe)", () => ShowNewsAsync(() => new NewsService().GetTopGlobalAsync(30), "Global - Top 30 (Türkçe)")));
+        news.DropDownItems.Add(CreateAsyncMenuItem("Teknoloji - Top 30", () => ShowNewsAsync(() => new NewsService().GetTopTechAsync(30), "Teknoloji - Top 30 (Türkçe)")));
+        menu.DropDownItems.Add(news);
+
+        // ── 📚 Sözlükler & Referans ──────────────────
+        var reference = new ToolStripMenuItem("📚 Sözlükler & Referans");
+        reference.DropDownItems.Add(CreateMenuItem("Wikipedia Arama", () => ShowMdiChild(new WikipediaSearchForm())));
+        reference.DropDownItems.Add(CreateMenuItem("Sözlük (EN)", () => ShowMdiChild(new DictionaryForm())));
+        reference.DropDownItems.Add(CreateMenuItem("Sözlük (EN ↔ TR)", () => ShowMdiChild(new TranslationDictionaryForm())));
+        menu.DropDownItems.Add(reference);
+
+        // ── 🔎 Sorgulamalar ──────────────────────────
+        var queries = new ToolStripMenuItem("🔎 Sorgulamalar");
+        queries.DropDownItems.Add(CreateMenuItem("IP / Domain Sorgula", () => ShowMdiChild(new IpDomainQueryForm())));
+        queries.DropDownItems.Add(CreateMenuItem("WHOIS / Alan Adı", () => ShowMdiChild(new WhoisForm())));
+        menu.DropDownItems.Add(queries);
+
+        // ── 💰 Finans ────────────────────────────────
+        var finance = new ToolStripMenuItem("💰 Finans");
+        finance.DropDownItems.Add(CreateMenuItem("Döviz Çevirici", () => ShowMdiChild(new CurrencyConverterForm())));
+        finance.DropDownItems.Add(CreateMenuItem("Piyasa 20", () => ShowMdiChild(new ExchangeRatesForm())));
+        menu.DropDownItems.Add(finance);
 
         menu.DropDownItems.Add(new ToolStripSeparator());
 
-        // Online tools
-        menu.DropDownItems.Add(CreateMenuItem("Wikipedia Arama", () => ShowMdiChild(new WikipediaSearchForm())));
-        menu.DropDownItems.Add(CreateMenuItem("Sözlük (EN)", () => ShowMdiChild(new DictionaryForm())));
-        menu.DropDownItems.Add(CreateMenuItem("Sözlük (EN ↔ TR)", () => ShowMdiChild(new TranslationDictionaryForm())));
-        menu.DropDownItems.Add(CreateMenuItem("IP / Domain Sorgula", () => ShowMdiChild(new IpDomainQueryForm())));
-        menu.DropDownItems.Add(CreateMenuItem("WHOIS / Alan Adı", () => ShowMdiChild(new WhoisForm())));
-        menu.DropDownItems.Add(CreateMenuItem("Deprem Takibi", () => ShowMdiChild(new EarthquakeForm())));
-        menu.DropDownItems.Add(CreateMenuItem("Döviz Çevirici", () => ShowMdiChild(new CurrencyConverterForm())));
-        menu.DropDownItems.Add(CreateMenuItem("Piyasa 20", () => ShowMdiChild(new ExchangeRatesForm())));
-
-        menu.DropDownItems.Add(new ToolStripSeparator());
-
-        menu.DropDownItems.Add(CreateMenuItem("Tatil Takvimi (TR)", () => ShowMdiChild(new TurkishHolidaysForm())));
+        menu.DropDownItems.Add(CreateMenuItem("🌍 Deprem Takibi", () => ShowMdiChild(new EarthquakeForm())));
+        menu.DropDownItems.Add(CreateMenuItem("📅 Tatil Takvimi (TR)", () => ShowMdiChild(new TurkishHolidaysForm())));
 
         return menu;
     }
@@ -257,31 +285,36 @@ internal partial class MainMDIForm : Form
     {
         var menu = new ToolStripMenuItem("Geliştirici Araçları");
 
-        // Data formatters
-        menu.DropDownItems.Add(CreateMenuItem("JSON Formatter/Validator", () => ShowMdiChild(new JsonFormatterForm())));
-        menu.DropDownItems.Add(CreateMenuItem("XML Formatter", () => ShowMdiChild(new XmlFormatterForm())));
-        menu.DropDownItems.Add(CreateMenuItem("Pretty XML", () => ShowMdiChild(new PrettyXmlForm())));
+        // ── 📝 Formatlayıcılar ────────────────────────
+        var formatters = new ToolStripMenuItem("📝 Formatlayıcılar");
+        formatters.DropDownItems.Add(CreateMenuItem("JSON Formatter/Validator", () => ShowMdiChild(new JsonFormatterForm())));
+        formatters.DropDownItems.Add(CreateMenuItem("XML Formatter", () => ShowMdiChild(new XmlFormatterForm())));
+        formatters.DropDownItems.Add(CreateMenuItem("Pretty XML", () => ShowMdiChild(new PrettyXmlForm())));
+        menu.DropDownItems.Add(formatters);
+
+        // ── 🔍 Test Araçları ──────────────────────────
+        var testing = new ToolStripMenuItem("🔍 Test Araçları");
+        testing.DropDownItems.Add(CreateMenuItem("Regex Tester", () => ShowMdiChild(new RegexTesterForm())));
+        testing.DropDownItems.Add(CreateMenuItem("Text Diff Tool", () => ShowMdiChild(new TextDiffForm())));
+        menu.DropDownItems.Add(testing);
+
+        // ── 🔄 Dönüştürücüler ─────────────────────────
+        var converters = new ToolStripMenuItem("🔄 Dönüştürücüler");
+        converters.DropDownItems.Add(CreateMenuItem("Base64 Encoder/Decoder", () => ShowMdiChild(new Base64ConverterForm())));
+        converters.DropDownItems.Add(CreateMenuItem("Hash Generator", () => ShowMdiChild(new HashGeneratorForm())));
+        converters.DropDownItems.Add(CreateMenuItem("Birim Çevirici", () => ShowMdiChild(new UnitConverterForm())));
+        menu.DropDownItems.Add(converters);
+
+        // ── 🎲 Üreticiler ─────────────────────────────
+        var generators = new ToolStripMenuItem("🎲 Üreticiler");
+        generators.DropDownItems.Add(CreateMenuItem("UUID/GUID Generator", () => ShowMdiChild(new UuidGeneratorForm())));
+        generators.DropDownItems.Add(CreateMenuItem("Lorem Ipsum Generator", () => ShowMdiChild(new LoremIpsumForm())));
+        generators.DropDownItems.Add(CreateMenuItem("QR Code Generator", () => ShowMdiChild(new QrCodeForm())));
+        menu.DropDownItems.Add(generators);
 
         menu.DropDownItems.Add(new ToolStripSeparator());
 
-        // Testing tools
-        menu.DropDownItems.Add(CreateMenuItem("Regex Tester", () => ShowMdiChild(new RegexTesterForm())));
-        menu.DropDownItems.Add(CreateMenuItem("Text Diff Tool", () => ShowMdiChild(new TextDiffForm())));
-
-        menu.DropDownItems.Add(new ToolStripSeparator());
-
-        // Generators and utilities
-        menu.DropDownItems.Add(CreateMenuItem("Base64 Encoder/Decoder", () => ShowMdiChild(new Base64ConverterForm())));
-        menu.DropDownItems.Add(CreateMenuItem("Color Picker", () => ShowMdiChild(new ColorPickerForm())));
-        menu.DropDownItems.Add(CreateMenuItem("QR Code Generator", () => ShowMdiChild(new QrCodeForm())));
-        menu.DropDownItems.Add(CreateMenuItem("UUID/GUID Generator", () => ShowMdiChild(new UuidGeneratorForm())));
-        menu.DropDownItems.Add(CreateMenuItem("Lorem Ipsum Generator", () => ShowMdiChild(new LoremIpsumForm())));
-        menu.DropDownItems.Add(CreateMenuItem("Hash Generator", () => ShowMdiChild(new HashGeneratorForm())));
-
-        menu.DropDownItems.Add(new ToolStripSeparator());
-
-        // Utilities
-        menu.DropDownItems.Add(CreateMenuItem("Birim Çevirici", () => ShowMdiChild(new UnitConverterForm())));
+        menu.DropDownItems.Add(CreateMenuItem("🎨 Color Picker", () => ShowMdiChild(new ColorPickerForm())));
 
         return menu;
     }
