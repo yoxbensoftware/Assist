@@ -203,6 +203,7 @@ internal partial class MainMDIForm : Form
         menu.DropDownItems.Add(CreateMenuItem("Disk Temizleyici", () => ShowMdiChild(new DiskCleanerForm())));
         menu.DropDownItems.Add(CreateMenuItem("Hosts File Editor", () => ShowMdiChild(new HostsFileEditorForm())));
         menu.DropDownItems.Add(CreateMenuItem("Donanım Sorun Giderici", () => ShowMdiChild(new HardwareDiagnosticsForm())));
+        menu.DropDownItems.Add(CreateMenuItem("System Recovery", () => ShowMdiChild(new SystemRecoveryForm())));
         menu.DropDownItems.Add(CreateMenuItem("Wi-Fi Şifreleri", () => ShowMdiChild(new WifiPasswordForm())));
 
         menu.DropDownItems.Add(new ToolStripSeparator());
