@@ -7,6 +7,8 @@ using System.Text;
 using Assist.Forms.ClipboardTools;
 using Assist.Forms.Core;
 using Assist.Forms.DeveloperTools;
+using Assist.SDLC.Domain;
+using Assist.SDLC.Forms;
 using Assist.Forms.DeveloperTools.Converters;
 using Assist.Forms.DeveloperTools.Formatters;
 using Assist.Forms.DeveloperTools.Generators;
@@ -30,6 +32,9 @@ using Assist.Services;
 internal partial class MainMDIForm : Form
 {
     private ClipboardHistoryService? _clipboardHistory;
+
+    // SDLC agent detail forms — keyed by AgentRole for deduplication
+    private readonly Dictionary<AgentRole, AgentDetailForm> _agentForms = [];
 
     // Dashboard fields
     private Panel? _dashboardPanel;
@@ -149,6 +154,7 @@ internal partial class MainMDIForm : Form
         menuStrip.Items.Add(CreateThemeMenu());
         menuStrip.Items.Add(CreateDeveloperToolsMenu());
         menuStrip.Items.Add(CreateClipboardMenu());
+        menuStrip.Items.Add(CreateSdlcMenu());
         menuStrip.Items.Add(CreateGamesMenu());
         menuStrip.Items.Add(CreateWindowMenu());
 
@@ -317,6 +323,81 @@ internal partial class MainMDIForm : Form
         menu.DropDownItems.Add(CreateMenuItem("🎨 Color Picker", () => ShowMdiChild(new ColorPickerForm())));
 
         return menu;
+    }
+
+    private ToolStripMenuItem CreateSdlcMenu()
+    {
+        var menu = new ToolStripMenuItem("AI SDLC Orchestrator");
+
+        // ── 🎯 Yönetim ───────────────────────────────
+        var mgmt = new ToolStripMenuItem("🎯 Yönetim");
+        mgmt.DropDownItems.Add(CreateMenuItem("Dashboard", () => ShowMdiChild(new SdlcDashboardForm())));
+        mgmt.DropDownItems.Add(CreateMenuItem("Task Intake", () => ShowMdiChild(new TaskIntakeForm())));
+        mgmt.DropDownItems.Add(CreateMenuItem("Session / IDE Manager", () => ShowMdiChild(new SessionManagerForm())));
+        menu.DropDownItems.Add(mgmt);
+
+        // ── 🤖 Agent'lar ─────────────────────────────
+        var agents = new ToolStripMenuItem("🤖 Agent'lar");
+        agents.DropDownItems.Add(CreateMenuItem("Agent Console Hub", () => ShowMdiChild(new AgentConsoleHubForm())));
+        agents.DropDownItems.Add(new ToolStripSeparator());
+        agents.DropDownItems.Add(CreateMenuItem("Product Owner Agent", () => ShowAgentDetail(AgentRole.ProductOwner)));
+        agents.DropDownItems.Add(CreateMenuItem("Analyst Agent", () => ShowAgentDetail(AgentRole.Analyst)));
+        agents.DropDownItems.Add(CreateMenuItem("Architect Agent", () => ShowAgentDetail(AgentRole.Architect)));
+        agents.DropDownItems.Add(CreateMenuItem("Developer Agent", () => ShowAgentDetail(AgentRole.Developer)));
+        agents.DropDownItems.Add(CreateMenuItem("Tester Agent", () => ShowAgentDetail(AgentRole.Tester)));
+        agents.DropDownItems.Add(CreateMenuItem("Reviewer Agent", () => ShowAgentDetail(AgentRole.Reviewer)));
+        agents.DropDownItems.Add(CreateMenuItem("Documentation Agent", () => ShowAgentDetail(AgentRole.Documentation)));
+        menu.DropDownItems.Add(agents);
+
+        // ── 🧑‍💼 İnsan Kontrol ──────────────────────
+        var human = new ToolStripMenuItem("🧑‍💼 İnsan Kontrol");
+        human.DropDownItems.Add(CreateMenuItem("Human Decision Console", () => ShowMdiChild(new HumanDecisionConsoleForm())));
+        menu.DropDownItems.Add(human);
+
+        // ── 📡 İzleme ────────────────────────────────
+        var monitoring = new ToolStripMenuItem("📡 İzleme");
+        monitoring.DropDownItems.Add(CreateMenuItem("Console Runner", () => ShowMdiChild(new ConsoleRunnerForm())));
+        monitoring.DropDownItems.Add(CreateMenuItem("Notifications Center", () => ShowMdiChild(new NotificationsCenterForm())));
+        monitoring.DropDownItems.Add(CreateMenuItem("Waiting Queue Monitor", () => ShowMdiChild(new WaitingQueueForm())));
+        monitoring.DropDownItems.Add(CreateMenuItem("Timeline / Iteration Monitor", () => ShowMdiChild(new TimelineForm())));
+        menu.DropDownItems.Add(monitoring);
+
+        // ── 📋 Raporlama ─────────────────────────────
+        var reports = new ToolStripMenuItem("📋 Raporlama");
+        reports.DropDownItems.Add(CreateMenuItem("Reports & Outputs", () => ShowMdiChild(new ReportsForm())));
+        menu.DropDownItems.Add(reports);
+
+        menu.DropDownItems.Add(new ToolStripSeparator());
+
+        menu.DropDownItems.Add(CreateMenuItem("⚙️ Settings", () => ShowMdiChild(new SdlcSettingsForm())));
+
+        return menu;
+    }
+
+    /// <summary>
+    /// Opens (or activates) an <see cref="AgentDetailForm"/> for the given role.
+    /// Uses a role-keyed dictionary instead of the standard type-based deduplication
+    /// because all agent detail forms share the same <see cref="Type"/>.
+    /// </summary>
+    private void ShowAgentDetail(AgentRole role)
+    {
+        if (_agentForms.TryGetValue(role, out var existing) && !existing.IsDisposed)
+        {
+            existing.Activate();
+            return;
+        }
+
+        var form = new AgentDetailForm(role)
+        {
+            MdiParent = this,
+            WindowState = FormWindowState.Maximized
+        };
+
+        UITheme.Apply(form);
+        EnsureDarkTitleBar(form);
+        form.FormClosed += (_, _) => _agentForms.Remove(role);
+        _agentForms[role] = form;
+        form.Show();
     }
 
     private ToolStripMenuItem CreateClipboardMenu()
