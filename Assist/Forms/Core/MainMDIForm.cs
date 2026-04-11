@@ -245,6 +245,10 @@ internal partial class MainMDIForm : Form
         menu.DropDownItems.Add(CreateMenuItem("Döviz Çevirici", () => ShowMdiChild(new CurrencyConverterForm())));
         menu.DropDownItems.Add(CreateMenuItem("Piyasa 20", () => ShowMdiChild(new ExchangeRatesForm())));
 
+        menu.DropDownItems.Add(new ToolStripSeparator());
+
+        menu.DropDownItems.Add(CreateMenuItem("📅 Tatil Takvimi (TR)", () => ShowMdiChild(new TurkishHolidaysForm())));
+
         return menu;
     }
 
