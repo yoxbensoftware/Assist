@@ -199,7 +199,6 @@ internal partial class MainMDIForm : Form
         menu.DropDownItems.Add(CreateMenuItem("Hosts File Editor", () => ShowMdiChild(new HostsFileEditorForm())));
         menu.DropDownItems.Add(CreateMenuItem("Donanım Sorun Giderici", () => ShowMdiChild(new HardwareDiagnosticsForm())));
         menu.DropDownItems.Add(CreateMenuItem("Wi-Fi Şifreleri", () => ShowMdiChild(new WifiPasswordForm())));
-        menu.DropDownItems.Add(CreateMenuItem("VPN Yöneticisi", () => ShowMdiChild(new VpnSwitcherForm())));
 
         menu.DropDownItems.Add(new ToolStripSeparator());
 
@@ -273,7 +272,6 @@ internal partial class MainMDIForm : Form
 
         // Utilities
         menu.DropDownItems.Add(CreateMenuItem("Birim Çevirici", () => ShowMdiChild(new UnitConverterForm())));
-        menu.DropDownItems.Add(CreateMenuItem("Sprint Holiday Analyzer", () => ShowMdiChild(new SprintHolidayAnalyzerForm())));
 
         return menu;
     }
