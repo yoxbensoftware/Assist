@@ -141,12 +141,11 @@ internal sealed class TurkishHolidaysForm : Form
         // ── Split container ──────────────────────────────────────────────────────
         var split = new SplitContainer
         {
-            Dock             = DockStyle.Fill,
-            Orientation      = Orientation.Vertical,
-            SplitterDistance = 800,
-            Panel1MinSize    = 500,
-            Panel2MinSize    = 210,
-            BackColor        = CBack,
+            Dock          = DockStyle.Fill,
+            Orientation   = Orientation.Vertical,
+            Panel1MinSize = 500,
+            Panel2MinSize = 210,
+            BackColor     = CBack,
         };
 
         // ── Grid ─────────────────────────────────────────────────────────────────
@@ -196,7 +195,11 @@ internal sealed class TurkishHolidaysForm : Form
         _btnBridge.Click      += (_, _) => SetFilter("bridge");
         _btnWeekday.Click     += (_, _) => SetFilter("weekday");
 
-        Shown     += async (_, _) => await LoadAsync();
+        Shown += async (_, _) =>
+        {
+            split.SplitterDistance = Math.Max(ClientSize.Width - 270, split.Panel1MinSize);
+            await LoadAsync();
+        };
         FormClosed += (_, _) => { _cts.Cancel(); _cts.Dispose(); };
 
         SetFilterButtonState("all");

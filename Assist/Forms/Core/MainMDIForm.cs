@@ -247,7 +247,7 @@ internal partial class MainMDIForm : Form
 
         menu.DropDownItems.Add(new ToolStripSeparator());
 
-        menu.DropDownItems.Add(CreateMenuItem("📅 Tatil Takvimi (TR)", () => ShowMdiChild(new TurkishHolidaysForm())));
+        menu.DropDownItems.Add(CreateMenuItem("Tatil Takvimi (TR)", () => ShowMdiChild(new TurkishHolidaysForm())));
 
         return menu;
     }
