@@ -141,11 +141,9 @@ internal sealed class TurkishHolidaysForm : Form
         // ── Split container ──────────────────────────────────────────────────────
         var split = new SplitContainer
         {
-            Dock          = DockStyle.Fill,
-            Orientation   = Orientation.Vertical,
-            Panel1MinSize = 500,
-            Panel2MinSize = 210,
-            BackColor     = CBack,
+            Dock        = DockStyle.Fill,
+            Orientation = Orientation.Vertical,
+            BackColor   = CBack,
         };
 
         // ── Grid ─────────────────────────────────────────────────────────────────
@@ -197,7 +195,9 @@ internal sealed class TurkishHolidaysForm : Form
 
         Shown += async (_, _) =>
         {
-            split.SplitterDistance = Math.Max(ClientSize.Width - 270, split.Panel1MinSize);
+            split.Panel1MinSize    = 500;
+            split.Panel2MinSize    = 210;
+            split.SplitterDistance = Math.Max(ClientSize.Width - 270, 500);
             await LoadAsync();
         };
         FormClosed += (_, _) => { _cts.Cancel(); _cts.Dispose(); };
