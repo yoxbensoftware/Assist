@@ -189,7 +189,12 @@ internal partial class MainMDIForm : Form
         menu.DropDownItems.Add(CreateMenuItem("Sistem Bilgisi", () => ShowMdiChild(new SystemInfoForm())));
         menu.DropDownItems.Add(CreateMenuItem("Performance Monitor", () => ShowMdiChild(new PerformanceMonitorForm())));
         menu.DropDownItems.Add(CreateMenuItem("Speed Test", () => ShowMdiChild(new SpeedTestForm())));
-        menu.DropDownItems.Add(CreateMenuItem("Bağlantı Monitörü", () => ShowMdiChild(new ConnectionMonitorForm())));
+        menu.DropDownItems.Add(CreateMenuItem("Bağlantı Monitörü", () =>
+        {
+            var existing = Application.OpenForms.OfType<ConnectionMonitorForm>().FirstOrDefault();
+            if (existing is not null) { existing.BringToFront(); return; }
+            new ConnectionMonitorForm().Show();
+        }));
 
         menu.DropDownItems.Add(new ToolStripSeparator());
 
@@ -508,9 +513,19 @@ internal partial class MainMDIForm : Form
                 }
             }
 
+            // Reuse existing NewsForm if open
+            var existing = MdiChildren.OfType<NewsForm>().FirstOrDefault();
+            if (existing is not null)
+            {
+                existing.Text = title;
+                existing.SetNews(items);
+                existing.Activate();
+                return;
+            }
+
             var newsForm = new NewsForm(title);
+            newsForm.SetNews(items); // set BEFORE ShowMdiChild to avoid disposed-form exception
             ShowMdiChild(newsForm);
-            newsForm.SetNews(items);
         }, "Haberler yükleniyor...");
     }
 
@@ -579,9 +594,11 @@ internal partial class MainMDIForm : Form
             return result.ToString();
         }, "DNS sıfırlanıyor...");
 
+        var existingOutput = MdiChildren.OfType<CommandOutputForm>().FirstOrDefault();
+        existingOutput?.Close();
         var outputForm = new CommandOutputForm();
+        outputForm.SetOutput(output); // set BEFORE ShowMdiChild
         ShowMdiChild(outputForm);
-        outputForm.SetOutput(output);
     }
 
     private static void ShowAbout()
@@ -1052,7 +1069,13 @@ internal partial class MainMDIForm : Form
 
     private static void OnAssistClick() => ShowAbout();
 
-    private void OnOzClick() => ShowMdiChild(new PerformanceMonitorForm());
+    private void OnOzClick()
+    {
+        _ = ShowNewsAsync(() => new NewsService().GetTopTrAsync(30), "TR - En Önemli Haberler (Top 30)");
+        if (!Application.OpenForms.OfType<ConnectionMonitorForm>().Any())
+            new ConnectionMonitorForm().Show();
+        ShowMdiChild(new PerformanceMonitorForm());
+    }
 
     #endregion
 }

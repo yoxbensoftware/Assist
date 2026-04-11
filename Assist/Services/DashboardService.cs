@@ -49,7 +49,7 @@ internal static class DashboardService
 
             var response = await AppConstants.SharedHttpClient.SendAsync(request).ConfigureAwait(false);
             var result = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-            _weatherCache = $"🌤 {result.Trim()}";
+            _weatherCache = $"🌤 {city}: {result.Trim()}";
             _lastWeatherFetch = DateTime.UtcNow;
             return _weatherCache;
         }
