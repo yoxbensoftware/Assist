@@ -16,7 +16,8 @@ internal static class DashboardService
     private static string? _cryptoCache;
     private static string? _ipCache;
     private static string? _detectedCity;
-    private static double _cachedUsdTryRate = 34.0;
+    private const double FallbackUsdTryRate = 34.0;
+    private static double _cachedUsdTryRate = FallbackUsdTryRate;
     private static DateTime _lastWeatherFetch;
     private static DateTime _lastCurrencyFetch;
     private static DateTime _lastCryptoFetch;
@@ -210,7 +211,7 @@ internal static class DashboardService
 
         try
         {
-            var url = "http://ip-api.com/json/?fields=query,city,country,isp";
+            var url = "https://ip-api.com/json/?fields=query,city,country,isp";
             var json = await AppConstants.SharedHttpClient.GetStringAsync(url).ConfigureAwait(false);
             var doc = JsonDocument.Parse(json);
             var root = doc.RootElement;
@@ -355,19 +356,21 @@ internal static class DashboardService
 
     #region Helpers
 
-    // Cached WMI-free CPU/RAM reading — avoids creating ManagementObjectSearcher every second
-    private static long _lastCpuIdleTicks;
-    private static long _lastCpuTotalTicks;
+    // Cached WMI CPU/RAM reading — avoids creating ManagementObjectSearcher on every fast timer tick
     private static int _lastCpuPercent;
+    private static DateTime _lastCpuFetch;
+    private static readonly TimeSpan CpuCacheDuration = TimeSpan.FromSeconds(4);
 
     /// <summary>
     /// Reads current CPU usage percentage using Environment.ProcessorCount and kernel idle time (no WMI).
     /// </summary>
     private static int GetCpuUsage()
     {
+        if (DateTime.UtcNow - _lastCpuFetch < CpuCacheDuration)
+            return _lastCpuPercent;
+
         try
         {
-            // Read CPU usage via WMI (cached result returned on failure)
             using var searcher = new System.Management.ManagementObjectSearcher(
                 "select PercentProcessorTime from Win32_PerfFormattedData_PerfOS_Processor where Name='_Total'");
             foreach (var obj in searcher.Get())
@@ -376,6 +379,7 @@ internal static class DashboardService
                 if (int.TryParse(val, out var cpu))
                 {
                     _lastCpuPercent = cpu;
+                    _lastCpuFetch = DateTime.UtcNow;
                     return cpu;
                 }
             }

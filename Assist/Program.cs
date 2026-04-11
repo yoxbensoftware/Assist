@@ -54,27 +54,27 @@ internal static class Program
 
         if (System.Diagnostics.Debugger.IsAttached)
         {
-            using var splash = new SplashForm();
-            splash.Show();
-            Application.DoEvents();
-
-            var mainForm = new MainMDIForm();
-            mainForm.Shown += (_, _) => splash.Close();
-            Application.Run(mainForm);
+            LaunchMainWindow();
             return;
         }
 
         using var loginForm = new LoginForm();
         UITheme.Apply(loginForm);
         if (loginForm.ShowDialog() == DialogResult.OK && loginForm.IsAuthenticated)
-        {
-            using var splash = new SplashForm();
-            splash.Show();
-            Application.DoEvents();
+            LaunchMainWindow();
+    }
 
-            var mainForm = new MainMDIForm();
-            mainForm.Shown += (_, _) => splash.Close();
-            Application.Run(mainForm);
-        }
+    /// <summary>
+    /// Shows a splash screen and starts the main MDI window.
+    /// </summary>
+    private static void LaunchMainWindow()
+    {
+        using var splash = new SplashForm();
+        splash.Show();
+        splash.Refresh(); // force immediate paint — avoids Application.DoEvents() re-entrancy risk
+
+        var mainForm = new MainMDIForm();
+        mainForm.Shown += (_, _) => splash.Close();
+        Application.Run(mainForm);
     }
 }

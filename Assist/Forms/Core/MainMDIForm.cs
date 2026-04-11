@@ -189,7 +189,7 @@ internal partial class MainMDIForm : Form
         menu.DropDownItems.Add(CreateMenuItem("Sistem Bilgisi", () => ShowMdiChild(new SystemInfoForm())));
         menu.DropDownItems.Add(CreateMenuItem("Performance Monitor", () => ShowMdiChild(new PerformanceMonitorForm())));
         menu.DropDownItems.Add(CreateMenuItem("Speed Test", () => ShowMdiChild(new SpeedTestForm())));
-        menu.DropDownItems.Add(CreateMenuItem("Bağlantı Monitörü", () => new ConnectionMonitorForm().Show()));
+        menu.DropDownItems.Add(CreateMenuItem("Bağlantı Monitörü", () => ShowMdiChild(new ConnectionMonitorForm())));
 
         menu.DropDownItems.Add(new ToolStripSeparator());
 
@@ -426,6 +426,15 @@ internal partial class MainMDIForm : Form
 
     private void ShowMdiChild(Form form)
     {
+        // Activate the existing instance instead of opening a duplicate
+        var existing = MdiChildren.FirstOrDefault(c => c.GetType() == form.GetType());
+        if (existing is not null)
+        {
+            form.Dispose();
+            existing.Activate();
+            return;
+        }
+
         form.MdiParent = this;
         form.WindowState = FormWindowState.Maximized;
         UITheme.Apply(form);
@@ -453,6 +462,15 @@ internal partial class MainMDIForm : Form
         if (DwmSetWindowAttribute(form.Handle, 20, ref val, sizeof(int)) != 0)
             DwmSetWindowAttribute(form.Handle, 19, ref val, sizeof(int));
     }
+
+    /// <summary>
+    /// Enables double-buffering on a control via the protected property to reduce flicker.
+    /// </summary>
+    private static void SetDoubleBuffered(Control control) =>
+        typeof(Control).InvokeMember(
+            "DoubleBuffered",
+            System.Reflection.BindingFlags.SetProperty | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic,
+            null, control, [true]);
 
     private void DetachActiveChild()
     {
@@ -568,27 +586,16 @@ internal partial class MainMDIForm : Form
 
     private static void ShowAbout()
     {
-        try
-        {
-            var assembly = System.Reflection.Assembly.GetEntryAssembly()
-                ?? System.Reflection.Assembly.GetExecutingAssembly();
-            var version = assembly.GetName().Version?.ToString() ?? "1.0.0";
+        var message = $"""
+            {AppConstants.AppTitle}
+            Sürüm: {AppConstants.BuildVersion}
+            © 2026 Assist
 
-            var message = $"""
-                {AppConstants.AppTitle}
-                Sürüm: {version}
-                © 2026 Assist
+            Bu uygulama şifre yönetimi ve sistem bilgisi özellikleri sağlar.
+            Geliştirici: Oz
+            """;
 
-                Bu uygulama şifre yönetimi ve sistem bilgisi özellikleri sağlar.
-                Geliştirici: Oz
-                """;
-
-            MessageBox.Show(message, "Hakkında", MessageBoxButtons.OK, MessageBoxIcon.Information);
-        }
-        catch
-        {
-            MessageBox.Show("Assist - Hakkında", "Hakkında", MessageBoxButtons.OK, MessageBoxIcon.Information);
-        }
+        MessageBox.Show(message, "Hakkında", MessageBoxButtons.OK, MessageBoxIcon.Information);
     }
 
     /// <summary>
@@ -670,9 +677,7 @@ internal partial class MainMDIForm : Form
             BackColor = p.Surface,
             BorderStyle = BorderStyle.None
         };
-        typeof(Panel).InvokeMember("DoubleBuffered",
-            System.Reflection.BindingFlags.SetProperty | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic,
-            null, _dashboardPanel, [true]);
+        SetDoubleBuffered(_dashboardPanel);
 
         _topBorderPanel = new Panel
         {
@@ -698,9 +703,7 @@ internal partial class MainMDIForm : Form
             BackColor = p.Surface2,
             TextAlign = ContentAlignment.MiddleLeft
         };
-        typeof(Panel).InvokeMember("DoubleBuffered",
-            System.Reflection.BindingFlags.SetProperty | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic,
-            null, _procBarPanel, [true]);
+        SetDoubleBuffered(_procBarPanel);
         _procBarPanel.Controls.Add(_lblProcBar);
         _procBarPanel.Controls.Add(new Panel { Dock = DockStyle.Bottom, Height = 1, BackColor = p.Grid });
         _dashboardPanel.Controls.Add(_procBarPanel);
@@ -772,9 +775,7 @@ internal partial class MainMDIForm : Form
         };
         table.Controls.Add(_lblVersion, 1, 5);
 
-        typeof(Control).InvokeMember("DoubleBuffered",
-            System.Reflection.BindingFlags.SetProperty | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic,
-            null, table, [true]);
+        SetDoubleBuffered(table);
 
         // Set non-transparent background on fast-updating labels to prevent flicker
         _lblClock!.BackColor = p.Surface;
@@ -914,10 +915,11 @@ internal partial class MainMDIForm : Form
             if (_lblProcBar.Text != procText)
                 _lblProcBar.Text = procText;
         }
-        catch { }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[ProcBar] Refresh failed: {ex.Message}");
+        }
     }
-
-    /// <summary>Disk, battery, uptime, ping, app stats — every 30 seconds.</summary>
     private async Task RefreshMediumAsync()
     {
         try
@@ -941,7 +943,11 @@ internal partial class MainMDIForm : Form
 
             if (InvokeRequired) Invoke(Update); else Update();
         }
-        catch { }
+        catch (ObjectDisposedException) { /* form closed during refresh — expected */ }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[Dashboard] Medium refresh failed: {ex.Message}");
+        }
     }
 
     /// <summary>Weather, currency, crypto, IP — every 5 minutes.</summary>
@@ -966,12 +972,16 @@ internal partial class MainMDIForm : Form
                 if (_lblCrypto is not null) _lblCrypto.Text = cryptoTask.Result;
             }
 
-            if (InvokeRequired) Invoke(Update); else Update();
-        }
-        catch { }
-    }
+                if (InvokeRequired) Invoke(Update); else Update();
+                }
+                catch (ObjectDisposedException) { /* form closed during refresh — expected */ }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[Dashboard] Slow refresh failed: {ex.Message}");
+                }
+            }
 
-    #endregion
+            #endregion
 
     #region Watermark
 
@@ -1040,34 +1050,9 @@ internal partial class MainMDIForm : Form
             (int)(fg.B * factor + bg.B * (1 - factor)));
     }
 
-    private static void OnAssistClick()
-    {
-        try
-        {
-            Process.Start(new ProcessStartInfo("https://www.google.com") { UseShellExecute = true });
-            Process.Start(new ProcessStartInfo("https://chat.openai.com") { UseShellExecute = true });
-        }
-        catch { }
-    }
+    private static void OnAssistClick() => ShowAbout();
 
-    private void OnOzClick()
-    {
-        try
-        {
-            // Turkey Top 30 news
-            _ = ShowNewsAsync(() => new NewsService().GetTopTrAsync(30), "TR - En Önemli Haberler (Top 30)");
-
-            // Connection Monitor
-            new ConnectionMonitorForm().Show();
-
-            // Wiggle Mouse
-            ShowMdiChild(new WiggleMouseForm());
-
-            // Performance Monitor
-            ShowMdiChild(new PerformanceMonitorForm());
-        }
-        catch { }
-    }
+    private void OnOzClick() => ShowMdiChild(new PerformanceMonitorForm());
 
     #endregion
 }

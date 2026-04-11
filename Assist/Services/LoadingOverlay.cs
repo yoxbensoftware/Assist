@@ -93,7 +93,7 @@ internal sealed class LoadingOverlay : IDisposable
         _overlay.BringToFront();
         _timer.Start();
         _parentForm.Cursor = Cursors.WaitCursor;
-        Application.DoEvents();
+        _overlay.Refresh(); // force immediate repaint — avoids Application.DoEvents() re-entrancy risk
     }
 
     /// <summary>
@@ -193,6 +193,8 @@ internal sealed class LoadingOverlay : IDisposable
         ThemeService.ThemeChanged -= OnThemeChanged;
         _timer.Stop();
         _timer.Dispose();
+        _spinnerLabel.Font?.Dispose();
+        _messageLabel.Font?.Dispose();
         _overlay.Dispose();
     }
 }
