@@ -34,6 +34,9 @@ internal sealed class TurkishHolidaysForm : Form
     private static readonly Color CText    = Color.FromArgb(200, 200, 200);
     private static readonly Color CMuted   = Color.FromArgb(120, 120, 120);
 
+    private static readonly System.Globalization.CultureInfo TrCulture =
+        System.Globalization.CultureInfo.GetCultureInfo("tr-TR");
+
     // ─── Controls ───────────────────────────────────────────────────────────────
 
     private readonly NumericUpDown _nudYear;
@@ -93,7 +96,7 @@ internal sealed class TurkishHolidaysForm : Form
         _nudYear = new NumericUpDown
         {
             Location  = new Point(42, 10),
-            Width     = 72,
+            Width     = 90,
             Minimum   = 2020,
             Maximum   = 2030,
             Value     = DateTime.Today.Year,
@@ -168,7 +171,8 @@ internal sealed class TurkishHolidaysForm : Form
 
         UITheme.Apply(_grid);
         AddGridColumns();
-        _grid.CellFormatting += OnCellFormatting;
+        _grid.CellFormatting     += OnCellFormatting;
+        _grid.SelectionChanged   += OnGridSelectionChanged;
 
         split.Panel1.Controls.Add(_grid);
 
@@ -212,12 +216,12 @@ internal sealed class TurkishHolidaysForm : Form
         _grid.Columns.AddRange(
         [
             Col("Name",      "Ad",              220, DataGridViewAutoSizeColumnMode.Fill),
-            Col("Type",      "Tür",              58, DataGridViewAutoSizeColumnMode.None),
-            Col("Start",     "Başlangıç",       100, DataGridViewAutoSizeColumnMode.None),
-            Col("End",       "Bitiş",           100, DataGridViewAutoSizeColumnMode.None),
-            Col("Days",      "Gün",              42, DataGridViewAutoSizeColumnMode.None),
-            Col("WeekDay",   "Haftanın Günü",    96, DataGridViewAutoSizeColumnMode.None),
-            Col("Weekend",   "H.Sonu",           62, DataGridViewAutoSizeColumnMode.None),
+            Col("Type",      "Tür",              62, DataGridViewAutoSizeColumnMode.None),
+            Col("Start",     "Başlangıç",       115, DataGridViewAutoSizeColumnMode.None),
+            Col("End",       "Bitiş",           115, DataGridViewAutoSizeColumnMode.None),
+            Col("Days",      "Gün",              44, DataGridViewAutoSizeColumnMode.None),
+            Col("WeekDay",   "Haftanın Günü",   118, DataGridViewAutoSizeColumnMode.None),
+            Col("Weekend",   "Hft.Sonu",         68, DataGridViewAutoSizeColumnMode.None),
             Col("Bridge",    "Köprü Analizi",   220, DataGridViewAutoSizeColumnMode.Fill),
         ]);
 
@@ -372,30 +376,40 @@ internal sealed class TurkishHolidaysForm : Form
         panel.Controls.Add(title);
         y += 20;
 
-        (string Text, Color Fg)[] items =
+        (string Text, Color Fg, Color Bg)[] items =
         [
-            ("█ Resmi Tatil",     TOfficialFg),
-            ("█ Dini Tatil",      TReligiousFg),
-            ("█ Yarım Gün",       THalfDayFg),
-            ("█ Köprü (İyi)",     TBridgeGoodFg),
-            ("█ En İyi Fırsat",   TBridgeBestFg),
-            ("█ Zaten Birleşiyor",TAlreadyFg),
+            ("Resmi Tatil",        TOfficialFg,   COfficial),
+            ("Dini Tatil",         TReligiousFg,  CReligious),
+            ("Yarım Gün",          THalfDayFg,    CHalfDay),
+            ("En İyi Köprü",       TBridgeBestFg, CBridgeBest),
+            ("İyi Köprü",          TBridgeGoodFg, CBridgeGood),
+            ("Zayıf Köprü",        TWeakFg,       CBridgeWeak),
+            ("Zaten Birleşiyor",   TAlreadyFg,    CAlready),
         ];
 
-        foreach (var (text, fg) in items)
+        foreach (var (text, fg, bg) in items)
         {
+            var swatch = new Panel
+            {
+                Left      = 8,
+                Top       = y + 2,
+                Width     = 14,
+                Height    = 12,
+                BackColor = bg,
+            };
             var lbl = new Label
             {
                 Text      = text,
-                Left      = 8,
+                Left      = 26,
                 Top       = y,
                 AutoSize  = true,
                 ForeColor = fg,
                 BackColor = Color.Transparent,
                 Font      = new Font("Consolas", 8),
             };
+            panel.Controls.Add(swatch);
             panel.Controls.Add(lbl);
-            y += 17;
+            y += 18;
         }
     }
 
@@ -515,14 +529,15 @@ internal sealed class TurkishHolidaysForm : Form
             int idx = _grid.Rows.Add(
                 vm.Name,
                 typeLabel,
-                vm.StartDate.ToString("dd.MM.yyyy"),
-                vm.EndDate.ToString("dd.MM.yyyy"),
+                vm.StartDate.ToString("d MMM yyyy", TrCulture),
+                vm.EndDate.ToString("d MMM yyyy", TrCulture),
                 vm.DayCount,
                 vm.WeekDay,
                 vm.IsWeekend ? "Evet" : "Hayır",
                 vm.BridgeSummary);
 
             ApplyRowStyle(_grid.Rows[idx], vm);
+            _grid.Rows[idx].Tag = vm;
         }
 
         _grid.ResumeLayout();
@@ -579,8 +594,37 @@ internal sealed class TurkishHolidaysForm : Form
             .FirstOrDefault();
 
         _lblBestOpportunity.Text = best is not null
-            ? $"{best.Name}\n{best.StartDate:dd.MM.yyyy}\n{best.BridgeSummary}"
+            ? $"{best.Name}\n{best.StartDate.ToString("d MMM yyyy", TrCulture)}\n{best.BridgeSummary}"
             : "—";
+    }
+
+    // ─── Row-click detail ─────────────────────────────────────────────────────────
+
+    private void OnGridSelectionChanged(object? sender, EventArgs e)
+    {
+        if (_grid.SelectedRows.Count == 0)
+        {
+            SetStatus("");
+            return;
+        }
+        if (_grid.SelectedRows[0].Tag is not HolidayViewModel vm) return;
+
+        var sb = new System.Text.StringBuilder();
+        sb.Append($"  {vm.Name}  \u2014  {vm.DayCount} gün tatil");
+
+        if (vm.DayCount > 1)
+            sb.Append($"  ({vm.StartDate.ToString("d MMM", TrCulture)} \u2013 {vm.EndDate.ToString("d MMM yyyy", TrCulture)})");
+
+        if (vm.HasBridge)
+        {
+            sb.Append($"  |  Köprü: {vm.BridgeSummary}");
+            // extract total vacation days from summary if available
+            var m = System.Text.RegularExpressions.Regex.Match(vm.BridgeSummary, @"(\d+)\s*gün tatil");
+            if (m.Success && int.TryParse(m.Groups[1].Value, out int bridgeTotal))
+                sb.Append($"  (toplam {bridgeTotal} gün kesintisiz tatil)");
+        }
+
+        SetStatus(sb.ToString());
     }
 
     // ─── Helpers
