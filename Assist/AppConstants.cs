@@ -28,7 +28,7 @@ internal static class AppConstants
     public const string IconDelete = "🗑️";
 
     // Build version
-    public const string BuildVersion = "v1.28";
+    public const string BuildVersion = "v1.29";
 
     // Window titles
     public const string AppTitle = "🔒 Assist";

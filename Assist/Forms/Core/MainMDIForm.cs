@@ -501,7 +501,7 @@ internal partial class MainMDIForm : Form
     private async Task RunDnsResetAsync()
     {
         var confirm = MessageBox.Show(
-            "Bu işlem ağ bağlantınızı geçici olarak kesebilir ve yönetici izni gerektirebilir. Devam etmek istiyor musunuz?",
+            "Bu işlem ağ bağlantınızı geçici olarak kesebilir. Devam etmek istiyor musunuz?",
             "DNS Reset Onayı",
             MessageBoxButtons.YesNo,
             MessageBoxIcon.Warning);

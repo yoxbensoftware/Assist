@@ -331,19 +331,16 @@ internal sealed partial class ThreatScannerForm : Form
         {
             if (s is not Button b || b.Tag is not int pid) return;
             var confirm = MessageBox.Show(
-                $"PID {pid} sonlandırılsın mı?\n(Yönetici yetkisi ile sonlandırılacak)",
+                $"PID {pid} sonlandırılsın mı?",
                 "Onay", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
             if (confirm != DialogResult.Yes) return;
             try
             {
-                // Use taskkill with elevated privileges for protected processes
                 using var killProc = new Process();
                 killProc.StartInfo = new ProcessStartInfo("taskkill", $"/F /PID {pid}")
                 {
-                    Verb = "runas",
-                    UseShellExecute = true,
-                    CreateNoWindow = true,
-                    WindowStyle = ProcessWindowStyle.Hidden
+                    UseShellExecute = false,
+                    CreateNoWindow = true
                 };
                 killProc.Start();
                 killProc.WaitForExit(5000);
@@ -359,11 +356,6 @@ internal sealed partial class ThreatScannerForm : Form
                     MessageBox.Show("İşlem sonlandırılamadı. Sistem korumalı bir işlem olabilir.",
                         "Uyarı", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
-            }
-            catch (System.ComponentModel.Win32Exception)
-            {
-                // User cancelled UAC prompt
-                MessageBox.Show("Yönetici izni verilmedi.", "İptal", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {

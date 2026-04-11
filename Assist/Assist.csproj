@@ -10,7 +10,7 @@
     <!-- Application Icon -->
     <ApplicationIcon>Resources\assist_icon.ico</ApplicationIcon>
 
-    <!-- UAC manifest: requireAdministrator (netsh key=clear requires admin) -->
+    <!-- UAC manifest: requireAdministrator — full admin privileges for all features -->
     <ApplicationManifest>app.manifest</ApplicationManifest>
 
     <!-- Code Analysis Settings -->
