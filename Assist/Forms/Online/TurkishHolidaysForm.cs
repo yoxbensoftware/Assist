@@ -66,8 +66,8 @@ internal sealed class TurkishHolidaysForm : Form
     public TurkishHolidaysForm()
     {
         Text        = "📅 Türkiye Tatil Takvimi";
-        ClientSize  = new Size(1150, 650);
-        MinimumSize = new Size(900,  520);
+        ClientSize  = new Size(1300, 650);
+        MinimumSize = new Size(1050, 520);
         BackColor   = CBack;
         ForeColor   = CText;
         Font        = new Font("Consolas", 10);
@@ -95,7 +95,7 @@ internal sealed class TurkishHolidaysForm : Form
 
         _nudYear = new NumericUpDown
         {
-            Location  = new Point(42, 10),
+            Location  = new Point(54, 10),
             Width     = 90,
             Minimum   = 2020,
             Maximum   = 2030,
@@ -106,16 +106,16 @@ internal sealed class TurkishHolidaysForm : Form
             TextAlign = HorizontalAlignment.Center,
         };
 
-        _btnAll      = MakeFilterBtn("Tümü",      new Point(128, 8));
-        _btnOfficial = MakeFilterBtn("Resmi",     new Point(204, 8));
-        _btnReligious= MakeFilterBtn("Dini",      new Point(280, 8));
-        _btnBridge   = MakeFilterBtn("Köprü",     new Point(356, 8));
-        _btnWeekday  = MakeFilterBtn("Hafta İçi", new Point(432, 8));
+        _btnAll      = MakeFilterBtn("Tümü",      new Point(152, 8));
+        _btnOfficial = MakeFilterBtn("Resmi",     new Point(228, 8));
+        _btnReligious= MakeFilterBtn("Dini",      new Point(304, 8));
+        _btnBridge   = MakeFilterBtn("Köprü",     new Point(380, 8));
+        _btnWeekday  = MakeFilterBtn("Hafta İçi", new Point(456, 8));
 
         _btnRefresh = new Button
         {
             Text      = "🔄 Yenile",
-            Location  = new Point(540, 8),
+            Location  = new Point(556, 8),
             Width     = 95,
             Height    = 30,
             BackColor = CSurface,
@@ -217,13 +217,16 @@ internal sealed class TurkishHolidaysForm : Form
         [
             Col("Name",      "Ad",              220, DataGridViewAutoSizeColumnMode.Fill),
             Col("Type",      "Tür",              62, DataGridViewAutoSizeColumnMode.None),
-            Col("Start",     "Başlangıç",       115, DataGridViewAutoSizeColumnMode.None),
-            Col("End",       "Bitiş",           115, DataGridViewAutoSizeColumnMode.None),
-            Col("Days",      "Gün",              44, DataGridViewAutoSizeColumnMode.None),
+            Col("Start",     "Başlangıç",       110, DataGridViewAutoSizeColumnMode.None),
+            Col("End",       "Bitiş",           110, DataGridViewAutoSizeColumnMode.None),
+            Col("Days",      "Gün",              52, DataGridViewAutoSizeColumnMode.None),
             Col("WeekDay",   "Haftanın Günü",   118, DataGridViewAutoSizeColumnMode.None),
-            Col("Weekend",   "Hft.Sonu",         68, DataGridViewAutoSizeColumnMode.None),
+            Col("Weekend",   "Hft.Sonu",         64, DataGridViewAutoSizeColumnMode.None),
             Col("Bridge",    "Köprü Analizi",   220, DataGridViewAutoSizeColumnMode.Fill),
         ]);
+
+        _grid.Columns["Name"]!.FillWeight   = 200;
+        _grid.Columns["Bridge"]!.FillWeight = 100;
 
         foreach (DataGridViewColumn col in _grid.Columns)
         {
@@ -526,18 +529,27 @@ internal sealed class TurkishHolidaysForm : Form
                 _                     => "—",
             };
 
-            int idx = _grid.Rows.Add(
-                vm.Name,
-                typeLabel,
-                vm.StartDate.ToString("d MMM yyyy", TrCulture),
-                vm.EndDate.ToString("d MMM yyyy", TrCulture),
-                vm.DayCount,
-                vm.WeekDay,
-                vm.IsWeekend ? "Evet" : "Hayır",
-                vm.BridgeSummary);
+            for (int d = 0; d < vm.DayCount; d++)
+            {
+                var day      = vm.StartDate.AddDays(d);
+                bool isWe    = day.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday;
+                string dow   = day.ToString("dddd", TrCulture);
+                string dayLbl = vm.DayCount > 1 ? $"{d + 1}/{vm.DayCount}" : "1";
+                string bridge = d == 0 ? vm.BridgeSummary : "";
 
-            ApplyRowStyle(_grid.Rows[idx], vm);
-            _grid.Rows[idx].Tag = vm;
+                int idx = _grid.Rows.Add(
+                    vm.Name,
+                    typeLabel,
+                    day.ToString("d MMM yyyy", TrCulture),
+                    day.ToString("d MMM yyyy", TrCulture),
+                    dayLbl,
+                    dow,
+                    isWe ? "Evet" : "Hayır",
+                    bridge);
+
+                ApplyRowStyle(_grid.Rows[idx], vm);
+                _grid.Rows[idx].Tag = vm;
+            }
         }
 
         _grid.ResumeLayout();

@@ -77,6 +77,12 @@ internal static class TurkishHolidayProvider
             i++;
         }
 
+        // Supplement with hardcoded Islamic holidays if the API omitted them
+        if (_islamicHolidays.TryGetValue(year, out var islamic))
+            foreach (var h in islamic)
+                if (!merged.Any(x => x.StartDate == h.StartDate))
+                    merged.Add(h);
+
         AddHalfDay(year, merged);
         return [.. merged.OrderBy(h => h.StartDate)];
     }
