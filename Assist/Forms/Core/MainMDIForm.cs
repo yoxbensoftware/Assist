@@ -256,8 +256,8 @@ internal partial class MainMDIForm : Form
         // ── 📰 Haberler ──────────────────────────────
         var news = new ToolStripMenuItem("📰 Haberler");
         news.DropDownItems.Add(CreateAsyncMenuItem("TR - Top 30", () => ShowNewsAsync(() => new NewsService().GetTopTrAsync(30), "TR - En Önemli Haberler (Top 30)")));
-        news.DropDownItems.Add(CreateAsyncMenuItem("Global - Top 30 (Türkçe)", () => ShowNewsAsync(() => new NewsService().GetTopGlobalAsync(30), "Global - Top 30 (Türkçe)")));
-        news.DropDownItems.Add(CreateAsyncMenuItem("Teknoloji - Top 30", () => ShowNewsAsync(() => new NewsService().GetTopTechAsync(30), "Teknoloji - Top 30 (Türkçe)")));
+        news.DropDownItems.Add(CreateAsyncMenuItem("Global - Top 30 (Türkçe)", () => ShowNewsAsync(() => new NewsService().GetTopGlobalAsync(30), "Global - Top 30 (Türkçe)", translate: true)));
+        news.DropDownItems.Add(CreateAsyncMenuItem("Teknoloji - Top 30", () => ShowNewsAsync(() => new NewsService().GetTopTechAsync(30), "Teknoloji - Top 30 (Türkçe)", translate: true)));
         menu.DropDownItems.Add(news);
 
         // ── 📚 Sözlükler & Referans ──────────────────
@@ -617,18 +617,25 @@ internal partial class MainMDIForm : Form
         child.Show();
     }
 
-    private async Task ShowNewsAsync(Func<Task<List<NewsItem>>> fetcher, string title)
+    private async Task ShowNewsAsync(Func<Task<List<NewsItem>>> fetcher, string title, bool translate = false)
     {
         await Loading.RunAsync(this, async () =>
         {
             var items = await fetcher();
 
-            foreach (var item in items)
+            if (translate)
             {
-                item.Title = await TranslationService.TranslateAsync(item.Title, "tr");
-                if (!string.IsNullOrEmpty(item.Summary))
+                foreach (var item in items)
                 {
-                    item.Summary = await TranslationService.TranslateAsync(item.Summary, "tr");
+                    try
+                    {
+                        item.Title = await TranslationService.TranslateAsync(item.Title, "tr");
+                    }
+                    catch
+                    {
+                        // Keep original title on failure
+                    }
+                    await Task.Delay(350);
                 }
             }
 
@@ -645,7 +652,7 @@ internal partial class MainMDIForm : Form
             var newsForm = new NewsForm(title);
             newsForm.SetNews(items); // set BEFORE ShowMdiChild to avoid disposed-form exception
             ShowMdiChild(newsForm);
-        }, "Haberler yükleniyor...");
+        }, translate ? "Haberler yükleniyor ve çevriliyor..." : "Haberler yükleniyor...");
     }
 
     private async Task RunDnsResetAsync()

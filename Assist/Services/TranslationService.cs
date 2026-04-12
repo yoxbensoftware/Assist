@@ -12,7 +12,7 @@ internal static class TranslationService
     private const string DefaultEndpoint = "https://api.cognitive.microsofttranslator.com";
     private const string MyMemoryEndpoint = "https://api.mymemory.translated.net/get";
 
-    private static readonly HttpClient HttpClient = new();
+    private static HttpClient HttpClient => AppConstants.SharedHttpClient;
 
     private static string? Key => Environment.GetEnvironmentVariable("ASSIST_TRANSLATOR_KEY");
     private static string? Region => Environment.GetEnvironmentVariable("ASSIST_TRANSLATOR_REGION");
@@ -92,7 +92,9 @@ internal static class TranslationService
     {
         try
         {
-            var encodedText = Uri.EscapeDataString(text);
+            // MyMemory free tier: max 500 characters per request
+            var trimmedText = text.Length > 500 ? text[..500] : text;
+            var encodedText = Uri.EscapeDataString(trimmedText);
             var email = string.IsNullOrEmpty(MyMemoryEmail) ? "" : $"&de={Uri.EscapeDataString(MyMemoryEmail)}";
             var url = $"{MyMemoryEndpoint}?q={encodedText}&langpair=en|{toLanguage}{email}";
 
