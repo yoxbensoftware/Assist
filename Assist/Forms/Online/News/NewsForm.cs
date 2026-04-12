@@ -57,23 +57,6 @@ internal sealed class NewsForm : Form
         _btnTranslateAll.Click += async (_, _) => await TranslateAllAsync();
         _btnTranslateSelected.Click += async (_, _) => await TranslateSelectedAsync();
         _dgv.CellDoubleClick += OnCellDoubleClick;
-        _dgv.CellMouseDown += OnCellMouseDown;
-
-        var contextMenu = new ContextMenuStrip
-        {
-            BackColor = Color.FromArgb(30, 30, 30),
-            ForeColor = AppConstants.AccentText,
-            Font = new Font("Consolas", 10),
-            ShowImageMargin = false
-        };
-        var summaryItem = new ToolStripMenuItem("\uD83D\uDCCB Makale \u00d6zeti")
-        {
-            BackColor = Color.FromArgb(30, 30, 30),
-            ForeColor = AppConstants.AccentText
-        };
-        summaryItem.Click += async (_, _) => await ShowArticleSummaryAsync();
-        contextMenu.Items.Add(summaryItem);
-        _dgv.ContextMenuStrip = contextMenu;
 
         Controls.Add(_dgv);
         Controls.Add(_btnTranslateAll);
@@ -228,41 +211,6 @@ internal sealed class NewsForm : Form
             {
                 // Failed to open browser
             }
-        }
-    }
-
-    private void OnCellMouseDown(object? sender, DataGridViewCellMouseEventArgs e)
-    {
-        if (e.Button == MouseButtons.Right && e.RowIndex >= 0)
-        {
-            _dgv.ClearSelection();
-            _dgv.Rows[e.RowIndex].Selected = true;
-        }
-    }
-
-    private async Task ShowArticleSummaryAsync()
-    {
-        if (_dgv.SelectedRows.Count == 0) return;
-
-        var row = _dgv.SelectedRows[0];
-        if (row.Tag is not NewsItem newsItem || string.IsNullOrEmpty(newsItem.Link)) return;
-
-        Cursor = Cursors.WaitCursor;
-        try
-        {
-            var summary = await NewsService.FetchArticleSummaryAsync(newsItem.Link);
-            Cursor = Cursors.Default;
-            using var popup = new ArticleSummaryPopup(newsItem.Title, summary);
-            popup.ShowDialog(this);
-        }
-        catch
-        {
-            Cursor = Cursors.Default;
-            MessageBox.Show(
-                "Makale \u00f6zeti al\u0131n\u0131rken hata olu\u015ftu.",
-                "Hata",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Error);
         }
     }
 }

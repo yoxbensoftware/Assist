@@ -1,8 +1,5 @@
 namespace Assist.Services;
 
-using System.Net;
-using System.Text;
-using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Assist.Models;
 
@@ -89,51 +86,5 @@ internal sealed class NewsService
         {
             return input;
         }
-    }
-
-    /// <summary>
-    /// Fetches article content from a URL and returns a brief text summary extracted from paragraphs.
-    /// </summary>
-    public static async Task<string> FetchArticleSummaryAsync(string url)
-    {
-        try
-        {
-            var client = AppConstants.SharedHttpClient;
-            var html = await client.GetStringAsync(url).ConfigureAwait(false);
-
-            var paragraphs = Regex.Matches(
-                html, @"<p[^>]*>(.*?)</p>",
-                RegexOptions.Singleline | RegexOptions.IgnoreCase);
-
-            var sb = new StringBuilder();
-            foreach (Match match in paragraphs)
-            {
-                var text = WebUtility.HtmlDecode(
-                    StripHtmlTags(match.Groups[1].Value)).Trim();
-
-                if (text.Length > 30)
-                {
-                    sb.AppendLine(text);
-                    sb.AppendLine();
-                    if (sb.Length > 800) break;
-                }
-            }
-
-            var result = sb.ToString().Trim();
-            return string.IsNullOrEmpty(result) ? "Makale i\u00e7eri\u011fi \u00e7\u0131kar\u0131lamad\u0131." : result;
-        }
-        catch (Exception ex)
-        {
-            return $"Makale al\u0131n\u0131rken hata olu\u015ftu: {ex.Message}";
-        }
-    }
-
-    /// <summary>
-    /// Strips all HTML tags from a string using regex.
-    /// </summary>
-    private static string StripHtmlTags(string input)
-    {
-        if (string.IsNullOrEmpty(input)) return string.Empty;
-        return Regex.Replace(input, @"<[^>]+>", string.Empty).Trim();
     }
 }
