@@ -1091,7 +1091,11 @@ internal partial class MainMDIForm : Form
     {
         try
         {
-            // Fetch IP first so detected city is available for weather
+            // Detect physical location (WiFi/GPS) for accurate weather city
+            var detectTask = DashboardService.DetectPhysicalCityAsync();
+            await Task.WhenAny(detectTask, Task.Delay(15000)).ConfigureAwait(false);
+
+            // Fetch IP info (city used as fallback if physical location unavailable)
             var ipResult = await DashboardService.GetIpInfoAsync().ConfigureAwait(false);
 
             var weatherTask = DashboardService.GetWeatherAsync();

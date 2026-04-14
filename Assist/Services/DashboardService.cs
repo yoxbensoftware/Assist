@@ -1,7 +1,9 @@
 namespace Assist.Services;
 
+using System.Globalization;
 using System.Net.NetworkInformation;
 using System.Text.Json;
+using Windows.Devices.Geolocation;
 
 /// <summary>
 /// Fetches and caches all dashboard data: weather, currency, crypto, IP,
@@ -16,6 +18,8 @@ internal static class DashboardService
     private static string? _cryptoCache;
     private static string? _ipCache;
     private static string? _detectedCity;
+    private static string? _physicalCity;
+    private static bool _physicalLocationAttempted;
     private const double FallbackUsdTryRate = 34.0;
     private static double _cachedUsdTryRate = FallbackUsdTryRate;
     private static DateTime _lastWeatherFetch;
@@ -33,7 +37,50 @@ internal static class DashboardService
     #region Online data
 
     /// <summary>
-    /// Current weather for Istanbul via wttr.in.
+    /// Detects the physical city using Windows Location Services (WiFi/GPS)
+    /// and reverse geocoding via Nominatim. Called once per session.
+    /// </summary>
+    public static async Task DetectPhysicalCityAsync()
+    {
+        if (_physicalLocationAttempted) return;
+        _physicalLocationAttempted = true;
+
+        try
+        {
+            var access = await Geolocator.RequestAccessAsync();
+            if (access != GeolocationAccessStatus.Allowed) return;
+
+            var geolocator = new Geolocator { DesiredAccuracyInMeters = 1000 };
+            var position = await geolocator.GetGeopositionAsync();
+
+            var lat = position.Coordinate.Point.Position.Latitude;
+            var lon = position.Coordinate.Point.Position.Longitude;
+
+            // Reverse geocode via OpenStreetMap Nominatim
+            var url = $"https://nominatim.openstreetmap.org/reverse?lat={lat.ToString(CultureInfo.InvariantCulture)}&lon={lon.ToString(CultureInfo.InvariantCulture)}&format=json&accept-language=tr";
+            using var request = new HttpRequestMessage(HttpMethod.Get, url);
+            request.Headers.Add("User-Agent", "Assist/1.0");
+
+            var response = await AppConstants.SharedHttpClient.SendAsync(request).ConfigureAwait(false);
+            var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+            using var doc = JsonDocument.Parse(json);
+            var address = doc.RootElement.GetProperty("address");
+
+            if (address.TryGetProperty("city", out var cityEl))
+                _physicalCity = cityEl.GetString();
+            else if (address.TryGetProperty("town", out var townEl))
+                _physicalCity = townEl.GetString();
+            else if (address.TryGetProperty("province", out var provEl))
+                _physicalCity = provEl.GetString();
+        }
+        catch
+        {
+            // Physical location not available — IP-based fallback will be used
+        }
+    }
+
+    /// <summary>
+    /// Current weather via wttr.in using detected physical city.
     /// </summary>
     public static async Task<string> GetWeatherAsync()
     {
@@ -42,7 +89,7 @@ internal static class DashboardService
 
         try
         {
-            var city = _detectedCity ?? "Istanbul";
+            var city = _physicalCity ?? _detectedCity ?? "Istanbul";
             var url = $"https://wttr.in/{Uri.EscapeDataString(city)}?format=%C+%t+%h+%w&lang=tr";
             using var request = new HttpRequestMessage(HttpMethod.Get, url);
             request.Headers.Add("User-Agent", "Assist/1.0");
