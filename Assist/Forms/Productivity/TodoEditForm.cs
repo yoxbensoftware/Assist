@@ -19,14 +19,8 @@ internal sealed class TodoEditForm : Form
     private CheckBox       _chkDue      = null!;
     private DateTimePicker _dtp         = null!;
 
-    // Layout constants — all relative to Panel client area
-    private const int PL   = 24;   // padding left
-    private const int CW   = 452;  // content width  (ClientSize.Width 500 - PL*2)
-    private const int HW   = 218;  // half width for two-column rows
-    private const int GAP  = 16;   // gap between two-column items
-    private const int LH   = 18;   // label height
-    private const int IH   = 27;   // input height
-    private const int RGAP = 12;   // vertical gap between rows
+    // Layout constants — kept for reference
+    private const int PL   = 24;   // padding left (unused after TLP rewrite)
 
     public TodoEditForm(TodoItem? existing = null)
     {
@@ -47,97 +41,146 @@ internal sealed class TodoEditForm : Form
     private void BuildUI()
     {
         Text            = _isNew ? "Yeni Görev" : "Görevi Düzenle";
-        ClientSize      = new Size(500, 340);
+        ClientSize      = new Size(500, 330);
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox     = false;
         MinimizeBox     = false;
         StartPosition   = FormStartPosition.CenterParent;
         Font            = new Font("Consolas", 10);
 
-        var main = new Panel { Dock = DockStyle.Fill };
+        // ── Ana grid (1 sütun, sabit satır yükseklikleri) ─────────────────
+        var grid = new TableLayoutPanel
+        {
+            Dock        = DockStyle.Fill,
+            ColumnCount = 1,
+            RowCount    = 9,
+            Padding     = new Padding(20, 14, 20, 10),
+            Margin      = Padding.Empty,
+        };
+        grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        // rows: lbl-title | txt-title | lbl-desc | txt-desc | cat+pri panel | lbl-due | due-row | separator | buttons
+        grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 20));  // 0 lbl Başlık
+        grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 30));  // 1 txt Başlık
+        grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 20));  // 2 lbl Açıklama
+        grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 30));  // 3 txt Açıklama
+        grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 54));  // 4 Kategori + Öncelik
+        grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 20));  // 5 lbl Bitiş
+        grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 32));  // 6 chk + dtp
+        grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 14));  // 7 ayırıcı
+        grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 36));  // 8 butonlar
 
-        int y = 18; // top padding
+        // 0 – Başlık label
+        grid.Controls.Add(SmallLbl("Başlık *"), 0, 0);
 
-        // ── Başlık ────────────────────────────────────────────────────────
-        main.Controls.Add(SmallLbl("Başlık *", PL, y));
-        y += LH + 3;
-        _txtTitle = MakeTxt(PL, y, CW);
-        main.Controls.Add(_txtTitle);
-        y += IH + RGAP;
+        // 1 – Başlık input
+        _txtTitle = new TextBox { Dock = DockStyle.Fill, Font = new Font("Consolas", 10), BorderStyle = BorderStyle.FixedSingle };
+        grid.Controls.Add(_txtTitle, 0, 1);
 
-        // ── Açıklama ──────────────────────────────────────────────────────
-        main.Controls.Add(SmallLbl("Açıklama", PL, y));
-        y += LH + 3;
-        _txtDesc = MakeTxt(PL, y, CW);
-        main.Controls.Add(_txtDesc);
-        y += IH + RGAP;
+        // 2 – Açıklama label
+        grid.Controls.Add(SmallLbl("Açıklama"), 0, 2);
 
-        // ── Kategori  |  Öncelik ──────────────────────────────────────────
-        main.Controls.Add(SmallLbl("Kategori", PL, y));
-        main.Controls.Add(SmallLbl("Öncelik",  PL + HW + GAP, y));
-        y += LH + 3;
+        // 3 – Açıklama input
+        _txtDesc = new TextBox { Dock = DockStyle.Fill, Font = new Font("Consolas", 10), BorderStyle = BorderStyle.FixedSingle };
+        grid.Controls.Add(_txtDesc, 0, 3);
 
-        _txtCategory = MakeTxt(PL, y, HW);
-        main.Controls.Add(_txtCategory);
+        // 4 – Kategori | Öncelik (iç içe 2-sütun TLP)
+        var catPri = new TableLayoutPanel
+        {
+            Dock        = DockStyle.Fill,
+            ColumnCount = 2,
+            RowCount    = 2,
+            Margin      = Padding.Empty,
+            Padding     = Padding.Empty,
+        };
+        catPri.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 55));
+        catPri.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 45));
+        catPri.RowStyles.Add(new RowStyle(SizeType.Absolute, 22)); // labels
+        catPri.RowStyles.Add(new RowStyle(SizeType.Absolute, 30)); // inputs
 
+        catPri.Controls.Add(SmallLbl("Kategori"), 0, 0);
+        catPri.Controls.Add(SmallLbl("Öncelik"),  1, 0);
+
+        _txtCategory = new TextBox
+        {
+            Dock        = DockStyle.Fill,
+            Font        = new Font("Consolas", 10),
+            BorderStyle = BorderStyle.FixedSingle,
+            Margin      = new Padding(0, 0, 10, 0)
+        };
         _cmbPriority = new ComboBox
         {
-            Location      = new Point(PL + HW + GAP, y),
-            Width         = HW,
+            Dock          = DockStyle.Fill,
             DropDownStyle = ComboBoxStyle.DropDownList,
-            Font          = new Font("Consolas", 10)
+            Font          = new Font("Consolas", 10),
+            Margin        = Padding.Empty
         };
         _cmbPriority.Items.AddRange(["  Düşük", "  Normal", "  Yüksek", "  Kritik"]);
-        main.Controls.Add(_cmbPriority);
-        y += IH + RGAP;
 
-        // ── Bitiş Tarihi ──────────────────────────────────────────────────
-        main.Controls.Add(SmallLbl("Bitiş Tarihi", PL, y));
-        y += LH + 3;
+        catPri.Controls.Add(_txtCategory, 0, 1);
+        catPri.Controls.Add(_cmbPriority, 1, 1);
+        grid.Controls.Add(catPri, 0, 4);
 
+        // 5 – Bitiş Tarihi label
+        grid.Controls.Add(SmallLbl("Bitiş Tarihi"), 0, 5);
+
+        // 6 – Checkbox + DateTimePicker (FlowLayoutPanel — asla üst üste binmez)
+        var dueRow = new FlowLayoutPanel
+        {
+            Dock          = DockStyle.Fill,
+            FlowDirection = FlowDirection.LeftToRight,
+            WrapContents  = false,
+            Margin        = Padding.Empty,
+            Padding       = Padding.Empty,
+        };
         _chkDue = new CheckBox
         {
             Text      = "Tarih belirle",
-            Location  = new Point(PL, y + 3),
             AutoSize  = true,
             Font      = new Font("Consolas", 10),
-            FlatStyle = FlatStyle.Flat
+            FlatStyle = FlatStyle.Flat,
+            Margin    = new Padding(0, 4, 14, 0)
         };
         _dtp = new DateTimePicker
         {
-            Format   = DateTimePickerFormat.Short,
-            Location = new Point(PL + 155, y + 1),
-            Width    = 130,
-            Value    = DateTime.Today.AddDays(1),
-            Enabled  = false,
-            Font     = new Font("Consolas", 10)
+            Format  = DateTimePickerFormat.Short,
+            Width   = 145,
+            Value   = DateTime.Today.AddDays(1),
+            Enabled = false,
+            Font    = new Font("Consolas", 10),
+            Margin  = new Padding(0, 2, 0, 0)
         };
         _chkDue.CheckedChanged += (_, _) => _dtp.Enabled = _chkDue.Checked;
-        main.Controls.AddRange([_chkDue, _dtp]);
-        y += IH + RGAP + 6;
+        dueRow.Controls.AddRange([_chkDue, _dtp]);
+        grid.Controls.Add(dueRow, 0, 6);
 
-        // ── Ayırıcı ───────────────────────────────────────────────────────
-        main.Controls.Add(new Panel
+        // 7 – Ayırıcı
+        var sep = new Panel
         {
-            Location  = new Point(PL, y),
-            Size      = new Size(CW, 1),
+            Dock      = DockStyle.Bottom,
+            Height    = 1,
             BackColor = Color.FromArgb(55, 55, 75)
-        });
-        y += 1 + 10;
+        };
+        grid.Controls.Add(sep, 0, 7);
 
-        // ── Butonlar (sağa hizalı) ────────────────────────────────────────
-        var btnSave   = MakeBtn("Kaydet");
-        btnSave.Click += OnSave;
-
-        var btnCancel = MakeBtn("İptal");
+        // 8 – Butonlar (sağa hizalı FlowLayout)
+        var btnRow = new FlowLayoutPanel
+        {
+            Dock          = DockStyle.Fill,
+            FlowDirection = FlowDirection.RightToLeft,
+            WrapContents  = false,
+            Margin        = Padding.Empty,
+            Padding       = Padding.Empty,
+        };
+        var btnSave   = MakeBtn("  Kaydet  ");
+        var btnCancel = MakeBtn("  İptal  ");
+        btnSave.Click   += OnSave;
         btnCancel.Click += (_, _) => { DialogResult = DialogResult.Cancel; Close(); };
+        // RightToLeft sırası: ilk eklenen en sağda
+        btnRow.Controls.Add(btnSave);
+        btnRow.Controls.Add(btnCancel);
+        grid.Controls.Add(btnRow, 0, 8);
 
-        int rightEdge  = PL + CW;
-        btnSave.Location   = new Point(rightEdge - btnSave.PreferredSize.Width - 2, y);
-        btnCancel.Location = new Point(rightEdge - btnSave.PreferredSize.Width - btnCancel.PreferredSize.Width - 14, y);
-        main.Controls.AddRange([btnCancel, btnSave]);
-
-        Controls.Add(main);
+        Controls.Add(grid);
         AcceptButton = btnSave;
         CancelButton = btnCancel;
     }
@@ -179,22 +222,13 @@ internal sealed class TodoEditForm : Form
     }
 
     // ── Factory helpers ───────────────────────────────────────────────────
-    private static Label SmallLbl(string text, int x, int y) => new()
+    private static Label SmallLbl(string text) => new()
     {
         Text      = text,
-        Location  = new Point(x, y),
         AutoSize  = true,
         Font      = new Font("Consolas", 9),
-        ForeColor = Color.FromArgb(150, 150, 195)
-    };
-
-    private static TextBox MakeTxt(int x, int y, int w) => new()
-    {
-        Location    = new Point(x, y),
-        Width       = w,
-        Height      = 27,
-        Font        = new Font("Consolas", 10),
-        BorderStyle = BorderStyle.FixedSingle
+        ForeColor = Color.FromArgb(150, 150, 195),
+        Margin    = new Padding(0, 2, 0, 1)
     };
 
     private static Button MakeBtn(string text)
