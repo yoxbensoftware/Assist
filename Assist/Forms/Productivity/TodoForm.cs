@@ -35,7 +35,7 @@ internal sealed class TodoForm : Form
 
     public TodoForm()
     {
-        Text        = "📋 Görev Takibi";
+        Text        = "Görev Takibi";
         Size        = new Size(980, 660);
         MinimumSize = new Size(780, 480);
         Font        = new Font("Consolas", 10);
@@ -45,11 +45,11 @@ internal sealed class TodoForm : Form
         var toolbar = new TableLayoutPanel
         {
             Dock        = DockStyle.Top,
-            Height      = 46,
+            Height      = 52,
             ColumnCount = 3,
             RowCount    = 1,
             BackColor   = Color.FromArgb(22, 22, 34),
-            Padding     = new Padding(8, 9, 8, 7),
+            Padding     = new Padding(8, 10, 8, 10),
             Margin      = Padding.Empty,
         };
         toolbar.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 200));
@@ -185,12 +185,13 @@ internal sealed class TodoForm : Form
             Name         = "Title",
             HeaderText   = "Görev",
             AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill,
+            MinimumWidth = 260,
             ReadOnly     = true
         });
-        AddFixed("Category", "Kategori",   110);
-        AddFixed("DueDate",  "Bitiş",      106);
-        AddFixed("TimeLeft", "Kalan Süre", 162);
-        AddFixed("Priority", "Öncelik",     90);
+        AddFixed("Category", "Kategori",   140);
+        AddFixed("DueDate",  "Bitiş",      110);
+        AddFixed("TimeLeft", "Kalan Süre", 170);
+        AddFixed("Priority", "Öncelik",    100);
     }
 
     private void AddFixed(string name, string header, int width) =>
