@@ -18,9 +18,8 @@ internal sealed class TodoEditForm : Form
     private ComboBox       _cmbPriority = null!;
     private CheckBox       _chkDue      = null!;
     private DateTimePicker _dtp         = null!;
-
-    // Layout constants — kept for reference
-    private const int PL   = 24;   // padding left (unused after TLP rewrite)
+    private CheckBox       _chkRecurring = null!;
+    private NumericUpDown  _nudDay       = null!;
 
     public TodoEditForm(TodoItem? existing = null)
     {
@@ -41,7 +40,7 @@ internal sealed class TodoEditForm : Form
     private void BuildUI()
     {
         Text            = _isNew ? "Yeni Görev" : "Görevi Düzenle";
-        ClientSize      = new Size(500, 330);
+        ClientSize      = new Size(500, 362);
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox     = false;
         MinimizeBox     = false;
@@ -53,12 +52,11 @@ internal sealed class TodoEditForm : Form
         {
             Dock        = DockStyle.Fill,
             ColumnCount = 1,
-            RowCount    = 9,
+            RowCount    = 10,
             Padding     = new Padding(20, 14, 20, 10),
             Margin      = Padding.Empty,
         };
         grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-        // rows: lbl-title | txt-title | lbl-desc | txt-desc | cat+pri panel | lbl-due | due-row | separator | buttons
         grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 20));  // 0 lbl Başlık
         grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 30));  // 1 txt Başlık
         grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 20));  // 2 lbl Açıklama
@@ -66,8 +64,9 @@ internal sealed class TodoEditForm : Form
         grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 54));  // 4 Kategori + Öncelik
         grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 20));  // 5 lbl Bitiş
         grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 32));  // 6 chk + dtp
-        grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 14));  // 7 ayırıcı
-        grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 36));  // 8 butonlar
+        grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 32));  // 7 periyodik satır
+        grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 14));  // 8 ayırıcı
+        grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 36));  // 9 butonlar
 
         // 0 – Başlık label
         grid.Controls.Add(SmallLbl("Başlık *"), 0, 0);
@@ -153,32 +152,50 @@ internal sealed class TodoEditForm : Form
         dueRow.Controls.AddRange([_chkDue, _dtp]);
         grid.Controls.Add(dueRow, 0, 6);
 
-        // 7 – Ayırıcı
-        var sep = new Panel
-        {
-            Dock      = DockStyle.Bottom,
-            Height    = 1,
-            BackColor = Color.FromArgb(55, 55, 75)
-        };
-        grid.Controls.Add(sep, 0, 7);
-
-        // 8 – Butonlar (sağa hizalı FlowLayout)
-        var btnRow = new FlowLayoutPanel
+        // 7 – Periyodik satır
+        var recurRow = new FlowLayoutPanel
         {
             Dock          = DockStyle.Fill,
-            FlowDirection = FlowDirection.RightToLeft,
+            FlowDirection = FlowDirection.LeftToRight,
             WrapContents  = false,
             Margin        = Padding.Empty,
             Padding       = Padding.Empty,
         };
+        _chkRecurring = new CheckBox
+        {
+            Text      = "Periyodik",
+            AutoSize  = true,
+            Font      = new Font("Consolas", 10),
+            FlatStyle = FlatStyle.Flat,
+            Margin    = new Padding(0, 4, 14, 0)
+        };
+        var lblPre = new Label { Text = "Her ayın", AutoSize = true, Font = new Font("Consolas", 10), Margin = new Padding(0, 6, 6, 0), Enabled = false };
+        _nudDay    = new NumericUpDown { Minimum = 1, Maximum = 28, Value = 1, Width = 56, Font = new Font("Consolas", 10), Margin = new Padding(0, 3, 6, 0), Enabled = false };
+        var lblSuf = new Label { Text = ". günü (aylık)", AutoSize = true, Font = new Font("Consolas", 10), Margin = new Padding(0, 6, 0, 0), Enabled = false };
+        _chkRecurring.CheckedChanged += (_, _) =>
+        {
+            bool on = _chkRecurring.Checked;
+            lblPre.Enabled  = on;
+            _nudDay.Enabled = on;
+            lblSuf.Enabled  = on;
+            _chkDue.Enabled = !on;          // periyodik ise manuel tarih kilitle
+            _dtp.Enabled    = !on && _chkDue.Checked;
+        };
+        recurRow.Controls.AddRange([_chkRecurring, lblPre, _nudDay, lblSuf]);
+        grid.Controls.Add(recurRow, 0, 7);
+
+        // 8 – Ayırıcı
+        grid.Controls.Add(new Panel { Dock = DockStyle.Bottom, Height = 1, BackColor = Color.FromArgb(55, 55, 75) }, 0, 8);
+
+        // 9 – Butonlar
+        var btnRow = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft, WrapContents = false, Margin = Padding.Empty, Padding = Padding.Empty };
         var btnSave   = MakeBtn("  Kaydet  ");
         var btnCancel = MakeBtn("  İptal  ");
         btnSave.Click   += OnSave;
         btnCancel.Click += (_, _) => { DialogResult = DialogResult.Cancel; Close(); };
-        // RightToLeft sırası: ilk eklenen en sağda
         btnRow.Controls.Add(btnSave);
         btnRow.Controls.Add(btnCancel);
-        grid.Controls.Add(btnRow, 0, 8);
+        grid.Controls.Add(btnRow, 0, 9);
 
         Controls.Add(grid);
         AcceptButton = btnSave;
@@ -191,7 +208,13 @@ internal sealed class TodoEditForm : Form
         _txtDesc.Text     = _item.Description;
         _txtCategory.Text = _item.Category;
         _cmbPriority.SelectedIndex = (int)_item.Priority;
-        if (_item.DueDate.HasValue)
+
+        if (_item.IsRecurring)
+        {
+            _chkRecurring.Checked = true;
+            _nudDay.Value         = Math.Clamp(_item.RecurrenceDay, 1, 28);
+        }
+        else if (_item.DueDate.HasValue)
         {
             _chkDue.Checked = true;
             _dtp.Value      = _item.DueDate.Value;
@@ -212,7 +235,25 @@ internal sealed class TodoEditForm : Form
         _item.Description = _txtDesc.Text.Trim();
         _item.Category    = _txtCategory.Text.Trim();
         _item.Priority    = (TodoPriority)_cmbPriority.SelectedIndex;
-        _item.DueDate     = _chkDue.Checked ? _dtp.Value.Date : (DateTime?)null;
+
+        if (_chkRecurring.Checked)
+        {
+            _item.IsRecurring    = true;
+            _item.RecurrenceType = RecurrenceType.Monthly;
+            _item.RecurrenceDay  = (int)_nudDay.Value;
+            // DueDate = bu ayki ödeme günü (geçmişse Load otomatik ilerletir)
+            var today = DateTime.Today;
+            int day   = (int)_nudDay.Value;
+            _item.DueDate = day >= today.Day
+                ? new DateTime(today.Year, today.Month, day)
+                : new DateTime(today.Year, today.Month, 1).AddMonths(1).AddDays(day - 1);
+        }
+        else
+        {
+            _item.IsRecurring    = false;
+            _item.RecurrenceType = RecurrenceType.None;
+            _item.DueDate        = _chkDue.Checked ? _dtp.Value.Date : (DateTime?)null;
+        }
 
         if (_isNew) TodoStore.Add(_item);
         else        TodoStore.Update(_item);

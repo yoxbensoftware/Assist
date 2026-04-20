@@ -25,6 +25,18 @@ internal static class TodoStore
             _items = JsonSerializer.Deserialize<List<TodoItem>>(json) ?? [];
         }
         catch { _items = []; }
+
+        // Periyodik görevlerde geçmiş kalmış tarihleri otomatik ilerlet
+        bool changed = false;
+        foreach (var item in _items.Where(x => x.IsRecurring && !x.IsCompleted && x.DueDate.HasValue))
+        {
+            while (item.DueDate!.Value.Date < DateTime.Today)
+            {
+                item.DueDate = item.NextOccurrenceAfter(item.DueDate.Value);
+                changed = true;
+            }
+        }
+        if (changed) Save();
     }
 
     public static void Save()
@@ -56,8 +68,18 @@ internal static class TodoStore
     {
         var item = _items.FirstOrDefault(x => x.Id == id);
         if (item is null) return;
-        item.IsCompleted  = !item.IsCompleted;
-        item.CompletedAt  = item.IsCompleted ? DateTime.Now : null;
+
+        if (item.IsRecurring)
+        {
+            // Periyodik görevler asla "bitti" olarak işaretlenmez;
+            // tamamlandığında DueDate bir sonraki tekrara atlar.
+            item.DueDate = item.NextOccurrenceAfter(item.DueDate ?? DateTime.Today);
+        }
+        else
+        {
+            item.IsCompleted = !item.IsCompleted;
+            item.CompletedAt = item.IsCompleted ? DateTime.Now : null;
+        }
         Save();
     }
 
