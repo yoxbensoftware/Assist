@@ -41,44 +41,70 @@ internal sealed class TodoForm : Form
         Font        = new Font("Consolas", 10);
 
         // ── Toolbar ───────────────────────────────────────────────────────
-        var toolbar = new Panel
+        // 3 columns: [200px search] | [Fill filter buttons] | [130px new btn]
+        var toolbar = new TableLayoutPanel
         {
-            Dock      = DockStyle.Top,
-            Height    = 46,
-            BackColor = Color.FromArgb(22, 22, 34),
+            Dock        = DockStyle.Top,
+            Height      = 46,
+            ColumnCount = 3,
+            RowCount    = 1,
+            BackColor   = Color.FromArgb(22, 22, 34),
+            Padding     = new Padding(8, 9, 8, 7),
+            Margin      = Padding.Empty,
         };
+        toolbar.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 200));
+        toolbar.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        toolbar.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 130));
+        toolbar.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
 
         _txtSearch = new TextBox
         {
-            PlaceholderText = "🔍 Ara...",
-            Location        = new Point(8, 10),
-            Width           = 190,
+            Dock            = DockStyle.Fill,
+            PlaceholderText = "Ara...",
             BorderStyle     = BorderStyle.FixedSingle,
-            Font            = new Font("Consolas", 10)
+            Font            = new Font("Consolas", 10),
+            Margin          = new Padding(0, 0, 6, 0)
         };
         _txtSearch.TextChanged += (_, _) => ApplyView();
-        toolbar.Controls.Add(_txtSearch);
 
-        // Filter buttons
+        // Filter buttons inside a FlowLayoutPanel so they never overlap
+        var filterFlow = new FlowLayoutPanel
+        {
+            Dock          = DockStyle.Fill,
+            FlowDirection = FlowDirection.LeftToRight,
+            WrapContents  = false,
+            BackColor     = Color.Transparent,
+            Margin        = Padding.Empty,
+            Padding       = Padding.Empty,
+        };
+
         string[] filters = ["Tümü", "Bugün", "Bu Hafta", "Gecikmiş", "✅ Bitti"];
-        int fx = 210;
         Button? firstBtn = null;
         foreach (var f in filters)
         {
             var btn = MakeFilterBtn(f);
-            btn.Location = new Point(fx, 9);
+            btn.Margin = new Padding(0, 0, 4, 0);
             var cap = f;
             btn.Click += (_, _) => SetFilter(cap, btn);
-            toolbar.Controls.Add(btn);
+            filterFlow.Controls.Add(btn);
             firstBtn ??= btn;
-            fx += btn.Width + 4;
         }
 
-        var btnNew = MakeNewBtn("➕ Yeni Görev");
-        btnNew.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+        var btnNew = new Button
+        {
+            Dock      = DockStyle.Fill,
+            Text      = "+ Yeni Görev",
+            FlatStyle = FlatStyle.Flat,
+            Font      = new Font("Consolas", 9),
+            Cursor    = Cursors.Hand,
+            Margin    = new Padding(4, 0, 0, 0)
+        };
+        btnNew.FlatAppearance.BorderSize = 1;
         btnNew.Click += OnNewTask;
-        toolbar.Controls.Add(btnNew);
-        toolbar.Resize += (_, _) => btnNew.Location = new Point(toolbar.Width - btnNew.Width - 10, 9);
+
+        toolbar.Controls.Add(_txtSearch, 0, 0);
+        toolbar.Controls.Add(filterFlow,  1, 0);
+        toolbar.Controls.Add(btnNew,      2, 0);
 
         // ── DataGridView ─────────────────────────────────────────────────
         _dgv = new DataGridView
@@ -395,21 +421,6 @@ internal sealed class TodoForm : Form
         {
             Text      = text,
             Width     = w,
-            Height    = 26,
-            FlatStyle = FlatStyle.Flat,
-            Font      = new Font("Consolas", 9),
-            Cursor    = Cursors.Hand
-        };
-        btn.FlatAppearance.BorderSize = 1;
-        return btn;
-    }
-
-    private static Button MakeNewBtn(string text)
-    {
-        var btn = new Button
-        {
-            Text      = text,
-            Width     = 126,
             Height    = 26,
             FlatStyle = FlatStyle.Flat,
             Font      = new Font("Consolas", 9),
