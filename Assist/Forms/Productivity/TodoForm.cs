@@ -122,8 +122,9 @@ internal sealed class TodoForm : Form
             GridColor                = Color.FromArgb(48, 48, 68),
             BorderStyle              = BorderStyle.None,
             EnableHeadersVisualStyles = false,
-            AutoSizeColumnsMode      = DataGridViewAutoSizeColumnsMode.None,
+            AutoSizeColumnsMode      = DataGridViewAutoSizeColumnsMode.Fill,
             ScrollBars               = ScrollBars.Vertical,
+            RowHeadersVisible        = false,
         };
         UITheme.Apply(_dgv);
         _dgv.ColumnHeadersDefaultCellStyle.Font           = new Font("Consolas", 9, FontStyle.Bold);
@@ -180,27 +181,21 @@ internal sealed class TodoForm : Form
     // ── Column layout ──────────────────────────────────────────────────────
     private void BuildColumns()
     {
-        _dgv.Columns.Add(new DataGridViewTextBoxColumn
-        {
-            Name         = "Title",
-            HeaderText   = "Görev",
-            AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill,
-            MinimumWidth = 260,
-            ReadOnly     = true
-        });
-        AddFixed("Category", "Kategori",   140);
-        AddFixed("DueDate",  "Bitiş",      110);
-        AddFixed("TimeLeft", "Kalan Süre", 170);
-        AddFixed("Priority", "Öncelik",    100);
+        AddFill("Title",    "Görev",      40, 200);
+        AddFill("Category", "Kategori",   15, 100);
+        AddFill("DueDate",  "Bitiş",      13, 100);
+        AddFill("TimeLeft", "Kalan Süre", 18, 120);
+        AddFill("Priority", "Öncelik",    14,  80);
     }
 
-    private void AddFixed(string name, string header, int width) =>
+    private void AddFill(string name, string header, int weight, int minWidth) =>
         _dgv.Columns.Add(new DataGridViewTextBoxColumn
         {
             Name         = name,
             HeaderText   = header,
-            Width        = width,
-            AutoSizeMode = DataGridViewAutoSizeColumnMode.None,
+            AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill,
+            FillWeight   = weight,
+            MinimumWidth = minWidth,
             ReadOnly     = true
         });
 
@@ -417,14 +412,15 @@ internal sealed class TodoForm : Form
     // ── Button factories ───────────────────────────────────────────────────
     private static Button MakeFilterBtn(string text)
     {
-        int w = Math.Max(62, text.Length * 9 + 18);
-        var btn = new Button
+        var font = new Font("Consolas", 9);
+        int w    = TextRenderer.MeasureText(text, font).Width + 22;
+        var btn  = new Button
         {
             Text      = text,
             Width     = w,
-            Height    = 26,
+            Height    = 28,
             FlatStyle = FlatStyle.Flat,
-            Font      = new Font("Consolas", 9),
+            Font      = font,
             Cursor    = Cursors.Hand
         };
         btn.FlatAppearance.BorderSize = 1;

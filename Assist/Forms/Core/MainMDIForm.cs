@@ -291,7 +291,7 @@ internal partial class MainMDIForm : Form
 
     private ToolStripMenuItem CreateTodoMenuItem()
     {
-        var item = new ToolStripMenuItem("📋 Görevler");
+        var item = new ToolStripMenuItem("Görevler");
         item.Click += (_, _) => ShowMdiChild(new TodoForm());
         return item;
     }
