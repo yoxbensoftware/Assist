@@ -20,6 +20,7 @@ using Assist.Forms.Online.News;
 using Assist.Forms.Online.Queries;
 using Assist.Forms.Online.Reference;
 using Assist.Forms.Passwords;
+using Assist.Forms.Productivity;
 using Assist.Forms.SystemTools;
 using Assist.Forms.SystemTools.Maintenance;
 using Assist.Forms.SystemTools.Monitoring;
@@ -151,6 +152,7 @@ internal partial class MainMDIForm : Form
         menuStrip.Items.Add(CreatePasswordMenu());
         menuStrip.Items.Add(CreateSystemToolsMenu());
         menuStrip.Items.Add(CreateOnlineMenu());
+        menuStrip.Items.Add(CreateTodoMenuItem());
         menuStrip.Items.Add(CreateThemeMenu());
         menuStrip.Items.Add(CreateDeveloperToolsMenu());
         menuStrip.Items.Add(CreateClipboardMenu());
@@ -285,6 +287,13 @@ internal partial class MainMDIForm : Form
         menu.DropDownItems.Add(CreateMenuItem("📅 Tatil Takvimi (TR)", () => ShowMdiChild(new TurkishHolidaysForm())));
 
         return menu;
+    }
+
+    private ToolStripMenuItem CreateTodoMenuItem()
+    {
+        var item = new ToolStripMenuItem("📋 Görevler");
+        item.Click += (_, _) => ShowMdiChild(new TodoForm());
+        return item;
     }
 
     private ToolStripMenuItem CreateDeveloperToolsMenu()
