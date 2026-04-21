@@ -1204,9 +1204,20 @@ internal partial class MainMDIForm : Form
     private void OnOzClick()
     {
         _ = ShowNewsAsync(() => new NewsService().GetTopTrAsync(30), "TR - En Önemli Haberler (Top 30)");
+
+        // ── MDI çocukları ─────────────────────────────────────────────────
+        ShowMdiChild(new PerformanceMonitorForm());
+        ShowMdiChild(new TodoForm());
+
+        // İkisini yan yana, okunabilir şekilde diz
+        LayoutMdi(MdiLayout.TileVertical);
+
+        // ── Bağımsız pencereler ───────────────────────────────────────────
         if (!Application.OpenForms.OfType<ConnectionMonitorForm>().Any())
             new ConnectionMonitorForm().Show();
-        ShowMdiChild(new PerformanceMonitorForm());
+
+        if (!Application.OpenForms.OfType<WiggleMouseForm>().Any())
+            new WiggleMouseForm().Show();
     }
 
     #endregion
