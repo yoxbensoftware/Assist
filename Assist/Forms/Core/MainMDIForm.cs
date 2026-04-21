@@ -1213,7 +1213,20 @@ internal partial class MainMDIForm : Form
         ShowMdiChildNormal(new TodoForm());
 
         // Formlar tam göründükten sonra Dikey Döşe uygula
-        await TileMdiWhenReadyAsync(3);
+        BeginInvoke(() =>
+        {
+            foreach (var child in MdiChildren)
+                child.WindowState = FormWindowState.Normal;
+
+            var tileTimer = new System.Windows.Forms.Timer { Interval = 180 };
+            tileTimer.Tick += (_, _) =>
+            {
+                tileTimer.Stop();
+                tileTimer.Dispose();
+                LayoutMdi(MdiLayout.TileVertical);
+            };
+            tileTimer.Start();
+        });
 
         // ── Bağımsız pencereler ───────────────────────────────────────────
         if (!Application.OpenForms.OfType<ConnectionMonitorForm>().Any())
@@ -1221,26 +1234,6 @@ internal partial class MainMDIForm : Form
 
         if (!Application.OpenForms.OfType<WiggleMouseForm>().Any())
             new WiggleMouseForm().Show();
-    }
-
-    private async Task TileMdiWhenReadyAsync(int expectedCount)
-    {
-        for (var i = 0; i < 30; i++)
-        {
-            var children = MdiChildren;
-            if (children.Length >= expectedCount && children.All(c => c.IsHandleCreated && c.Visible))
-            {
-                foreach (var child in children)
-                    child.WindowState = FormWindowState.Normal;
-                BeginInvoke(() => LayoutMdi(MdiLayout.TileVertical));
-                return;
-            }
-            await Task.Delay(150);
-        }
-
-        foreach (var child in MdiChildren)
-            child.WindowState = FormWindowState.Normal;
-        BeginInvoke(() => LayoutMdi(MdiLayout.TileVertical));
     }
 
     /// <summary>MDI child'ı Normal (tile'a uygun) boyutta açar, zaten açıksa aktive eder.</summary>
