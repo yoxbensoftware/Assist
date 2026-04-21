@@ -1214,7 +1214,15 @@ internal partial class MainMDIForm : Form
         {
             foreach (var child in MdiChildren)
                 child.WindowState = FormWindowState.Normal;
-            LayoutMdi(MdiLayout.TileVertical);
+
+            var tileTimer = new System.Windows.Forms.Timer { Interval = 120 };
+            tileTimer.Tick += (_, _) =>
+            {
+                tileTimer.Stop();
+                tileTimer.Dispose();
+                LayoutMdi(MdiLayout.TileVertical);
+            };
+            tileTimer.Start();
         });
 
         // ── Bağımsız pencereler ───────────────────────────────────────────

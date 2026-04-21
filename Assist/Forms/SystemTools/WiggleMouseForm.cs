@@ -167,6 +167,12 @@ internal sealed class WiggleMouseForm : Form
         body.Controls.AddRange([lblHeader, _countdownLabel, lblH, lblM, lblS, _nudHours, _nudMinutes, _nudSeconds, _btnSet, _btnStartStop, _statusLabel]);
         Controls.Add(body);
         Controls.Add(configPanel);
+
+        // Allow drag from anywhere
+        MakeDraggable(this);
+        MakeDraggable(body);
+        foreach (Control c in body.Controls)
+            MakeDraggable(c);
     }
 
     private void MakeDraggable(Control control)
