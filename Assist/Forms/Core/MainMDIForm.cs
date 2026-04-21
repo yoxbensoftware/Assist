@@ -1205,12 +1205,17 @@ internal partial class MainMDIForm : Form
     {
         _ = ShowNewsAsync(() => new NewsService().GetTopTrAsync(30), "TR - En Önemli Haberler (Top 30)");
 
-        // ── MDI çocukları ─────────────────────────────────────────────────
-        ShowMdiChild(new PerformanceMonitorForm());
-        ShowMdiChild(new TodoForm());
+        // ── MDI çocukları — Normal (Maximized değil) açılır, sonra tile edilir ─
+        ShowMdiChildNormal(new PerformanceMonitorForm());
+        ShowMdiChildNormal(new TodoForm());
 
-        // Formlar tam render olduktan sonra dikey döşe (Pencereler → Dikey Döşe ile aynı)
-        BeginInvoke(() => LayoutMdi(MdiLayout.TileVertical));
+        // Formlar tam göründükten sonra Dikey Döşe uygula
+        BeginInvoke(() =>
+        {
+            foreach (var child in MdiChildren)
+                child.WindowState = FormWindowState.Normal;
+            LayoutMdi(MdiLayout.TileVertical);
+        });
 
         // ── Bağımsız pencereler ───────────────────────────────────────────
         if (!Application.OpenForms.OfType<ConnectionMonitorForm>().Any())
@@ -1218,6 +1223,26 @@ internal partial class MainMDIForm : Form
 
         if (!Application.OpenForms.OfType<WiggleMouseForm>().Any())
             new WiggleMouseForm().Show();
+    }
+
+    /// <summary>MDI child'ı Normal (tile'a uygun) boyutta açar, zaten açıksa aktive eder.</summary>
+    private void ShowMdiChildNormal(Form form)
+    {
+        var existing = MdiChildren.FirstOrDefault(c => c.GetType() == form.GetType());
+        if (existing is not null)
+        {
+            form.Dispose();
+            if (existing.WindowState == FormWindowState.Maximized)
+                existing.WindowState = FormWindowState.Normal;
+            existing.Activate();
+            return;
+        }
+
+        form.MdiParent   = this;
+        form.WindowState = FormWindowState.Normal;
+        UITheme.Apply(form);
+        EnsureDarkTitleBar(form);
+        form.Show();
     }
 
     #endregion
