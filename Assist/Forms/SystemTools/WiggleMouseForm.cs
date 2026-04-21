@@ -37,7 +37,7 @@ internal sealed class WiggleMouseForm : Form
     private void InitializeComponent()
     {
         Text = "Wiggle Mouse";
-        Size = new Size(400, 380);
+        Size = new Size(400, 320);
         FormBorderStyle = FormBorderStyle.None;
         MaximizeBox = false;
         StartPosition = FormStartPosition.Manual;
@@ -82,6 +82,7 @@ internal sealed class WiggleMouseForm : Form
             Location = new Point(210, 3),
             BackColor = Color.FromArgb(15, 15, 15)
         };
+        opacitySlider.Tag = "nodrag";
         opacitySlider.ValueChanged += (_, _) => Opacity = opacitySlider.Value / 100d;
 
         var btnClose = new Label
@@ -96,6 +97,7 @@ internal sealed class WiggleMouseForm : Form
             Cursor = Cursors.Hand,
             Anchor = AnchorStyles.Top | AnchorStyles.Right
         };
+        btnClose.Tag = "nodrag";
         btnClose.Location = new Point(configPanel.Width - btnClose.Width - 4, 4);
         btnClose.Click += (_, _) => Close();
         btnClose.MouseEnter += (_, _) => btnClose.ForeColor = Color.FromArgb(255, 50, 50);
@@ -108,7 +110,7 @@ internal sealed class WiggleMouseForm : Form
         {
             Dock = DockStyle.Fill,
             BackColor = Color.Black,
-            Padding = new Padding(12, 10, 12, 12)
+            Padding = new Padding(12, 10, 12, 6)
         };
 
         var lblHeader = new Label
@@ -159,7 +161,7 @@ internal sealed class WiggleMouseForm : Form
         _statusLabel.Font = new Font("Consolas", 10f);
         _statusLabel.ForeColor = Color.Gray;
         _statusLabel.AutoSize = true;
-        _statusLabel.Location = new Point(8, 250);
+        _statusLabel.Location = new Point(8, 236);
 
         _countdownTimer.Interval = 1000;
         _wiggleTimer.Interval = 180;  // shorter steps = more reliable idle reset
@@ -174,10 +176,17 @@ internal sealed class WiggleMouseForm : Form
 
     private void MakeDraggableRecursive(Control control)
     {
-        MakeDraggable(control);
+        if (!ShouldSkipDrag(control))
+            MakeDraggable(control);
         foreach (Control child in control.Controls)
             MakeDraggableRecursive(child);
     }
+
+    private static bool ShouldSkipDrag(Control control) =>
+        control.Tag as string == "nodrag" ||
+        control is TrackBar ||
+        control is NumericUpDown ||
+        control is Button;
 
     private void MakeDraggable(Control control)
     {
