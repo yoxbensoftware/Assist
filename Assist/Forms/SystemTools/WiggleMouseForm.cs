@@ -169,10 +169,14 @@ internal sealed class WiggleMouseForm : Form
         Controls.Add(configPanel);
 
         // Allow drag from anywhere
-        MakeDraggable(this);
-        MakeDraggable(body);
-        foreach (Control c in body.Controls)
-            MakeDraggable(c);
+        MakeDraggableRecursive(this);
+    }
+
+    private void MakeDraggableRecursive(Control control)
+    {
+        MakeDraggable(control);
+        foreach (Control child in control.Controls)
+            MakeDraggableRecursive(child);
     }
 
     private void MakeDraggable(Control control)

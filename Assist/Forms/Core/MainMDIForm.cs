@@ -626,7 +626,7 @@ internal partial class MainMDIForm : Form
         child.Show();
     }
 
-    private async Task ShowNewsAsync(Func<Task<List<NewsItem>>> fetcher, string title)
+    private async Task ShowNewsAsync(Func<Task<List<NewsItem>>> fetcher, string title, bool openNormal = false)
     {
         await Loading.RunAsync(this, async () =>
         {
@@ -647,13 +647,16 @@ internal partial class MainMDIForm : Form
             {
                 existing.Text = title;
                 existing.SetNews(items);
+                if (openNormal && existing.WindowState == FormWindowState.Maximized)
+                    existing.WindowState = FormWindowState.Normal;
                 existing.Activate();
                 return;
             }
 
             var newsForm = new NewsForm(title);
             newsForm.SetNews(items); // set BEFORE ShowMdiChild to avoid disposed-form exception
-            ShowMdiChild(newsForm);
+            if (openNormal) ShowMdiChildNormal(newsForm);
+            else ShowMdiChild(newsForm);
         }, "Haberler yükleniyor...");
     }
 
@@ -1201,9 +1204,9 @@ internal partial class MainMDIForm : Form
 
     private static void OnAssistClick() => ShowAbout();
 
-    private void OnOzClick()
+    private async void OnOzClick()
     {
-        _ = ShowNewsAsync(() => new NewsService().GetTopTrAsync(30), "TR - En Önemli Haberler (Top 30)");
+        await ShowNewsAsync(() => new NewsService().GetTopTrAsync(30), "TR - En Önemli Haberler (Top 30)", openNormal: true);
 
         // ── MDI çocukları — Normal (Maximized değil) açılır, sonra tile edilir ─
         ShowMdiChildNormal(new PerformanceMonitorForm());
@@ -1215,7 +1218,7 @@ internal partial class MainMDIForm : Form
             foreach (var child in MdiChildren)
                 child.WindowState = FormWindowState.Normal;
 
-            var tileTimer = new System.Windows.Forms.Timer { Interval = 120 };
+            var tileTimer = new System.Windows.Forms.Timer { Interval = 180 };
             tileTimer.Tick += (_, _) =>
             {
                 tileTimer.Stop();
