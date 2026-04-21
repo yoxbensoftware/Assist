@@ -1209,8 +1209,8 @@ internal partial class MainMDIForm : Form
         ShowMdiChild(new PerformanceMonitorForm());
         ShowMdiChild(new TodoForm());
 
-        // İkisini yan yana, okunabilir şekilde diz
-        LayoutMdi(MdiLayout.TileVertical);
+        // Formlar tam render olduktan sonra dikey döşe (Pencereler → Dikey Döşe ile aynı)
+        BeginInvoke(() => LayoutMdi(MdiLayout.TileVertical));
 
         // ── Bağımsız pencereler ───────────────────────────────────────────
         if (!Application.OpenForms.OfType<ConnectionMonitorForm>().Any())
