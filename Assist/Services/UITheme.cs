@@ -6,7 +6,25 @@ namespace Assist.Services;
 internal static class UITheme
 {
     // Cached font instance to prevent repeated allocations on every Apply call
-    private static readonly Font DefaultFont = new("Consolas", 10);
+    // Use GDI charset 162 (Turkish) to ensure correct Turkish characters rendering
+    private static readonly Font DefaultFont = new("Consolas", 10, FontStyle.Regular, GraphicsUnit.Point, (byte)162);
+
+    private static Font NormalizeFont(Font f)
+    {
+        if (f is null) return DefaultFont;
+        try
+        {
+            // If control already requests Consolas (or any font named Consolas), recreate with Turkish charset
+            if (string.Equals(f.Name, "Consolas", StringComparison.OrdinalIgnoreCase))
+                return new Font(f.Name, f.Size, f.Style, f.Unit, (byte)162);
+            // Otherwise, keep original
+            return f;
+        }
+        catch
+        {
+            return DefaultFont;
+        }
+    }
 
     /// <summary>
     /// Gets the current theme's color palette.
@@ -136,6 +154,9 @@ internal static class UITheme
     /// </summary>
     private static void ApplyCore(Control root, ThemePalette p)
     {
+        // Ensure font uses correct charset for Consolas-derived fonts
+        root.Font = NormalizeFont(root.Font);
+
         switch (root)
         {
             case Form form:
