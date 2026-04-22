@@ -34,7 +34,7 @@ internal sealed class DiskCleanerForm : Form
 
         var lblTitle = new Label
         {
-            Text = "=== D─░SK TEM─░ZLEY─░C─░ ===",
+            Text = "=== DİSK TEMİZLEYİCİ ===",
             Location = new Point(20, 15),
             AutoSize = true,
             ForeColor = AppConstants.AccentText,
@@ -43,7 +43,7 @@ internal sealed class DiskCleanerForm : Form
 
         var lblWarning = new Label
         {
-            Text = "ÔÜá Sadece temp ve log dosyalar─▒ hedeflenir. Taray─▒c─▒/uygulama verileri korunur.",
+            Text = "Uyarı: Sadece temp ve log dosyaları hedeflenir. Tarayıcı/uygulama verileri korunur.",
             Location = new Point(20, 45),
             AutoSize = true,
             ForeColor = Color.Yellow,
@@ -64,8 +64,8 @@ internal sealed class DiskCleanerForm : Form
 
         _chkTargets.Items.Add("Windows Temp (%TEMP%)", true);
         _chkTargets.Items.Add("System Temp (C:\\Windows\\Temp)", true);
-        _chkTargets.Items.Add("Log Dosyalar─▒ (*.log)", true);
-        _chkTargets.Items.Add("Geri D├Ân├╝┼ş├╝m Kutusu", false);
+        _chkTargets.Items.Add("Log Dosyaları (*.log)", true);
+        _chkTargets.Items.Add("Geri Dönüşüm Kutusu", false);
         _chkTargets.Items.Add("Thumbnail Cache", true);
 
         _btnScan = CreateButton("­şöı Tara", new Point(20, 185));
@@ -91,7 +91,7 @@ internal sealed class DiskCleanerForm : Form
 
         _lblStatus = new Label
         {
-            Text = "Taramaya haz─▒r.",
+            Text = "Taramaya hazır.",
             Location = new Point(20, 565),
             Width = 760,
             ForeColor = AppConstants.AccentText,
@@ -110,7 +110,7 @@ internal sealed class DiskCleanerForm : Form
         _totalBytesFound = 0;
         _txtLog.Clear();
 
-        AppendLog("Tarama ba┼şl─▒yor...\r\n");
+        AppendLog("Tarama başlıyor...\r\n");
 
         await Task.Run(() =>
         {
@@ -130,7 +130,7 @@ internal sealed class DiskCleanerForm : Form
         AppendLog($"\r\n{'=',-60}");
         AppendLog($"Toplam: {_filesToDelete.Count} dosya, {FormatSize(_totalBytesFound)}");
 
-        _lblStatus.Text = $"Tarama tamamland─▒: {_filesToDelete.Count} dosya ({FormatSize(_totalBytesFound)})";
+        _lblStatus.Text = $"Tarama tamamlandı: {_filesToDelete.Count} dosya ({FormatSize(_totalBytesFound)})";
         _btnScan.Enabled = true;
         _btnClean.Enabled = _filesToDelete.Count > 0;
     }
