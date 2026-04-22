@@ -69,10 +69,10 @@ internal sealed class DiskCleanerForm : Form
         _chkTargets.Items.Add(TextSanitizer.Normalize("Geri D\u00F6n\u00FC\u015F\u00FCm Kutusu"), false);
         _chkTargets.Items.Add("Thumbnail Cache", true);
 
-        _btnScan = CreateButton("­şöı Tara", new Point(20, 185));
+        _btnScan = CreateButton("Şimdi Tara", new Point(20, 185));
         _btnScan.Click += async (_, _) => await ScanAsync();
 
-        _btnClean = CreateButton("­şğ╣ Temizle", new Point(200, 185));
+        _btnClean = CreateButton("Temizle", new Point(200, 185));
         _btnClean.Enabled = false;
         _btnClean.Click += async (_, _) => await CleanAsync();
 
@@ -347,7 +347,7 @@ internal sealed class DiskCleanerForm : Form
     {
         var btn = new Button
         {
-            Text = text,
+            Text = TextSanitizer.Normalize(text),
             Location = location,
             Width = 160,
             Height = 30,
