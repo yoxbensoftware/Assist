@@ -47,6 +47,8 @@ internal static class UITheme
     {
         if (root is null) return;
 
+        // Normalize displayed text to fix mojibake caused by source file encoding issues
+        try { root.Text = TextSanitizer.Normalize(root.Text); } catch { }
         ApplyCore(root, Palette);
     }
 
@@ -167,6 +169,20 @@ internal static class UITheme
             case MenuStrip menu:
                 menu.BackColor = p.MenuBack;
                 menu.ForeColor = p.Text;
+                // normalize menu items
+                try
+                {
+                    foreach (ToolStripItem it in menu.Items)
+                    {
+                        it.Text = TextSanitizer.Normalize(it.Text);
+                        if (it is ToolStripMenuItem mi && mi.DropDownItems.Count > 0)
+                        {
+                            foreach (ToolStripItem sub in mi.DropDownItems)
+                                sub.Text = TextSanitizer.Normalize(sub.Text);
+                        }
+                    }
+                }
+                catch { }
                 break;
             case StatusStrip status:
                 status.BackColor = p.MenuBack;
@@ -186,6 +202,12 @@ internal static class UITheme
                 break;
             case DataGridView dgv:
                 Apply(dgv);
+                try
+                {
+                    foreach (DataGridViewColumn col in dgv.Columns)
+                        col.HeaderText = TextSanitizer.Normalize(col.HeaderText);
+                }
+                catch { }
                 break;
             case ListView lv:
                 Apply(lv);

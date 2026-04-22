@@ -1,5 +1,6 @@
 namespace Assist.Forms.SystemTools.Maintenance;
 
+using Assist.Services;
 /// <summary>
 /// Safe disk cleaner ÔÇö only targets temp and log files.
 /// Skips active browser/app directories.
@@ -34,7 +35,7 @@ internal sealed class DiskCleanerForm : Form
 
         var lblTitle = new Label
         {
-            Text = "=== DİSK TEMİZLEYİCİ ===",
+            Text = TextSanitizer.Normalize("=== D\u0130SK TEM\u0130ZLEY\u0130C\u0130 ==="),
             Location = new Point(20, 15),
             AutoSize = true,
             ForeColor = AppConstants.AccentText,
@@ -43,7 +44,7 @@ internal sealed class DiskCleanerForm : Form
 
         var lblWarning = new Label
         {
-            Text = "Uyarı: Sadece temp ve log dosyaları hedeflenir. Tarayıcı/uygulama verileri korunur.",
+            Text = TextSanitizer.Normalize("Uyar\u0131: Sadece temp ve log dosyalar\u0131 hedeflenir. Taray\u0131c\u0131/uygulama verileri korunur."),
             Location = new Point(20, 45),
             AutoSize = true,
             ForeColor = Color.Yellow,
@@ -64,8 +65,8 @@ internal sealed class DiskCleanerForm : Form
 
         _chkTargets.Items.Add("Windows Temp (%TEMP%)", true);
         _chkTargets.Items.Add("System Temp (C:\\Windows\\Temp)", true);
-        _chkTargets.Items.Add("Log Dosyaları (*.log)", true);
-        _chkTargets.Items.Add("Geri Dönüşüm Kutusu", false);
+        _chkTargets.Items.Add(TextSanitizer.Normalize("Log Dosyalar\u0131 (*.log)"), true);
+        _chkTargets.Items.Add(TextSanitizer.Normalize("Geri D\u00F6n\u00FC\u015F\u00FCm Kutusu"), false);
         _chkTargets.Items.Add("Thumbnail Cache", true);
 
         _btnScan = CreateButton("­şöı Tara", new Point(20, 185));
@@ -100,6 +101,10 @@ internal sealed class DiskCleanerForm : Form
         };
 
         Controls.AddRange([lblTitle, lblWarning, _chkTargets, _btnScan, _btnClean, _txtLog, _lblStatus]);
+        // Sanitize initial texts (in case source file encoding introduced mojibake)
+        Text = TextSanitizer.Normalize(Text);
+        lblTitle.Text = TextSanitizer.Normalize(lblTitle.Text);
+        lblWarning.Text = TextSanitizer.Normalize(lblWarning.Text);
     }
 
     private async Task ScanAsync()

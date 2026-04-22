@@ -1,5 +1,7 @@
 namespace Assist.Forms.DeveloperTools.Formatters;
 
+using Assist.Services;
+
 using System.Text;
 using System.Xml;
 using System.Xml.Linq;
@@ -16,7 +18,7 @@ internal sealed class PrettyXmlForm : Form
 
     public PrettyXmlForm()
     {
-        Text = "Pretty XML";
+        Text = TextSanitizer.Normalize("Pretty XML");
         ClientSize = new Size(860, 620);
         MinimumSize = new Size(700, 500);
         StartPosition = FormStartPosition.CenterParent;
@@ -28,7 +30,7 @@ internal sealed class PrettyXmlForm : Form
         int y = 12;
         var lblTitle = new Label
         {
-            Text = "=== PRETTY XML ===",
+            Text = TextSanitizer.Normalize("=== PRETTY XML ==="),
             Location = new Point(20, y),
             AutoSize = true,
             ForeColor = AppConstants.AccentText,
@@ -65,7 +67,7 @@ internal sealed class PrettyXmlForm : Form
         y = 78;
         var lblInput = new Label
         {
-            Text = "XML Girişi (raw veya Base64):",
+            Text = TextSanitizer.Normalize("XML Girişi (raw veya Base64):"),
             Location = new Point(20, y),
             AutoSize = true,
             ForeColor = AppConstants.AccentText,
@@ -90,7 +92,7 @@ internal sealed class PrettyXmlForm : Form
         y = 318;
         var lblOutput = new Label
         {
-            Text = "Çıktı:",
+            Text = TextSanitizer.Normalize("Çıktı:"),
             Location = new Point(20, y),
             AutoSize = true,
             ForeColor = AppConstants.AccentText,
@@ -115,7 +117,7 @@ internal sealed class PrettyXmlForm : Form
         // Status
         _lblStatus = new Label
         {
-            Text = "Hazır.",
+            Text = TextSanitizer.Normalize("Hazır."),
             Location = new Point(20, 590),
             Size = new Size(820, 20),
             ForeColor = AppConstants.AccentText,
