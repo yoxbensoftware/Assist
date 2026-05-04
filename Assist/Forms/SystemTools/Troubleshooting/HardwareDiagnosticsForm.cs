@@ -2,6 +2,7 @@ namespace Assist.Forms.SystemTools.Troubleshooting;
 
 using System.Diagnostics;
 using System.Net;
+using Assist.Services;
 
 /// <summary>
 /// Detects common hardware/system issues and provides per-issue fix buttons.
@@ -68,6 +69,18 @@ internal sealed class HardwareDiagnosticsForm : Form
         };
 
         Controls.AddRange([lblTitle, _btnScan, _resultsPanel, _lblStatus]);
+
+        // Normalize any potential mojibake in literal strings and apply theme
+        try
+        {
+            lblTitle.Text = TextSanitizer.Normalize(lblTitle.Text);
+            _btnScan.Text = TextSanitizer.Normalize(_btnScan.Text);
+            _lblStatus.Text = TextSanitizer.Normalize(_lblStatus.Text);
+            foreach (Control c in _resultsPanel.Controls) if (!string.IsNullOrEmpty(c.Text)) c.Text = TextSanitizer.Normalize(c.Text);
+        }
+        catch { }
+
+        UITheme.Apply(this);
     }
 
     private async Task RunDiagnosticsAsync()
