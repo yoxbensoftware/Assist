@@ -99,9 +99,7 @@ internal sealed class PerformanceMonitorForm : Form
             BackColor = Color.FromArgb(6, 8, 16),
             ForeColor = DetailsFg,
             Font      = new Font("Consolas", 9),
-            TextAlign = ContentAlignment.TopLeft,
             Padding   = new Padding(14, 10, 14, 10),
-            AutoSize  = false,
             Margin    = Padding.Empty
         };
 
@@ -227,17 +225,48 @@ internal sealed class PerformanceMonitorForm : Form
     }
 
     // ════════════════════════════════════════════════════════════════════
-    //  FlickerFreeLabel — double-buffered Label to eliminate blinking on text update
+    //  FlickerFreeLabel — fully double-buffered text panel (no Label.Text repaint flicker)
     // ════════════════════════════════════════════════════════════════════
-    private sealed class FlickerFreeLabel : Label
+    private sealed class FlickerFreeLabel : Panel
     {
+        private string _text = string.Empty;
+
         public FlickerFreeLabel()
         {
+            DoubleBuffered = true;
             SetStyle(ControlStyles.OptimizedDoubleBuffer
                    | ControlStyles.AllPaintingInWmPaint
                    | ControlStyles.UserPaint
                    | ControlStyles.ResizeRedraw, true);
             UpdateStyles();
+        }
+
+        [System.Diagnostics.CodeAnalysis.AllowNull]
+        public override string Text
+        {
+            get => _text;
+            set
+            {
+                var v = value ?? string.Empty;
+                if (_text == v) return;
+                _text = v;
+                Invalidate();
+            }
+        }
+
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            // We do NOT call base.OnPaint — Panel default paint can introduce flicker
+            var g = e.Graphics;
+            g.Clear(BackColor);
+            var rect = new Rectangle(
+                Padding.Left,
+                Padding.Top,
+                Width  - Padding.Horizontal,
+                Height - Padding.Vertical);
+            TextFormatFlags flags = TextFormatFlags.Left | TextFormatFlags.Top
+                                  | TextFormatFlags.WordBreak | TextFormatFlags.NoPadding;
+            TextRenderer.DrawText(g, _text, Font, rect, ForeColor, BackColor, flags);
         }
     }
 
