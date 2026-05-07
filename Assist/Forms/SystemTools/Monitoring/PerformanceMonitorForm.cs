@@ -14,8 +14,8 @@ internal sealed class PerformanceMonitorForm : Form
     private readonly GaugePanel _ramGauge;
     private readonly GaugePanel _diskGauge;
 
-    // ── Details text ──
-    private readonly Label _lblDetails;
+    // ── Details text (double-buffered to prevent flicker) ──
+    private readonly FlickerFreeLabel _lblDetails;
 
     // ── Timer ──
     private readonly System.Windows.Forms.Timer _timer;
@@ -65,24 +65,35 @@ internal sealed class PerformanceMonitorForm : Form
                 SysFont, new Point(20, 34), Color.FromArgb(80, 130, 180));
         };
 
-        // ── Gauge container ──
-        var gaugePanel = new Panel
+        // ── Gauge container (3 equal-width columns) ──
+        var gaugePanel = new TableLayoutPanel
         {
-            Dock      = DockStyle.Top,
-            Height    = 292,
-            BackColor = BgColor
+            Dock        = DockStyle.Fill,
+            ColumnCount = 3,
+            RowCount    = 1,
+            BackColor   = BgColor,
+            Padding     = new Padding(10, 6, 10, 6),
+            Margin      = Padding.Empty
         };
+        gaugePanel.ColumnStyles.Clear();
+        gaugePanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.34f));
+        gaugePanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.33f));
+        gaugePanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.33f));
+        gaugePanel.RowStyles.Clear();
+        gaugePanel.RowStyles.Add(new RowStyle(SizeType.Percent, 100f));
 
-        _cpuGauge  = new GaugePanel("CPU",  CpuColor)  { Bounds = new Rectangle(14,  8, 256, 276) };
-        _ramGauge  = new GaugePanel("RAM",  RamColor)  { Bounds = new Rectangle(277, 8, 256, 276) };
-        _diskGauge = new GaugePanel("DISK", DiskColor) { Bounds = new Rectangle(540, 8, 256, 276) };
-        gaugePanel.Controls.AddRange(new Control[] { _cpuGauge, _ramGauge, _diskGauge });
+        _cpuGauge  = new GaugePanel("CPU",  CpuColor)  { Dock = DockStyle.Fill, Margin = new Padding(4) };
+        _ramGauge  = new GaugePanel("RAM",  RamColor)  { Dock = DockStyle.Fill, Margin = new Padding(4) };
+        _diskGauge = new GaugePanel("DISK", DiskColor) { Dock = DockStyle.Fill, Margin = new Padding(4) };
+        gaugePanel.Controls.Add(_cpuGauge,  0, 0);
+        gaugePanel.Controls.Add(_ramGauge,  1, 0);
+        gaugePanel.Controls.Add(_diskGauge, 2, 0);
 
         // ── Separator ──
         var sep = new Panel { Dock = DockStyle.Top, Height = 1, BackColor = Color.FromArgb(0, 80, 140) };
 
-        // ── Details label ──
-        _lblDetails = new Label
+        // ── Details label (flicker-free) ──
+        _lblDetails = new FlickerFreeLabel
         {
             Dock      = DockStyle.Fill,
             BackColor = Color.FromArgb(6, 8, 16),
@@ -90,12 +101,29 @@ internal sealed class PerformanceMonitorForm : Form
             Font      = new Font("Consolas", 9),
             TextAlign = ContentAlignment.TopLeft,
             Padding   = new Padding(14, 10, 14, 10),
-            AutoSize  = false
+            AutoSize  = false,
+            Margin    = Padding.Empty
         };
 
-        Controls.Add(_lblDetails);
-        Controls.Add(sep);
-        Controls.Add(gaugePanel);
+        // ── Body: 70% gauges / 30% details ──
+        var body = new TableLayoutPanel
+        {
+            Dock        = DockStyle.Fill,
+            ColumnCount = 1,
+            RowCount    = 3,
+            BackColor   = BgColor,
+            Margin      = Padding.Empty,
+            Padding     = Padding.Empty
+        };
+        body.RowStyles.Clear();
+        body.RowStyles.Add(new RowStyle(SizeType.Percent,  70f)); // gauges
+        body.RowStyles.Add(new RowStyle(SizeType.Absolute,  1f)); // separator
+        body.RowStyles.Add(new RowStyle(SizeType.Percent,  30f)); // details
+        body.Controls.Add(gaugePanel,  0, 0);
+        body.Controls.Add(sep,         0, 1);
+        body.Controls.Add(_lblDetails, 0, 2);
+
+        Controls.Add(body);
         Controls.Add(header);
 
         InitCounters();
@@ -166,7 +194,7 @@ internal sealed class PerformanceMonitorForm : Form
             drives.AppendLine($"  {d.Name,-6} {pct,3}%  [{free:F0} GB boş / {tot:F0} GB]");
         }
 
-        _lblDetails.Text =
+        var newText =
             $"  ┌─────────────────────────── SİSTEM DETAYLARI ─────────────────────────────┐\r\n" +
             $"  │  CPU Kullanımı    :  {cpu,6:F1}%  ({Environment.ProcessorCount} çekirdek)\r\n" +
             $"  │  RAM Kullanımı    :  {ramPct,6:F1}%  ({usedGB:F2} GB / {totalGB:F2} GB)\r\n" +
@@ -181,6 +209,9 @@ internal sealed class PerformanceMonitorForm : Form
             $"  │  Sürücüler:\r\n{drives}" +
             $"  └────────────────────────────────────────────────────────────────────────────┘\r\n" +
             $"    Güncelleme: {DateTime.Now:HH:mm:ss}";
+
+        if (_lblDetails.Text != newText)
+            _lblDetails.Text = newText;
     }
 
     protected override void OnFormClosed(FormClosedEventArgs e)
@@ -193,6 +224,21 @@ internal sealed class PerformanceMonitorForm : Form
         _cpuGauge.Dispose();
         _ramGauge.Dispose();
         _diskGauge.Dispose();
+    }
+
+    // ════════════════════════════════════════════════════════════════════
+    //  FlickerFreeLabel — double-buffered Label to eliminate blinking on text update
+    // ════════════════════════════════════════════════════════════════════
+    private sealed class FlickerFreeLabel : Label
+    {
+        public FlickerFreeLabel()
+        {
+            SetStyle(ControlStyles.OptimizedDoubleBuffer
+                   | ControlStyles.AllPaintingInWmPaint
+                   | ControlStyles.UserPaint
+                   | ControlStyles.ResizeRedraw, true);
+            UpdateStyles();
+        }
     }
 
     // ════════════════════════════════════════════════════════════════════
