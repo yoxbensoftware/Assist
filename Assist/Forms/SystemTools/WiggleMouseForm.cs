@@ -12,8 +12,16 @@ internal sealed class WiggleMouseForm : Form
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool ReleaseCapture();
 
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool SetWindowPos(nint hWnd, nint hWndInsertAfter, int x, int y, int cx, int cy, uint uFlags);
+
     private const int WM_NCLBUTTONDOWN = 0xA1;
     private const int HTCAPTION = 0x2;
+    private static readonly nint HWND_TOPMOST = new(-1);
+    private const uint SWP_NOMOVE = 0x0002;
+    private const uint SWP_NOSIZE = 0x0001;
+    private const uint SWP_NOACTIVATE = 0x0010;
 
     private readonly Label _countdownLabel = new();
     private readonly NumericUpDown _nudHours = new();
@@ -32,6 +40,38 @@ internal sealed class WiggleMouseForm : Form
     {
         InitializeComponent();
         WireEvents();
+
+        // Ensure always on top
+        Load += OnLoad;
+        Activated += OnActivated;
+        Deactivate += OnDeactivate;
+    }
+
+    /// <summary>
+    /// Force TopMost when form loads.
+    /// </summary>
+    private void OnLoad(object? sender, EventArgs e)
+    {
+        TopMost = true;
+        SetWindowPos(Handle, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+    }
+
+    /// <summary>
+    /// Ensure the form stays on top when activated.
+    /// </summary>
+    private void OnActivated(object? sender, EventArgs e)
+    {
+        TopMost = true;
+        SetWindowPos(Handle, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+    }
+
+    /// <summary>
+    /// Maintain TopMost even when deactivated.
+    /// </summary>
+    private void OnDeactivate(object? sender, EventArgs e)
+    {
+        TopMost = true;
+        SetWindowPos(Handle, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
     }
 
     private void InitializeComponent()
@@ -41,6 +81,7 @@ internal sealed class WiggleMouseForm : Form
         FormBorderStyle = FormBorderStyle.None;
         MaximizeBox = false;
         StartPosition = FormStartPosition.Manual;
+        TopMost = true;
         BackColor = Color.Black;
         ForeColor = Color.FromArgb(0, 255, 0);
         Opacity = 0.92;

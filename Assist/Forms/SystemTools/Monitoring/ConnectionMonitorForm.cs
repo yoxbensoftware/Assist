@@ -17,12 +17,21 @@ internal sealed class ConnectionMonitorForm : Form
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool ReleaseCapture();
 
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool SetWindowPos(nint hWnd, nint hWndInsertAfter, int x, int y, int cx, int cy, uint uFlags);
+
     private const int WM_NCLBUTTONDOWN = 0xA1;
     private const int HTCAPTION = 0x2;
+    private static readonly nint HWND_TOPMOST = new(-1);
+    private const uint SWP_NOMOVE = 0x0002;
+    private const uint SWP_NOSIZE = 0x0001;
+    private const uint SWP_NOACTIVATE = 0x0010;
 
     // ── Matrix rain ──
     private readonly System.Windows.Forms.Timer _rainTimer;
     private readonly System.Windows.Forms.Timer _pingTimer;
+    private readonly System.Windows.Forms.Timer _topmostTimer;
     private readonly Random _rng = new();
     private int[]? _drops;
     private Bitmap? _buffer;
@@ -247,10 +256,52 @@ internal sealed class ConnectionMonitorForm : Form
         _pingTimer.Tick += async (_, _) => await CheckConnectivityAsync();
         _pingTimer.Start();
 
+        // Force TopMost periodically to ensure it stays on top
+        _topmostTimer = new System.Windows.Forms.Timer { Interval = 500 };
+        _topmostTimer.Tick += (_, _) =>
+        {
+            if (!TopMost)
+                TopMost = true;
+            SetWindowPos(Handle, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+        };
+        _topmostTimer.Start();
+
         _ = CheckConnectivityAsync();
 
         FormClosed += OnFormClosed;
+        Activated += OnActivated;
+        Deactivate += OnDeactivate;
+        Load += OnLoad;
         InitDrops();
+    }
+
+    /// <summary>
+    /// Force TopMost when form loads.
+    /// </summary>
+    private void OnLoad(object? sender, EventArgs e)
+    {
+        TopMost = true;
+        SetWindowPos(Handle, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+    }
+
+    /// <summary>
+    /// Ensure the form stays on top when activated.
+    /// </summary>
+    private void OnActivated(object? sender, EventArgs e)
+    {
+        TopMost = true;
+        // Force TopMost using Windows API for more reliable behavior
+        SetWindowPos(Handle, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+    }
+
+    /// <summary>
+    /// Maintain TopMost even when deactivated.
+    /// </summary>
+    private void OnDeactivate(object? sender, EventArgs e)
+    {
+        TopMost = true;
+        // Force TopMost using Windows API for more reliable behavior
+        SetWindowPos(Handle, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
     }
 
     /// <summary>
@@ -274,6 +325,8 @@ internal sealed class ConnectionMonitorForm : Form
         _rainTimer.Dispose();
         _pingTimer.Stop();
         _pingTimer.Dispose();
+        _topmostTimer.Stop();
+        _topmostTimer.Dispose();
         _buffer?.Dispose();
         _fadeBrush.Dispose();
         _greenBrush.Dispose();
