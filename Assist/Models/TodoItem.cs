@@ -22,14 +22,26 @@ internal sealed class TodoItem
     public bool           IsRecurring    { get; set; }
     public RecurrenceType RecurrenceType { get; set; }
     public int            RecurrenceDay  { get; set; } = 1;  // ayın kaçında (1-28)
+    public bool           IsPaymentReminder { get; set; }
+    public string         PaymentName    { get; set; } = string.Empty;
+    public decimal?       PaymentAmount  { get; set; }
 
     [System.Text.Json.Serialization.JsonIgnore]
     public string RecurrenceLabel => (IsRecurring, RecurrenceType) switch
     {
+        (true, RecurrenceType.Monthly) when IsPaymentReminder && !string.IsNullOrWhiteSpace(PaymentName) && PaymentAmount.HasValue
+            => $"Her ay {RecurrenceDay}. — {PaymentName} / ₺{PaymentAmount.Value:0.##}",
+        (true, RecurrenceType.Monthly) when IsPaymentReminder && !string.IsNullOrWhiteSpace(PaymentName)
+            => $"Her ay {RecurrenceDay}. — {PaymentName}",
         (true, RecurrenceType.Monthly) when RecurrenceDay == 1 => "Her ay 1.",
         (true, RecurrenceType.Monthly)                         => $"Her ay {RecurrenceDay}.",
         _                                                      => ""
     };
+
+    [System.Text.Json.Serialization.JsonIgnore]
+    public string DisplayTitle => IsPaymentReminder && !string.IsNullOrWhiteSpace(PaymentName)
+        ? $"💳 {PaymentName}"
+        : Title;
 
     /// <summary>Verilen tarihten sonraki bir sonraki tekrar tarihini döner.</summary>
     public DateTime NextOccurrenceAfter(DateTime from)
@@ -68,12 +80,18 @@ internal sealed class TodoItem
         get
         {
             if (IsCompleted)       return "✅ Tamamlandı";
+            if (IsPaymentReminder && !DueDate.HasValue)
+                return string.IsNullOrWhiteSpace(PaymentName) ? "💳 Ödeme hatırlatıcı" : $"💳 {PaymentName}";
             if (!DueDate.HasValue) return IsRecurring ? RecurrenceLabel : "—";
             var diff = DueDate.Value.Date - DateTime.Today;
+            var amountText = IsPaymentReminder && PaymentAmount.HasValue ? $" • ₺{PaymentAmount.Value:0.##}" : string.Empty;
+            var reminderPrefix = IsPaymentReminder && !string.IsNullOrWhiteSpace(PaymentName)
+                ? $"💳 {PaymentName}{amountText} • "
+                : string.Empty;
             if (diff.TotalDays <  0) return $"⚠ {Math.Abs((int)diff.TotalDays)} gün gecikmiş";
-            if (diff.TotalDays == 0) return "🔥 Bugün!";
-            if (diff.TotalDays == 1) return "⏰ Yarın";
-            return $"📅 {(int)diff.TotalDays} gün kaldı";
+            if (diff.TotalDays == 0) return $"{reminderPrefix}🔥 Bugün!";
+            if (diff.TotalDays == 1) return $"{reminderPrefix}⏰ Yarın";
+            return $"{reminderPrefix}📅 {(int)diff.TotalDays} gün kaldı";
         }
     }
 

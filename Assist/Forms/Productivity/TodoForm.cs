@@ -257,7 +257,8 @@ internal sealed class TodoForm : Form
         if (!string.IsNullOrWhiteSpace(search))
             filtered = filtered.Where(x =>
                 x.Title.Contains(search, StringComparison.OrdinalIgnoreCase) ||
-                x.Category.Contains(search, StringComparison.OrdinalIgnoreCase));
+                x.Category.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                x.PaymentName.Contains(search, StringComparison.OrdinalIgnoreCase));
 
         _view = [.. filtered
             .OrderBy(x => x.IsCompleted)
@@ -272,7 +273,7 @@ internal sealed class TodoForm : Form
         foreach (var item in _view)
         {
             int ri = _dgv.Rows.Add(
-                item.Title,
+                item.DisplayTitle,
                 string.IsNullOrEmpty(item.Category) ? "—" : item.Category,
                 item.DueDate?.ToString("dd.MM.yyyy") ?? "—",
                 item.TimeLeftText,

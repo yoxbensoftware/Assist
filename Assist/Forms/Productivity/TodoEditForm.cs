@@ -20,6 +20,9 @@ internal sealed class TodoEditForm : Form
     private DateTimePicker _dtp         = null!;
     private CheckBox       _chkRecurring = null!;
     private NumericUpDown  _nudDay       = null!;
+    private CheckBox       _chkPaymentReminder = null!;
+    private TextBox        _txtPaymentName = null!;
+    private NumericUpDown  _nudAmount = null!;
 
     public TodoEditForm(TodoItem? existing = null)
     {
@@ -34,13 +37,15 @@ internal sealed class TodoEditForm : Form
     {
         Id = s.Id, Title = s.Title, Description = s.Description,
         Category = s.Category, Priority = s.Priority, DueDate = s.DueDate,
-        IsCompleted = s.IsCompleted, CreatedAt = s.CreatedAt, CompletedAt = s.CompletedAt
+        IsCompleted = s.IsCompleted, CreatedAt = s.CreatedAt, CompletedAt = s.CompletedAt,
+        IsRecurring = s.IsRecurring, RecurrenceType = s.RecurrenceType, RecurrenceDay = s.RecurrenceDay,
+        IsPaymentReminder = s.IsPaymentReminder, PaymentName = s.PaymentName, PaymentAmount = s.PaymentAmount
     };
 
     private void BuildUI()
     {
         Text            = _isNew ? "Yeni Görev" : "Görevi Düzenle";
-        ClientSize      = new Size(500, 362);
+        ClientSize      = new Size(520, 450);
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox     = false;
         MinimizeBox     = false;
@@ -52,7 +57,7 @@ internal sealed class TodoEditForm : Form
         {
             Dock        = DockStyle.Fill,
             ColumnCount = 1,
-            RowCount    = 10,
+        RowCount    = 11,
             Padding     = new Padding(20, 14, 20, 10),
             Margin      = Padding.Empty,
         };
@@ -65,8 +70,9 @@ internal sealed class TodoEditForm : Form
         grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 20));  // 5 lbl Bitiş
         grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 32));  // 6 chk + dtp
         grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 32));  // 7 periyodik satır
-        grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 14));  // 8 ayırıcı
-        grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 36));  // 9 butonlar
+        grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 36));  // 8 ödeme hatırlatıcı
+        grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 14));  // 9 ayırıcı
+        grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 36));  // 10 butonlar
 
         // 0 – Başlık label
         grid.Controls.Add(SmallLbl("Başlık *"), 0, 0);
@@ -185,7 +191,59 @@ internal sealed class TodoEditForm : Form
         grid.Controls.Add(recurRow, 0, 7);
 
         // 8 – Ayırıcı
-        grid.Controls.Add(new Panel { Dock = DockStyle.Bottom, Height = 1, BackColor = Color.FromArgb(55, 55, 75) }, 0, 8);
+        var paymentRow = new FlowLayoutPanel
+        {
+            Dock = DockStyle.Fill,
+            FlowDirection = FlowDirection.LeftToRight,
+            WrapContents = false,
+            Margin = Padding.Empty,
+            Padding = Padding.Empty,
+        };
+        _chkPaymentReminder = new CheckBox
+        {
+            Text = "Ödeme hatırlatıcı",
+            AutoSize = true,
+            Font = new Font("Consolas", 10),
+            FlatStyle = FlatStyle.Flat,
+            Margin = new Padding(0, 4, 12, 0)
+        };
+        var lblPaymentName = new Label { Text = "Adı:", AutoSize = true, Font = new Font("Consolas", 10), Margin = new Padding(0, 6, 6, 0) };
+        _txtPaymentName = new TextBox { Width = 170, Font = new Font("Consolas", 10), Margin = new Padding(0, 2, 10, 0) };
+        var lblAmount = new Label { Text = "Tutar:", AutoSize = true, Font = new Font("Consolas", 10), Margin = new Padding(0, 6, 6, 0) };
+        _nudAmount = new NumericUpDown
+        {
+            DecimalPlaces = 2,
+            Maximum = 100000000,
+            Minimum = 0,
+            ThousandsSeparator = true,
+            Width = 110,
+            Font = new Font("Consolas", 10),
+            Margin = new Padding(0, 2, 0, 0)
+        };
+        _chkPaymentReminder.CheckedChanged += (_, _) =>
+        {
+            var on = _chkPaymentReminder.Checked;
+            _txtPaymentName.Enabled = on;
+            _nudAmount.Enabled = on;
+            if (on)
+            {
+                _chkRecurring.Checked = true;
+                _chkDue.Checked = true;
+                _chkDue.Enabled = false;
+                _dtp.Enabled = false;
+            }
+            else
+            {
+                _chkDue.Enabled = !_chkRecurring.Checked;
+                _dtp.Enabled = _chkDue.Checked && !_chkRecurring.Checked;
+            }
+        };
+        _txtPaymentName.Enabled = false;
+        _nudAmount.Enabled = false;
+        paymentRow.Controls.AddRange([_chkPaymentReminder, lblPaymentName, _txtPaymentName, lblAmount, _nudAmount]);
+        grid.Controls.Add(paymentRow, 0, 8);
+
+        grid.Controls.Add(new Panel { Dock = DockStyle.Bottom, Height = 1, BackColor = Color.FromArgb(55, 55, 75) }, 0, 9);
 
         // 9 – Butonlar
         var btnRow = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft, WrapContents = false, Margin = Padding.Empty, Padding = Padding.Empty };
@@ -195,7 +253,7 @@ internal sealed class TodoEditForm : Form
         btnCancel.Click += (_, _) => { DialogResult = DialogResult.Cancel; Close(); };
         btnRow.Controls.Add(btnSave);
         btnRow.Controls.Add(btnCancel);
-        grid.Controls.Add(btnRow, 0, 9);
+        grid.Controls.Add(btnRow, 0, 10);
 
         Controls.Add(grid);
         AcceptButton = btnSave;
@@ -220,6 +278,13 @@ internal sealed class TodoEditForm : Form
             _dtp.Value      = _item.DueDate.Value;
             _dtp.Enabled    = true;
         }
+
+        if (_item.IsPaymentReminder)
+        {
+            _chkPaymentReminder.Checked = true;
+            _txtPaymentName.Text = _item.PaymentName;
+            _nudAmount.Value = Math.Max(0, _item.PaymentAmount ?? 0);
+        }
     }
 
     private void OnSave(object? sender, EventArgs e)
@@ -236,7 +301,31 @@ internal sealed class TodoEditForm : Form
         _item.Category    = _txtCategory.Text.Trim();
         _item.Priority    = (TodoPriority)_cmbPriority.SelectedIndex;
 
-        if (_chkRecurring.Checked)
+        _item.IsPaymentReminder = _chkPaymentReminder.Checked;
+        _item.PaymentName = _chkPaymentReminder.Checked ? _txtPaymentName.Text.Trim() : string.Empty;
+        _item.PaymentAmount = _chkPaymentReminder.Checked ? _nudAmount.Value : (decimal?)null;
+
+        if (_chkPaymentReminder.Checked)
+        {
+            if (string.IsNullOrWhiteSpace(_item.PaymentName))
+            {
+                MessageBox.Show("Ödeme adı boş olamaz.", "Uyarı",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                _txtPaymentName.Focus();
+                return;
+            }
+
+            _item.IsRecurring = true;
+            _item.RecurrenceType = RecurrenceType.Monthly;
+            _item.Category = string.IsNullOrWhiteSpace(_item.Category) ? "Ödeme" : _item.Category;
+            _item.RecurrenceDay = (int)_nudDay.Value;
+            var today = DateTime.Today;
+            int day = (int)_nudDay.Value;
+            _item.DueDate = day >= today.Day
+                ? new DateTime(today.Year, today.Month, day)
+                : new DateTime(today.Year, today.Month, 1).AddMonths(1).AddDays(day - 1);
+        }
+        else if (_chkRecurring.Checked)
         {
             _item.IsRecurring    = true;
             _item.RecurrenceType = RecurrenceType.Monthly;
@@ -253,6 +342,9 @@ internal sealed class TodoEditForm : Form
             _item.IsRecurring    = false;
             _item.RecurrenceType = RecurrenceType.None;
             _item.DueDate        = _chkDue.Checked ? _dtp.Value.Date : (DateTime?)null;
+            _item.IsPaymentReminder = false;
+            _item.PaymentName = string.Empty;
+            _item.PaymentAmount = null;
         }
 
         if (_isNew) TodoStore.Add(_item);

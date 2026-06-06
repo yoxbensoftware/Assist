@@ -20,7 +20,9 @@ internal static class AppConstants
         "AssistPasswordStore");
 
     public static readonly string PasswordsFilePath = Path.Combine(AppDataPath, "passwords.dat");
+    public static readonly string PasswordsBackupFilePath = Path.Combine(AppDataPath, "passwords.bak");
     public static readonly string LoginFilePath = Path.Combine(AppDataPath, "login.dat");
+    public static readonly string LoginBackupFilePath = Path.Combine(AppDataPath, "login.bak");
 
     // UI Icons (emoji-based)
     public const string IconEye = "👁";
