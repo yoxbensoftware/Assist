@@ -275,6 +275,9 @@ internal partial class MainMDIForm : Form
         queries.DropDownItems.Add(CreateMenuItem("WHOIS / Alan Adı", () => ShowMdiChild(new WhoisForm())));
         menu.DropDownItems.Add(queries);
 
+        menu.DropDownItems.Add(new ToolStripSeparator());
+        menu.DropDownItems.Add(CreateMenuItem("📈 Usage Center", ShowUsageCenter));
+
         // ── 💰 Finans ────────────────────────────────
         var finance = new ToolStripMenuItem("💰 Finans");
         finance.DropDownItems.Add(CreateMenuItem("Döviz Çevirici", () => ShowMdiChild(new CurrencyConverterForm())));
@@ -294,6 +297,20 @@ internal partial class MainMDIForm : Form
         var item = new ToolStripMenuItem("Görevler");
         item.Click += (_, _) => ShowMdiChild(new TodoForm());
         return item;
+    }
+
+    private void ShowUsageCenter()
+    {
+        var existing = Application.OpenForms.OfType<UsageViewerForm>().FirstOrDefault();
+        if (existing is not null)
+        {
+            existing.WindowState = FormWindowState.Normal;
+            existing.Activate();
+            existing.BringToFront();
+            return;
+        }
+
+        new UsageViewerForm().Show();
     }
 
     private ToolStripMenuItem CreateDeveloperToolsMenu()

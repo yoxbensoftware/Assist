@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Drawing.Drawing2D;
 
 /// <summary>
-/// Next-gen performance monitor with animated neon arc gauges for CPU, RAM, and Disk.
+/// Next-gen performance monitor with animated neon arc gauges for CPU, RAM, Disk, and GPU.
 /// Custom-painted borderless-style panel — smoother and more stylish than Windows Task Manager.
 /// </summary>
 internal sealed class PerformanceMonitorForm : Form
@@ -13,6 +13,7 @@ internal sealed class PerformanceMonitorForm : Form
     private readonly GaugePanel _cpuGauge;
     private readonly GaugePanel _ramGauge;
     private readonly GaugePanel _diskGauge;
+    private readonly GaugePanel _gpuGauge;
 
     // ── Details text (double-buffered to prevent flicker) ──
     private readonly FlickerFreeLabel _lblDetails;
@@ -23,6 +24,7 @@ internal sealed class PerformanceMonitorForm : Form
     // ── Performance counters (cached as fields — not re-created every tick) ──
     private PerformanceCounter? _cpuCounter;
     private PerformanceCounter? _diskCounter;
+    private readonly List<PerformanceCounter> _gpuCounters = [];
     private readonly Microsoft.VisualBasic.Devices.ComputerInfo _sysInfo = new();
 
     // ── Colors ──
@@ -30,6 +32,7 @@ internal sealed class PerformanceMonitorForm : Form
     private static readonly Color CpuColor  = Color.FromArgb(0,  210, 255);
     private static readonly Color RamColor  = Color.FromArgb(255,140,   0);
     private static readonly Color DiskColor = Color.FromArgb(180, 60, 255);
+    private static readonly Color GpuColor  = Color.FromArgb(0, 255, 140);
     private static readonly Color HeaderFg  = Color.FromArgb(200, 220, 255);
     private static readonly Color DetailsFg = Color.FromArgb(120, 160, 200);
 
@@ -65,29 +68,32 @@ internal sealed class PerformanceMonitorForm : Form
                 SysFont, new Point(20, 34), Color.FromArgb(80, 130, 180));
         };
 
-        // ── Gauge container (3 equal-width columns) ──
+        // ── Gauge container (4 equal-width columns) ──
         var gaugePanel = new TableLayoutPanel
         {
             Dock        = DockStyle.Fill,
-            ColumnCount = 3,
+            ColumnCount = 4,
             RowCount    = 1,
             BackColor   = BgColor,
             Padding     = new Padding(10, 6, 10, 6),
             Margin      = Padding.Empty
         };
         gaugePanel.ColumnStyles.Clear();
-        gaugePanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.34f));
-        gaugePanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.33f));
-        gaugePanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.33f));
+        gaugePanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25f));
+        gaugePanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25f));
+        gaugePanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25f));
+        gaugePanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25f));
         gaugePanel.RowStyles.Clear();
         gaugePanel.RowStyles.Add(new RowStyle(SizeType.Percent, 100f));
 
         _cpuGauge  = new GaugePanel("CPU",  CpuColor)  { Dock = DockStyle.Fill, Margin = new Padding(4) };
         _ramGauge  = new GaugePanel("RAM",  RamColor)  { Dock = DockStyle.Fill, Margin = new Padding(4) };
         _diskGauge = new GaugePanel("DISK", DiskColor) { Dock = DockStyle.Fill, Margin = new Padding(4) };
+        _gpuGauge  = new GaugePanel("GPU",  GpuColor)  { Dock = DockStyle.Fill, Margin = new Padding(4) };
         gaugePanel.Controls.Add(_cpuGauge,  0, 0);
         gaugePanel.Controls.Add(_ramGauge,  1, 0);
         gaugePanel.Controls.Add(_diskGauge, 2, 0);
+        gaugePanel.Controls.Add(_gpuGauge,  3, 0);
 
         // ── Separator ──
         var sep = new Panel { Dock = DockStyle.Top, Height = 1, BackColor = Color.FromArgb(0, 80, 140) };
@@ -147,6 +153,36 @@ internal sealed class PerformanceMonitorForm : Form
             _diskCounter.NextValue();
         }
         catch { _diskCounter = null; }
+
+        try
+        {
+            _gpuCounters.Clear();
+            var category = new PerformanceCounterCategory("GPU Engine");
+            var counterName = category.CounterExists("Utilization Percentage")
+                ? "Utilization Percentage"
+                : "% Utilization";
+
+            foreach (var instance in category.GetInstanceNames())
+            {
+                try
+                {
+                    if (!category.CounterExists(counterName))
+                        continue;
+
+                    var counter = new PerformanceCounter("GPU Engine", counterName, instance, readOnly: true);
+                    counter.NextValue();
+                    _gpuCounters.Add(counter);
+                }
+                catch
+                {
+                    // Skip unsupported GPU engine instances
+                }
+            }
+        }
+        catch
+        {
+            _gpuCounters.Clear();
+        }
     }
 
     private void Tick()
@@ -161,12 +197,14 @@ internal sealed class PerformanceMonitorForm : Form
             var usedGB   = usedMem  / 1073741824.0;
             var totalGB  = totalMem / 1073741824.0;
             var disk     = Math.Min(100f, _diskCounter?.NextValue() ?? 0f);
+            var gpu     = ReadGpuUsage();
 
             _cpuGauge .SetValue(cpu,    $"{cpu:F1}%",    "Processor Time");
             _ramGauge .SetValue(ramPct, $"{ramPct:F1}%", $"{usedGB:F1} / {totalGB:F1} GB");
             _diskGauge.SetValue(disk,   $"{disk:F1}%",   "Disk Activity");
+            _gpuGauge .SetValue(gpu,    $"{gpu:F1}%",    "GPU Usage");
 
-            UpdateDetails(cpu, usedMem, totalMem, availMem, disk);
+            UpdateDetails(cpu, usedMem, totalMem, availMem, disk, gpu);
         }
         catch (Exception ex)
         {
@@ -174,7 +212,28 @@ internal sealed class PerformanceMonitorForm : Form
         }
     }
 
-    private void UpdateDetails(float cpu, long usedMem, long totalMem, long availMem, float disk)
+    private float ReadGpuUsage()
+    {
+        if (_gpuCounters.Count == 0)
+            return 0f;
+
+        var total = 0f;
+        foreach (var counter in _gpuCounters)
+        {
+            try
+            {
+                total += Math.Max(0f, counter.NextValue());
+            }
+            catch
+            {
+                // ignore stale counter instances
+            }
+        }
+
+        return Math.Min(100f, total);
+    }
+
+    private void UpdateDetails(float cpu, long usedMem, long totalMem, long availMem, float disk, float gpu)
     {
         var usedGB  = usedMem  / 1073741824.0;
         var totalGB = totalMem / 1073741824.0;
@@ -198,6 +257,7 @@ internal sealed class PerformanceMonitorForm : Form
             $"  │  RAM Kullanımı    :  {ramPct,6:F1}%  ({usedGB:F2} GB / {totalGB:F2} GB)\r\n" +
             $"  │  Kullanılabilir   :  {availGB:F2} GB\r\n" +
             $"  │  Disk Aktivitesi  :  {disk,6:F1}%\r\n" +
+            $"  │  GPU Kullanımı    :  {gpu,6:F1}%\r\n" +
             $"  ├────────────────────────────────────────────────────────────────────────────┤\r\n" +
             $"  │  OS              :  {Environment.OSVersion}\r\n" +
             $"  │  Makine          :  {Environment.MachineName}\r\n" +
@@ -219,9 +279,12 @@ internal sealed class PerformanceMonitorForm : Form
         _timer.Dispose();
         _cpuCounter?.Dispose();
         _diskCounter?.Dispose();
+        foreach (var counter in _gpuCounters)
+            counter.Dispose();
         _cpuGauge.Dispose();
         _ramGauge.Dispose();
         _diskGauge.Dispose();
+        _gpuGauge.Dispose();
     }
 
     // ════════════════════════════════════════════════════════════════════
