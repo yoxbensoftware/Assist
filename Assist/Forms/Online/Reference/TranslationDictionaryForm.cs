@@ -261,7 +261,7 @@ internal sealed class TranslationDictionaryForm : Form
                     return;
                 }
                 var jsonStr = await httpResp.Content.ReadAsStringAsync();
-                var doc = JsonDocument.Parse(jsonStr);
+                using var doc = JsonDocument.Parse(jsonStr);
                 var response = doc.RootElement;
 
                 if (response.ValueKind == JsonValueKind.Undefined)

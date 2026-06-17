@@ -17,6 +17,7 @@ internal static class Program
     {
         ApplicationConfiguration.Initialize();
         ThemeService.Load();
+        AppSettingsService.Load();
 
         // Handle uninstall request from Add/Remove Programs
         if (args.Contains("--uninstall"))

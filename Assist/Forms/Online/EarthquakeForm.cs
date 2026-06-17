@@ -6,7 +6,7 @@ using Assist.Services;
 
 internal sealed class EarthquakeForm : Form
 {
-    private static readonly HttpClient Http = new();
+    private static readonly HttpClient Http = AppConstants.SharedHttpClient;
 
     private readonly ComboBox _cmbRegion;
     private readonly ComboBox _cmbMag;

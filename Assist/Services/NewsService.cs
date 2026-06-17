@@ -12,7 +12,7 @@ internal sealed class NewsService
     private const string GoogleNewsGlobalUrl = "https://news.google.com/rss?hl=en-US&gl=US&ceid=US:en";
     private const string GoogleNewsTechUrl = "https://news.google.com/rss/search?q=technology&hl=en-US&gl=US&ceid=US:en";
 
-    private static readonly HttpClient SharedHttpClient = new();
+    private static readonly HttpClient SharedHttpClient = AppConstants.SharedHttpClient;
 
     /// <summary>
     /// Fetches the top Turkish news headlines from Google News RSS.

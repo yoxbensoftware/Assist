@@ -37,7 +37,7 @@ internal sealed class ClipboardSettingsForm : Form
         numCapacity = new NumericUpDown { Location = new Point(150, 12), Width = 120, Minimum = 10, Maximum = 1000 };
 
         var lblInterval = new Label { Text = "Poll Interval (ms):", Location = new Point(10, 50), AutoSize = true };
-        numInterval = new NumericUpDown { Location = new Point(150, 48), Width = 120, Minimum = 200, Maximum = 60_000, Increment = 100 };
+        numInterval = new NumericUpDown { Location = new Point(150, 48), Width = 120, Minimum = 500, Maximum = 60_000, Increment = 100 };
 
         var lblFilter = new Label { Text = "Hassas İçerik Filtrele:", Location = new Point(10, 85), AutoSize = true };
         chkFilter = new CheckBox { Location = new Point(150, 82) };

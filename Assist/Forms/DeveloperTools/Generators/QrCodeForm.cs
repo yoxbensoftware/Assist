@@ -7,7 +7,7 @@ using System.Drawing.Imaging;
 /// </summary>
 internal sealed class QrCodeForm : Form
 {
-    private static readonly HttpClient HttpClient = new();
+    private static readonly HttpClient HttpClient = AppConstants.SharedHttpClient;
 
     private readonly TextBox _txtInput = null!;
     private readonly PictureBox _pictureBox = null!;
@@ -196,7 +196,9 @@ internal sealed class QrCodeForm : Form
             using var ms = new System.IO.MemoryStream(imageData);
             var bitmap = new Bitmap(ms);
 
+            var previousImage = _pictureBox.Image;
             _pictureBox.Image = bitmap;
+            previousImage?.Dispose();
 
             _txtDecoded.Text = $"""
                 ╔════════════════════════════════════════╗
@@ -289,5 +291,15 @@ internal sealed class QrCodeForm : Form
             _lblStatus.ForeColor = Color.Red;
             MessageBox.Show($"Kopyalama hatası: {ex.Message}", "Hata", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _pictureBox?.Image?.Dispose();
+        }
+
+        base.Dispose(disposing);
     }
 }

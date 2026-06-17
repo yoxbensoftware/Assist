@@ -7,8 +7,6 @@ using System.Text;
 using Assist.Forms.ClipboardTools;
 using Assist.Forms.Core;
 using Assist.Forms.DeveloperTools;
-using Assist.SDLC.Domain;
-using Assist.SDLC.Forms;
 using Assist.Forms.DeveloperTools.Converters;
 using Assist.Forms.DeveloperTools.Formatters;
 using Assist.Forms.DeveloperTools.Generators;
@@ -34,8 +32,10 @@ internal partial class MainMDIForm : Form
 {
     private ClipboardHistoryService? _clipboardHistory;
 
-    // SDLC agent detail forms — keyed by AgentRole for deduplication
-    private readonly Dictionary<AgentRole, AgentDetailForm> _agentForms = [];
+    private readonly Dictionary<string, Func<Form>> _sessionFormFactories;
+    private IReadOnlyList<QuickLaunchItem> _quickLaunchItems = [];
+    private ToolStripMenuItem? _lowPowerMenuItem;
+    private bool _sessionRestored;
 
     // Dashboard fields
     private Panel? _dashboardPanel;
@@ -53,6 +53,9 @@ internal partial class MainMDIForm : Form
     private System.Windows.Forms.Timer? _fastTimer;   // 2s — clock, CPU/RAM
     private System.Windows.Forms.Timer? _mediumTimer;  // 30s — disk, battery, uptime, ping, app stats
     private System.Windows.Forms.Timer? _slowTimer;    // 5min — weather, currency, crypto, IP
+    private bool _isClosing;
+    private int _mediumRefreshInProgress;
+    private int _slowRefreshInProgress;
 
     // Current-process monitor
     private readonly Process _selfProcess = Process.GetCurrentProcess();
@@ -85,17 +88,26 @@ internal partial class MainMDIForm : Form
     public MainMDIForm()
     {
         InitializeComponent();
+        _sessionFormFactories = CreateSessionFormFactories();
+        _quickLaunchItems = CreateQuickLaunchItems();
         IsMdiContainer = true;
         ThemeService.ThemeChanged += OnThemeChanged;
+        AppSettingsService.SettingsChanged += OnAppSettingsChanged;
+        FormClosing += OnFormClosing;
         FormClosed += OnFormClosed;
         InitializeMenu();
         ApplyTheme();
         EnsureClipboardHistory();
         LoadIcon();
-        InitializeDashboardPanel();
+        if (AppSettingsService.Current.DashboardEnabled)
+            InitializeDashboardPanel();
         InitializeWatermark();
         HandleCreated += (_, _) => ApplyDarkTitleBar(this);
-        Shown += async (_, _) => await CheckForUpdateAsync(silent: true);
+        Shown += async (_, _) =>
+        {
+            RestoreSessionIfNeeded();
+            await CheckForUpdateAsync(silent: true);
+        };
     }
 
     /// <summary>
@@ -107,6 +119,18 @@ internal partial class MainMDIForm : Form
     {
         try
         {
+            if (keyData == (Keys.Control | Keys.K))
+            {
+                ShowQuickLauncher();
+                return true;
+            }
+
+            if (keyData == (Keys.Control | Keys.Shift | Keys.D))
+            {
+                ShowMdiChild(new DiagnosticsForm(this));
+                return true;
+            }
+
             return base.ProcessCmdKey(ref msg, keyData);
         }
         catch (InvalidOperationException)
@@ -129,15 +153,25 @@ internal partial class MainMDIForm : Form
         }
     }
 
+    private void OnFormClosing(object? sender, FormClosingEventArgs e)
+    {
+        _isClosing = true;
+        SaveSession();
+    }
+
     private void OnFormClosed(object? sender, FormClosedEventArgs e)
     {
+        _isClosing = true;
         ThemeService.ThemeChanged -= OnThemeChanged;
+        AppSettingsService.SettingsChanged -= OnAppSettingsChanged;
         _fastTimer?.Stop();
         _fastTimer?.Dispose();
         _mediumTimer?.Stop();
         _mediumTimer?.Dispose();
         _slowTimer?.Stop();
         _slowTimer?.Dispose();
+        _clipboardHistory?.Dispose();
+        _clipboardHistory = null;
         _selfProcess.Dispose();
     }
 
@@ -149,6 +183,7 @@ internal partial class MainMDIForm : Form
         };
 
         // Main menus
+        menuStrip.Items.Add(CreateAssistMenu());
         menuStrip.Items.Add(CreatePasswordMenu());
         menuStrip.Items.Add(CreateSystemToolsMenu());
         menuStrip.Items.Add(CreateOnlineMenu());
@@ -156,7 +191,6 @@ internal partial class MainMDIForm : Form
         menuStrip.Items.Add(CreateThemeMenu());
         menuStrip.Items.Add(CreateDeveloperToolsMenu());
         menuStrip.Items.Add(CreateClipboardMenu());
-        menuStrip.Items.Add(CreateSdlcMenu());
         menuStrip.Items.Add(CreateGamesMenu());
         menuStrip.Items.Add(CreateWindowMenu());
 
@@ -169,6 +203,22 @@ internal partial class MainMDIForm : Form
 
         MainMenuStrip = menuStrip;
         Controls.Add(menuStrip);
+    }
+
+    private ToolStripMenuItem CreateAssistMenu()
+    {
+        var menu = new ToolStripMenuItem("Assist");
+
+        menu.DropDownItems.Add(CreateMenuItem("Hızlı Başlatıcı\tCtrl+K", ShowQuickLauncher));
+        menu.DropDownItems.Add(CreateMenuItem("Diagnostics\tCtrl+Shift+D", () => ShowMdiChild(new DiagnosticsForm(this))));
+        menu.DropDownItems.Add(CreateMenuItem("Genel Ayarlar", ShowAppSettings));
+        menu.DropDownItems.Add(new ToolStripSeparator());
+
+        _lowPowerMenuItem = CreateMenuItem("Low Power Mode", ToggleLowPowerMode);
+        _lowPowerMenuItem.Checked = AppSettingsService.Current.LowPowerMode;
+        menu.DropDownItems.Add(_lowPowerMenuItem);
+
+        return menu;
     }
 
     private ToolStripMenuItem CreatePasswordMenu()
@@ -351,96 +401,39 @@ internal partial class MainMDIForm : Form
         return menu;
     }
 
-    private ToolStripMenuItem CreateSdlcMenu()
-    {
-        var menu = new ToolStripMenuItem("AI SDLC Orchestrator");
-
-        // ── 🎯 Yönetim ───────────────────────────────
-        var mgmt = new ToolStripMenuItem("🎯 Yönetim");
-        mgmt.DropDownItems.Add(CreateMenuItem("Dashboard", () => ShowMdiChild(new SdlcDashboardForm())));
-        mgmt.DropDownItems.Add(CreateMenuItem("Task Intake", () => ShowMdiChild(new TaskIntakeForm())));
-        mgmt.DropDownItems.Add(CreateMenuItem("Session / IDE Manager", () => ShowMdiChild(new SessionManagerForm())));
-        menu.DropDownItems.Add(mgmt);
-
-        // ── 🤖 Agent'lar ─────────────────────────────
-        var agents = new ToolStripMenuItem("🤖 Agent'lar");
-        agents.DropDownItems.Add(CreateMenuItem("Agent Console Hub", () => ShowMdiChild(new AgentConsoleHubForm())));
-        agents.DropDownItems.Add(new ToolStripSeparator());
-        agents.DropDownItems.Add(CreateMenuItem("Product Owner Agent", () => ShowAgentDetail(AgentRole.ProductOwner)));
-        agents.DropDownItems.Add(CreateMenuItem("Analyst Agent", () => ShowAgentDetail(AgentRole.Analyst)));
-        agents.DropDownItems.Add(CreateMenuItem("Architect Agent", () => ShowAgentDetail(AgentRole.Architect)));
-        agents.DropDownItems.Add(CreateMenuItem("Developer Agent", () => ShowAgentDetail(AgentRole.Developer)));
-        agents.DropDownItems.Add(CreateMenuItem("Tester Agent", () => ShowAgentDetail(AgentRole.Tester)));
-        agents.DropDownItems.Add(CreateMenuItem("Reviewer Agent", () => ShowAgentDetail(AgentRole.Reviewer)));
-        agents.DropDownItems.Add(CreateMenuItem("Documentation Agent", () => ShowAgentDetail(AgentRole.Documentation)));
-        menu.DropDownItems.Add(agents);
-
-        // ── 🧑‍💼 İnsan Kontrol ──────────────────────
-        var human = new ToolStripMenuItem("🧑‍💼 İnsan Kontrol");
-        human.DropDownItems.Add(CreateMenuItem("Human Decision Console", () => ShowMdiChild(new HumanDecisionConsoleForm())));
-        menu.DropDownItems.Add(human);
-
-        // ── 📡 İzleme ────────────────────────────────
-        var monitoring = new ToolStripMenuItem("📡 İzleme");
-        monitoring.DropDownItems.Add(CreateMenuItem("Console Runner", () => ShowMdiChild(new ConsoleRunnerForm())));
-        monitoring.DropDownItems.Add(CreateMenuItem("Notifications Center", () => ShowMdiChild(new NotificationsCenterForm())));
-        monitoring.DropDownItems.Add(CreateMenuItem("Waiting Queue Monitor", () => ShowMdiChild(new WaitingQueueForm())));
-        monitoring.DropDownItems.Add(CreateMenuItem("Timeline / Iteration Monitor", () => ShowMdiChild(new TimelineForm())));
-        menu.DropDownItems.Add(monitoring);
-
-        // ── 📋 Raporlama ─────────────────────────────
-        var reports = new ToolStripMenuItem("📋 Raporlama");
-        reports.DropDownItems.Add(CreateMenuItem("Reports & Outputs", () => ShowMdiChild(new ReportsForm())));
-        menu.DropDownItems.Add(reports);
-
-        menu.DropDownItems.Add(new ToolStripSeparator());
-
-        menu.DropDownItems.Add(CreateMenuItem("⚙️ Settings", () => ShowMdiChild(new SdlcSettingsForm())));
-
-        return menu;
-    }
-
-    /// <summary>
-    /// Opens (or activates) an <see cref="AgentDetailForm"/> for the given role.
-    /// Uses a role-keyed dictionary instead of the standard type-based deduplication
-    /// because all agent detail forms share the same <see cref="Type"/>.
-    /// </summary>
-    private void ShowAgentDetail(AgentRole role)
-    {
-        if (_agentForms.TryGetValue(role, out var existing) && !existing.IsDisposed)
-        {
-            existing.Activate();
-            return;
-        }
-
-        var form = new AgentDetailForm(role)
-        {
-            MdiParent = this,
-            WindowState = FormWindowState.Maximized
-        };
-
-        UITheme.Apply(form);
-        EnsureDarkTitleBar(form);
-        form.FormClosed += (_, _) => _agentForms.Remove(role);
-        _agentForms[role] = form;
-        form.Show();
-    }
-
     private ToolStripMenuItem CreateClipboardMenu()
     {
         var menu = new ToolStripMenuItem("Pano");
 
         var historyItem = new ToolStripMenuItem("Pano Geçmişi");
-        historyItem.Click += (_, _) =>
+        historyItem.Click += (_, _) => ShowClipboardHistory();
+
+        var settingsItem = new ToolStripMenuItem("Pano Ayarları");
+        settingsItem.Click += (_, _) =>
         {
+            if (!AppSettingsService.Current.ClipboardHistoryEnabled)
+            {
+                MessageBox.Show(
+                    "Pano geçmişi genel ayarlardan kapalı. Önce Assist > Genel Ayarlar ekranından açın.",
+                    "Pano Geçmişi",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+                return;
+            }
+
             EnsureClipboardHistory();
-            ShowMdiChild(new ClipboardHistoryForm(_clipboardHistory!));
+            using var settingsForm = new ClipboardSettingsForm(_clipboardHistory!);
+            UITheme.Apply(settingsForm);
+            settingsForm.ShowDialog(this);
         };
 
         var clearItem = new ToolStripMenuItem("Pano Temizle");
         clearItem.Click += (_, _) =>
         {
-            if (_clipboardHistory is null) return;
+            if (!AppSettingsService.Current.ClipboardHistoryEnabled)
+                return;
+
+            EnsureClipboardHistory();
 
             var result = MessageBox.Show(
                 "Tüm pano geçmişini silmek istediğinize emin misiniz?",
@@ -450,12 +443,13 @@ internal partial class MainMDIForm : Form
 
             if (result == DialogResult.Yes)
             {
-                _clipboardHistory.Clear();
+                _clipboardHistory!.Clear();
                 MessageBox.Show("Pano geçmişi temizlendi.", "Bilgi", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         };
 
         menu.DropDownItems.Add(historyItem);
+        menu.DropDownItems.Add(settingsItem);
 
         menu.DropDownItems.Add(new ToolStripSeparator());
 
@@ -518,6 +512,215 @@ internal partial class MainMDIForm : Form
         form.ShowDialog(this);
     }
 
+    private void ShowAppSettings()
+    {
+        using var form = new AppSettingsForm();
+        form.ShowDialog(this);
+    }
+
+    private void ShowQuickLauncher()
+    {
+        if (!AppSettingsService.Current.QuickLauncherEnabled)
+            return;
+
+        var existing = Application.OpenForms.OfType<QuickLauncherForm>().FirstOrDefault();
+        if (existing is not null)
+        {
+            existing.Activate();
+            existing.BringToFront();
+            return;
+        }
+
+        using var launcher = new QuickLauncherForm(_quickLaunchItems);
+        UITheme.Apply(launcher);
+        launcher.ShowDialog(this);
+    }
+
+    private void ShowClipboardHistory()
+    {
+        if (!AppSettingsService.Current.ClipboardHistoryEnabled)
+        {
+            MessageBox.Show(
+                "Pano geçmişi genel ayarlardan kapalı.",
+                "Pano Geçmişi",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Information);
+            return;
+        }
+
+        EnsureClipboardHistory();
+        if (_clipboardHistory is not null)
+            ShowMdiChild(new ClipboardHistoryForm(_clipboardHistory));
+    }
+
+    private void ToggleLowPowerMode()
+    {
+        AppSettingsService.Update(settings => settings.LowPowerMode = !settings.LowPowerMode);
+    }
+
+    private void OnAppSettingsChanged(object? sender, EventArgs e)
+    {
+        if (_isClosing || IsDisposed)
+            return;
+
+        if (_lowPowerMenuItem is not null)
+            _lowPowerMenuItem.Checked = AppSettingsService.Current.LowPowerMode;
+
+        ApplyClipboardSettings();
+        ApplyDashboardSettings();
+    }
+
+    private void ApplyClipboardSettings()
+    {
+        if (!AppSettingsService.Current.ClipboardHistoryEnabled)
+        {
+            _clipboardHistory?.Dispose();
+            _clipboardHistory = null;
+            return;
+        }
+
+        EnsureClipboardHistory();
+        _clipboardHistory?.Start(AppSettingsService.EffectiveClipboardIntervalMs);
+    }
+
+    private void ApplyDashboardSettings()
+    {
+        if (!AppSettingsService.Current.DashboardEnabled)
+        {
+            StopDashboardTimers();
+            if (_dashboardPanel is not null)
+                _dashboardPanel.Visible = false;
+            return;
+        }
+
+        if (_dashboardPanel is null || _dashboardPanel.IsDisposed)
+        {
+            InitializeDashboardPanel();
+            return;
+        }
+
+        _dashboardPanel.Visible = true;
+        StartDashboardTimers();
+        RefreshFast();
+        _ = RunMediumRefreshAsync();
+        _ = RunSlowRefreshAsync();
+    }
+
+    private void OpenSessionForm(string key)
+    {
+        if (_sessionFormFactories.TryGetValue(key, out var factory))
+            ShowMdiChild(factory());
+    }
+
+    private Dictionary<string, Func<Form>> CreateSessionFormFactories() => new(StringComparer.Ordinal)
+    {
+        [nameof(PasswordListForm)] = () => new PasswordListForm(),
+        [nameof(PasswordGeneratorForm)] = () => new PasswordGeneratorForm(),
+        [nameof(TodoForm)] = () => new TodoForm(),
+        [nameof(SystemInfoForm)] = () => new SystemInfoForm(),
+        [nameof(PerformanceMonitorForm)] = () => new PerformanceMonitorForm(),
+        [nameof(StartupManagerForm)] = () => new StartupManagerForm(),
+        [nameof(DiskCleanerForm)] = () => new DiskCleanerForm(),
+        [nameof(HostsFileEditorForm)] = () => new HostsFileEditorForm(),
+        [nameof(HardwareDiagnosticsForm)] = () => new HardwareDiagnosticsForm(),
+        [nameof(SystemRecoveryForm)] = () => new SystemRecoveryForm(),
+        [nameof(SpeedTestForm)] = () => new SpeedTestForm(),
+        [nameof(NetworkScannerForm)] = () => new NetworkScannerForm(),
+        [nameof(WifiPasswordForm)] = () => new WifiPasswordForm(),
+        [nameof(ThreatScannerForm)] = () => new ThreatScannerForm(),
+        [nameof(WikipediaSearchForm)] = () => new WikipediaSearchForm(),
+        [nameof(DictionaryForm)] = () => new DictionaryForm(),
+        [nameof(TranslationDictionaryForm)] = () => new TranslationDictionaryForm(),
+        [nameof(IpDomainQueryForm)] = () => new IpDomainQueryForm(),
+        [nameof(WhoisForm)] = () => new WhoisForm(),
+        [nameof(CurrencyConverterForm)] = () => new CurrencyConverterForm(),
+        [nameof(ExchangeRatesForm)] = () => new ExchangeRatesForm(),
+        [nameof(EarthquakeForm)] = () => new EarthquakeForm(),
+        [nameof(TurkishHolidaysForm)] = () => new TurkishHolidaysForm(),
+        [nameof(JsonFormatterForm)] = () => new JsonFormatterForm(),
+        [nameof(XmlFormatterForm)] = () => new XmlFormatterForm(),
+        [nameof(PrettyXmlForm)] = () => new PrettyXmlForm(),
+        [nameof(RegexTesterForm)] = () => new RegexTesterForm(),
+        [nameof(TextDiffForm)] = () => new TextDiffForm(),
+        [nameof(Base64ConverterForm)] = () => new Base64ConverterForm(),
+        [nameof(HashGeneratorForm)] = () => new HashGeneratorForm(),
+        [nameof(UnitConverterForm)] = () => new UnitConverterForm(),
+        [nameof(UuidGeneratorForm)] = () => new UuidGeneratorForm(),
+        [nameof(LoremIpsumForm)] = () => new LoremIpsumForm(),
+        [nameof(QrCodeForm)] = () => new QrCodeForm(),
+        [nameof(ColorPickerForm)] = () => new ColorPickerForm(),
+        [nameof(DiagnosticsForm)] = () => new DiagnosticsForm(this),
+    };
+
+    private IReadOnlyList<QuickLaunchItem> CreateQuickLaunchItems()
+    {
+        QuickLaunchItem Open(string title, string category, string keywords, string key) =>
+            new(title, category, keywords, () => OpenSessionForm(key));
+
+        return
+        [
+            new("Assist Ayarları", "Assist", "settings ayar low power dashboard clipboard", ShowAppSettings),
+            new("Assist Diagnostics", "Assist", "ram cpu memory diagnostics performans kaynak", () => ShowMdiChild(new DiagnosticsForm(this))),
+            new("Low Power Mode", "Assist", "battery ram low power tasarruf", ToggleLowPowerMode),
+            Open("Şifreleri Gör", "Şifreler", "password vault şifre kasa", nameof(PasswordListForm)),
+            Open("Şifre Üret", "Şifreler", "password generator şifre üret", nameof(PasswordGeneratorForm)),
+            Open("Görevler", "Verimlilik", "todo görev yapılacak", nameof(TodoForm)),
+            new("Pano Geçmişi", "Pano", "clipboard pano geçmiş", ShowClipboardHistory),
+            Open("Sistem Bilgisi", "Sistem", "system info hardware", nameof(SystemInfoForm)),
+            Open("Performance Monitor", "Sistem", "cpu ram disk monitor performans", nameof(PerformanceMonitorForm)),
+            Open("Startup Manager", "Sistem", "başlangıç startup process", nameof(StartupManagerForm)),
+            Open("Disk Temizleyici", "Sistem", "disk cleaner temp temizle", nameof(DiskCleanerForm)),
+            Open("Speed Test", "Ağ", "internet speed hız ping", nameof(SpeedTestForm)),
+            Open("Ağ Tarayıcı", "Ağ", "network scanner netstat bağlantı", nameof(NetworkScannerForm)),
+            Open("Wi-Fi Şifreleri", "Ağ", "wifi password kablosuz", nameof(WifiPasswordForm)),
+            Open("Tehdit Tarayıcı", "Güvenlik", "threat scanner security malware", nameof(ThreatScannerForm)),
+            Open("JSON Formatter", "Geliştirici", "json format validate", nameof(JsonFormatterForm)),
+            Open("XML Formatter", "Geliştirici", "xml format validate", nameof(XmlFormatterForm)),
+            Open("Regex Tester", "Geliştirici", "regex test replace", nameof(RegexTesterForm)),
+            Open("Text Diff", "Geliştirici", "diff compare text", nameof(TextDiffForm)),
+            Open("Base64 Converter", "Geliştirici", "base64 encode decode", nameof(Base64ConverterForm)),
+            Open("Hash Generator", "Geliştirici", "hash md5 sha", nameof(HashGeneratorForm)),
+            Open("UUID Generator", "Geliştirici", "uuid guid generator", nameof(UuidGeneratorForm)),
+            Open("QR Code Generator", "Geliştirici", "qr qrcode barcode", nameof(QrCodeForm)),
+            Open("Wikipedia Arama", "Online", "wiki wikipedia search", nameof(WikipediaSearchForm)),
+            Open("Sözlük", "Online", "dictionary sözlük", nameof(DictionaryForm)),
+            Open("IP / Domain Sorgula", "Online", "ip domain dns geo", nameof(IpDomainQueryForm)),
+            Open("WHOIS", "Online", "whois domain rdap", nameof(WhoisForm)),
+            Open("Döviz Çevirici", "Finans", "currency exchange döviz", nameof(CurrencyConverterForm)),
+            Open("Piyasa 20", "Finans", "borsa piyasa crypto gold", nameof(ExchangeRatesForm)),
+            Open("Deprem Takibi", "Online", "earthquake deprem afad", nameof(EarthquakeForm)),
+            Open("Tatil Takvimi", "Online", "tatil holiday calendar", nameof(TurkishHolidaysForm)),
+        ];
+    }
+
+    private void RestoreSessionIfNeeded()
+    {
+        if (_sessionRestored || !AppSettingsService.Current.RestoreLastSession)
+            return;
+
+        _sessionRestored = true;
+        foreach (var key in SessionStateService.LoadOpenForms().Take(8))
+        {
+            if (_sessionFormFactories.TryGetValue(key, out var factory))
+            {
+                try { ShowMdiChild(factory()); }
+                catch { /* Skip forms that cannot be restored in this session. */ }
+            }
+        }
+    }
+
+    private void SaveSession()
+    {
+        if (!AppSettingsService.Current.RestoreLastSession)
+            return;
+
+        var keys = MdiChildren
+            .Select(form => form.GetType().Name)
+            .Where(key => _sessionFormFactories.ContainsKey(key));
+
+        SessionStateService.SaveOpenForms(keys);
+    }
+
     private void ApplyThemeSelection(AppTheme theme)
     {
         ThemeService.SetTheme(theme);
@@ -526,12 +729,12 @@ internal partial class MainMDIForm : Form
     private void OnThemeChanged(object? sender, EventArgs e)
     {
         if (IsDisposed) return;
-        BeginInvoke(new Action(() =>
+        PostToUi(() =>
         {
             UITheme.ApplyToOpenForms();
             ApplyDashboardTheme();
             ApplyWatermarkTheme();
-        }));
+        });
     }
 
     private static ToolStripMenuItem CreateMenuItem(string text, Action action, ToolStripItemAlignment alignment = ToolStripItemAlignment.Left)
@@ -550,10 +753,13 @@ internal partial class MainMDIForm : Form
 
     private void EnsureClipboardHistory()
     {
+        if (!AppSettingsService.Current.ClipboardHistoryEnabled)
+            return;
+
         if (_clipboardHistory is not null) return;
 
         _clipboardHistory = new ClipboardHistoryService(50, filterSensitive: true);
-        _clipboardHistory.Start(1000);
+        _clipboardHistory.Start(AppSettingsService.EffectiveClipboardIntervalMs);
     }
 
     private void ApplyTheme()
@@ -834,6 +1040,13 @@ internal partial class MainMDIForm : Form
 
     private void InitializeDashboardPanel()
     {
+        if (_dashboardPanel is not null && !_dashboardPanel.IsDisposed)
+        {
+            _dashboardPanel.Visible = true;
+            StartDashboardTimers();
+            return;
+        }
+
         var p = UITheme.Palette;
         _dashboardPanel = new Panel
         {
@@ -949,28 +1162,51 @@ internal partial class MainMDIForm : Form
         _dashboardPanel.Controls.Add(table);
         Controls.Add(_dashboardPanel);
 
-        // ── Timers ──
-
-        // Fast: every 2 seconds — clock, CPU/RAM (reduced from 1s to lower GC pressure)
-        _fastTimer = new System.Windows.Forms.Timer { Interval = 2_000 };
+        _fastTimer = new System.Windows.Forms.Timer { Interval = (int)AppSettingsService.FastDashboardInterval.TotalMilliseconds };
         _fastTimer.Tick += (_, _) => RefreshFast();
-        _fastTimer.Start();
 
-        // Medium: every 30 seconds — disk, battery, uptime, ping, app stats
-        _mediumTimer = new System.Windows.Forms.Timer { Interval = 30_000 };
-        _mediumTimer.Tick += async (_, _) => await RefreshMediumAsync();
-        _mediumTimer.Start();
+        _mediumTimer = new System.Windows.Forms.Timer { Interval = (int)AppSettingsService.MediumDashboardInterval.TotalMilliseconds };
+        _mediumTimer.Tick += async (_, _) => await RunMediumRefreshAsync();
 
-        // Slow: every 5 minutes — weather, currency, crypto, IP
-        _slowTimer = new System.Windows.Forms.Timer { Interval = 300_000 };
-        _slowTimer.Tick += async (_, _) => await RefreshSlowAsync();
-        _slowTimer.Start();
+        _slowTimer = new System.Windows.Forms.Timer { Interval = (int)AppSettingsService.SlowDashboardInterval.TotalMilliseconds };
+        _slowTimer.Tick += async (_, _) => await RunSlowRefreshAsync();
+
+        StartDashboardTimers();
 
         // Initial load
         RefreshFast();
-        _ = RefreshMediumAsync();
-        _ = RefreshSlowAsync();
+        _ = RunMediumRefreshAsync();
+        _ = RunSlowRefreshAsync();
         ApplyDashboardTheme();
+    }
+
+    private void StartDashboardTimers()
+    {
+        ApplyDashboardTimerIntervals();
+
+        if (!AppSettingsService.Current.DashboardEnabled)
+            return;
+
+        _fastTimer?.Start();
+        _mediumTimer?.Start();
+        _slowTimer?.Start();
+    }
+
+    private void StopDashboardTimers()
+    {
+        _fastTimer?.Stop();
+        _mediumTimer?.Stop();
+        _slowTimer?.Stop();
+    }
+
+    private void ApplyDashboardTimerIntervals()
+    {
+        if (_fastTimer is not null)
+            _fastTimer.Interval = (int)AppSettingsService.FastDashboardInterval.TotalMilliseconds;
+        if (_mediumTimer is not null)
+            _mediumTimer.Interval = (int)AppSettingsService.MediumDashboardInterval.TotalMilliseconds;
+        if (_slowTimer is not null)
+            _slowTimer.Interval = (int)AppSettingsService.SlowDashboardInterval.TotalMilliseconds;
     }
 
     private void ApplyDashboardTheme()
@@ -1011,9 +1247,65 @@ internal partial class MainMDIForm : Form
         };
     }
 
+    private void PostToUi(Action action)
+    {
+        if (_isClosing || IsDisposed || !IsHandleCreated)
+            return;
+
+        void GuardedAction()
+        {
+            if (_isClosing || IsDisposed)
+                return;
+
+            action();
+        }
+
+        try
+        {
+            if (InvokeRequired)
+                BeginInvoke((Action)GuardedAction);
+            else
+                GuardedAction();
+        }
+        catch (ObjectDisposedException) { }
+        catch (InvalidOperationException) { }
+    }
+
+    private async Task RunMediumRefreshAsync()
+    {
+        if (_isClosing || !AppSettingsService.Current.DashboardEnabled || Interlocked.Exchange(ref _mediumRefreshInProgress, 1) == 1)
+            return;
+
+        try
+        {
+            await RefreshMediumAsync().ConfigureAwait(false);
+        }
+        finally
+        {
+            Volatile.Write(ref _mediumRefreshInProgress, 0);
+        }
+    }
+
+    private async Task RunSlowRefreshAsync()
+    {
+        if (_isClosing || !AppSettingsService.Current.DashboardEnabled || Interlocked.Exchange(ref _slowRefreshInProgress, 1) == 1)
+            return;
+
+        try
+        {
+            await RefreshSlowAsync().ConfigureAwait(false);
+        }
+        finally
+        {
+            Volatile.Write(ref _slowRefreshInProgress, 0);
+        }
+    }
+
     /// <summary>Clock + CPU/RAM — every 2 seconds.</summary>
     private void RefreshFast()
     {
+        if (_isClosing || IsDisposed || !AppSettingsService.Current.DashboardEnabled) return;
+
         if (_lblClock is not null)
         {
             var clockText = $"⏰ {DateTime.Now:HH:mm:ss}  📅 {DateTime.Now:dddd, dd MMMM yyyy}";
@@ -1033,7 +1325,7 @@ internal partial class MainMDIForm : Form
 
     private void RefreshProcessBar()
     {
-        if (_lblProcBar is null) return;
+        if (_lblProcBar is null || !AppSettingsService.Current.DashboardEnabled) return;
         try
         {
             _selfProcess.Refresh();
@@ -1087,6 +1379,8 @@ internal partial class MainMDIForm : Form
     }
     private async Task RefreshMediumAsync()
     {
+        if (_isClosing || IsDisposed || !AppSettingsService.Current.DashboardEnabled) return;
+
         try
         {
             var pingTask = DashboardService.GetPingAsync();
@@ -1106,7 +1400,7 @@ internal partial class MainMDIForm : Form
                 if (_lblAppStats is not null) _lblAppStats.Text = appStats;
             }
 
-            if (InvokeRequired) Invoke(Update); else Update();
+            PostToUi(Update);
         }
         catch (ObjectDisposedException) { /* form closed during refresh — expected */ }
         catch (Exception ex)
@@ -1118,6 +1412,8 @@ internal partial class MainMDIForm : Form
     /// <summary>Weather, currency, crypto, IP — every 5 minutes.</summary>
     private async Task RefreshSlowAsync()
     {
+        if (_isClosing || IsDisposed || !AppSettingsService.Current.DashboardEnabled) return;
+
         try
         {
             // Detect physical location (WiFi/GPS) for accurate weather city
@@ -1141,16 +1437,16 @@ internal partial class MainMDIForm : Form
                 if (_lblCrypto is not null) _lblCrypto.Text = cryptoTask.Result;
             }
 
-                if (InvokeRequired) Invoke(Update); else Update();
-                }
-                catch (ObjectDisposedException) { /* form closed during refresh — expected */ }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine($"[Dashboard] Slow refresh failed: {ex.Message}");
-                }
-            }
+            PostToUi(Update);
+        }
+        catch (ObjectDisposedException) { /* form closed during refresh — expected */ }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[Dashboard] Slow refresh failed: {ex.Message}");
+        }
+    }
 
-            #endregion
+    #endregion
 
     #region Watermark
 

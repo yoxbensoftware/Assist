@@ -6,7 +6,7 @@ using Assist.Services;
 
 internal sealed class CurrencyConverterForm : Form
 {
-    private static readonly HttpClient Http = new();
+    private static readonly HttpClient Http = AppConstants.SharedHttpClient;
 
     // Comprehensive fallback list – the API may return even more
     private static readonly string[] DefaultCurrencies =

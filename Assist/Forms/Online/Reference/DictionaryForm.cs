@@ -7,7 +7,7 @@ using Assist.Services;
 
 internal sealed class DictionaryForm : Form
 {
-    private static readonly HttpClient Http = new();
+    private static readonly HttpClient Http = AppConstants.SharedHttpClient;
 
     private readonly TextBox _txtWord;
     private readonly Button _btnSearch;

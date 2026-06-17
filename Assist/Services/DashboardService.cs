@@ -118,7 +118,7 @@ internal static class DashboardService
         {
             var url = "https://open.er-api.com/v6/latest/USD";
             var json = await AppConstants.SharedHttpClient.GetStringAsync(url).ConfigureAwait(false);
-            var doc = JsonDocument.Parse(json);
+            using var doc = JsonDocument.Parse(json);
             var rates = doc.RootElement.GetProperty("rates");
             var tryRate = rates.GetProperty("TRY").GetDouble();
             _cachedUsdTryRate = tryRate;
@@ -260,7 +260,7 @@ internal static class DashboardService
         {
             var url = "https://ip-api.com/json/?fields=query,city,country,isp";
             var json = await AppConstants.SharedHttpClient.GetStringAsync(url).ConfigureAwait(false);
-            var doc = JsonDocument.Parse(json);
+            using var doc = JsonDocument.Parse(json);
             var root = doc.RootElement;
             var ip = root.GetProperty("query").GetString();
             var city = root.GetProperty("city").GetString();

@@ -7,7 +7,7 @@ using Assist.Services;
 
 internal sealed class IpDomainQueryForm : Form
 {
-    private static readonly HttpClient Http = new();
+    private static readonly HttpClient Http = AppConstants.SharedHttpClient;
 
     private readonly TextBox _txtQuery;
     private readonly Button _btnQuery;

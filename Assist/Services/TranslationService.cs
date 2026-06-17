@@ -12,7 +12,7 @@ internal static class TranslationService
     private const string DefaultEndpoint = "https://api.cognitive.microsofttranslator.com";
     private const string MyMemoryEndpoint = "https://api.mymemory.translated.net/get";
 
-    private static readonly HttpClient HttpClient = new();
+    private static readonly HttpClient HttpClient = AppConstants.SharedHttpClient;
 
     private static string? Key => Environment.GetEnvironmentVariable("ASSIST_TRANSLATOR_KEY");
     private static string? Region => Environment.GetEnvironmentVariable("ASSIST_TRANSLATOR_REGION");

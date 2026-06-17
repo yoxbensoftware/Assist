@@ -13,6 +13,8 @@ internal sealed class ClipboardHistoryForm : Form
     private TextBox _txtSearch = null!;
     private System.Windows.Forms.Timer? _refreshTimer;
     private List<string> _allItems = [];
+    private long _lastServiceVersion = -1;
+    private bool _refreshing;
 
     /// <summary>
     /// Initializes the clipboard history form with the specified service instance.
@@ -107,15 +109,26 @@ internal sealed class ClipboardHistoryForm : Form
     /// </summary>
     private async Task RefreshDataAsync()
     {
+        if (_refreshing || _lastServiceVersion == _service.Version)
+            return;
+
+        _refreshing = true;
         try
         {
-            var items = await Task.Run(() => _service.GetAll());
+            var version = _service.Version;
+            var items = _service.GetAll();
             if (IsDisposed) return;
 
             _allItems = items;
+            _lastServiceVersion = version;
             ApplyFilter();
+            await Task.CompletedTask;
         }
         catch { /* Service unavailable */ }
+        finally
+        {
+            _refreshing = false;
+        }
     }
 
     /// <summary>
@@ -128,10 +141,18 @@ internal sealed class ClipboardHistoryForm : Form
             ? _allItems
             : _allItems.Where(x => x.Contains(filter, StringComparison.OrdinalIgnoreCase)).ToList();
 
-        _dgv.Rows.Clear();
-        foreach (var item in filtered)
+        _dgv.SuspendLayout();
+        try
         {
-            _dgv.Rows.Add(item);
+            _dgv.Rows.Clear();
+            foreach (var item in filtered)
+            {
+                _dgv.Rows.Add(item);
+            }
+        }
+        finally
+        {
+            _dgv.ResumeLayout();
         }
     }
 

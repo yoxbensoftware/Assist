@@ -8,7 +8,7 @@ using Assist.Services;
 
 internal sealed partial class WikipediaSearchForm : Form
 {
-    private static readonly HttpClient Http = new();
+    private static readonly HttpClient Http = AppConstants.SharedHttpClient;
     private static readonly Dictionary<string, string> LangMap = new()
     {
         ["TR"] = "tr",

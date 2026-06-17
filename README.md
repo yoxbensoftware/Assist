@@ -2,7 +2,7 @@
 
 > **A powerful all-in-one Windows desktop productivity and developer toolkit built with .NET 10 and WinForms.**
 
-Assist is a modern MDI (Multiple Document Interface) desktop application designed to centralize your daily tools — from password management and task tracking to system diagnostics, developer utilities, network analysis, and AI-driven workflows — all inside a sleek, dark-themed interface.
+Assist is a modern MDI (Multiple Document Interface) desktop application designed to centralize your daily tools — from password management and task tracking to system diagnostics, developer utilities, and network analysis — all inside a sleek, dark-themed interface.
 
 ---
 
@@ -67,20 +67,9 @@ Assist is a modern MDI (Multiple Document Interface) desktop application designe
 | **Wikipedia Search** | Quick in-app article browser |
 | **Translation Tool** | Translate text between languages |
 
-### 🤖 AI & SDLC Agent
-- Multi-agent orchestration (SDLC planning, issue analysis, review)
-- `AgentCoordinator` + `EventBus` driven pipeline
-- Human Decision Console for agent-in-the-loop approvals
-- Timeline view of agent activity and decisions
-- AI-assisted task intake and dashboard
-- Session manager for managing agent contexts
-
 ### 🎯 Productivity Extras
 - **Wiggle Mouse** — keeps your PC/session active by micro-moving the cursor on a timer
 - **Clipboard History** — persistent clipboard ring with pinning support
-- **Notification Center** — in-app toast and alert management
-- **Waiting Queue** — simple numbered queue/ticket manager
-- **Reports** — system and activity report generation
 - **News Feed** — RSS/API news reader with translation
 
 ---
@@ -100,9 +89,8 @@ Assist/
 │   │   ├── Formatters/        # JSON, XML, PrettyXml formatters
 │   │   └── Utilities/         # Regex, Hash, UUID, Base64, ColorPicker, TextDiff
 │   ├── Network/               # NetworkScanner, IpDomainQuery, Whois, SpeedTest
-│   ├── Online/                # News, ExchangeRates, Earthquake, Wikipedia
-│   └── Agent/                 # SDLC Dashboard, AgentConsoleHub, HumanDecisionConsole
-├── Models/                    # TodoItem, PasswordEntry, NewsItem, SdlcModels, etc.
+│   └── Online/                # News, ExchangeRates, Earthquake, Wikipedia
+├── Models/                    # TodoItem, PasswordEntry, NewsItem, etc.
 ├── Services/                  # UITheme, TextSanitizer, TodoStore, PasswordStore,
 │                              #   NewsService, TranslationService, AutoUpdateService
 └── AppConstants.cs            # App-wide constants, paths, build version
@@ -113,7 +101,6 @@ Assist/
 - **Dark Theme** — `UITheme` + `ThemeService` apply a consistent dark palette across all controls including grids, menus, and custom-drawn elements
 - **Local-first Storage** — Passwords and todos are stored encrypted/JSON in `%APPDATA%\AssistPasswordStore\`
 - **Turkish Locale Support** — `TextSanitizer` provides runtime mojibake repair for Turkish characters; GDI charset 162 is set for all fonts
-- **Event-driven Agents** — `EventBus` decouples agent components; `AgentCoordinator` manages multi-step AI workflows
 
 ---
 

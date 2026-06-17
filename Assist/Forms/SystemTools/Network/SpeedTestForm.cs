@@ -8,7 +8,7 @@ using Assist.Forms.SystemTools.Monitoring;
 /// </summary>
 internal sealed class SpeedTestForm : Form
 {
-    private static readonly HttpClient HttpClient = new();
+    private static readonly HttpClient HttpClient = AppConstants.SharedHttpClient;
 
     private readonly Label _lblDownload = null!;
     private readonly Label _lblUpload = null!;
@@ -195,11 +195,27 @@ internal sealed class SpeedTestForm : Form
 
         try
         {
-            var response = await HttpClient.GetAsync(testUrl);
-            var data = await response.Content.ReadAsByteArrayAsync();
+            using var response = await HttpClient.GetAsync(testUrl, HttpCompletionOption.ResponseHeadersRead);
+            response.EnsureSuccessStatusCode();
+
+            await using var stream = await response.Content.ReadAsStreamAsync();
+            var buffer = System.Buffers.ArrayPool<byte>.Shared.Rent(64 * 1024);
+            long bytes = 0;
+            try
+            {
+                int read;
+                while ((read = await stream.ReadAsync(buffer)) > 0)
+                {
+                    bytes += read;
+                }
+            }
+            finally
+            {
+                System.Buffers.ArrayPool<byte>.Shared.Return(buffer);
+            }
+
             sw.Stop();
 
-            var bytes = data.Length;
             var seconds = sw.Elapsed.TotalSeconds;
             var mbps = (bytes * 8) / (seconds * 1_000_000);
 
