@@ -66,6 +66,8 @@ internal partial class MainMDIForm : Form
     private DateTime _lastNetCheck = DateTime.MinValue;
     private double _cachedRxKbPerSec;
     private double _cachedTxKbPerSec;
+    private int _cachedThreadCount;
+    private DateTime _lastThreadCountCheck = DateTime.MinValue;
     private Label? _lblProcBar;
 
     // Dashboard panel refs for theme refresh
@@ -82,8 +84,19 @@ internal partial class MainMDIForm : Form
     private Rectangle _rcAssist, _rcBy, _rcOz;
     private Color _watermarkAccent;
     private Color _watermarkMuted;
+    private Size _watermarkLayoutForClientSize = Size.Empty;
+    private Size _sAssistCached;
+    private Size _sByCached;
+    private Size _sOzCached;
     private static readonly Font WatermarkLargeFont = new("Consolas", 60, FontStyle.Bold);
     private static readonly Font WatermarkSmallFont = new("Consolas", 22);
+
+    // Move/size loop tracking — used to throttle UI work while the window is being dragged or resized
+    private const int WM_ENTERSIZEMOVE = 0x0231;
+    private const int WM_EXITSIZEMOVE = 0x0232;
+    private bool _isInSizeMove;
+    private bool _fastTimerWasRunning;
+    private bool _mediumTimerWasRunning;
 
     public MainMDIForm()
     {
@@ -137,6 +150,45 @@ internal partial class MainMDIForm : Form
         {
             return false;
         }
+    }
+
+    /// <summary>
+    /// Pause dashboard UI-thread timers while Windows is in its modal move/size loop.
+    /// WinForms timers keep firing inside that loop and would otherwise interleave with
+    /// window dragging, causing visible stutter.
+    /// </summary>
+    protected override void WndProc(ref Message m)
+    {
+        switch (m.Msg)
+        {
+            case WM_ENTERSIZEMOVE:
+                if (!_isInSizeMove)
+                {
+                    _isInSizeMove = true;
+                    _fastTimerWasRunning = _fastTimer?.Enabled == true;
+                    _mediumTimerWasRunning = _mediumTimer?.Enabled == true;
+                    _fastTimer?.Stop();
+                    _mediumTimer?.Stop();
+                }
+                break;
+
+            case WM_EXITSIZEMOVE:
+                if (_isInSizeMove)
+                {
+                    _isInSizeMove = false;
+                    if (_fastTimerWasRunning) _fastTimer?.Start();
+                    if (_mediumTimerWasRunning) _mediumTimer?.Start();
+                    // Single catch-up refresh so the dashboard looks current immediately after the drag ends
+                    if (!_isClosing && !IsDisposed && AppSettingsService.Current.DashboardEnabled)
+                    {
+                        try { RefreshFast(); }
+                        catch { /* refresh on resume is best-effort */ }
+                    }
+                }
+                break;
+        }
+
+        base.WndProc(ref m);
     }
 
     private void LoadIcon()
@@ -1305,6 +1357,9 @@ internal partial class MainMDIForm : Form
     private void RefreshFast()
     {
         if (_isClosing || IsDisposed || !AppSettingsService.Current.DashboardEnabled) return;
+        // Belt-and-braces: even if WndProc somehow misses pausing the timer (e.g. the tick was
+        // already queued before the move began), do not run any of the WMI/process work mid-drag.
+        if (_isInSizeMove) return;
 
         if (_lblClock is not null)
         {
@@ -1326,6 +1381,9 @@ internal partial class MainMDIForm : Form
     private void RefreshProcessBar()
     {
         if (_lblProcBar is null || !AppSettingsService.Current.DashboardEnabled) return;
+        // Skip the heavier samplers while the user is moving/sizing the window — keeps the
+        // drag loop responsive even though the timers should already be paused.
+        if (_isInSizeMove) return;
         try
         {
             _selfProcess.Refresh();
@@ -1341,6 +1399,15 @@ internal partial class MainMDIForm : Form
             }
             _lastCpuTime = _selfProcess.TotalProcessorTime;
             _lastCpuCheck = now;
+
+            // Thread count is cached for ~5s — Process.Threads materialises a full ProcessThreadCollection
+            // which is surprisingly expensive when called every couple of seconds.
+            if ((now - _lastThreadCountCheck).TotalSeconds >= 5)
+            {
+                try { _cachedThreadCount = _selfProcess.Threads.Count; }
+                catch { /* keep the previous cached value */ }
+                _lastThreadCountCheck = now;
+            }
 
             // System-wide network delta — only update every ~10 seconds to reduce allocations
             var secondsSinceNetCheck = (now - _lastNetCheck).TotalSeconds;
@@ -1367,7 +1434,7 @@ internal partial class MainMDIForm : Form
             var procText =
                 $"  \u25ba ASSIST  |  \ud83d\udcbe RAM: {ram} MB" +
                 $"  |  \ud83d\udda5 CPU: {cpu:F1}%" +
-                $"  |  \ud83d\udd00 Threads: {_selfProcess.Threads.Count}" +
+                $"  |  \ud83d\udd00 Threads: {_cachedThreadCount}" +
                 $"  |  \ud83c\udf10 \u2193 {_cachedRxKbPerSec:F0} KB/s  \u2191 {_cachedTxKbPerSec:F0} KB/s";
             if (_lblProcBar.Text != procText)
                 _lblProcBar.Text = procText;
@@ -1459,9 +1526,22 @@ internal partial class MainMDIForm : Form
         _watermarkAccent = BlendColor(p.Accent, p.Back, 0.12);
         _watermarkMuted  = BlendColor(p.Muted,  p.Back, 0.08);
 
+        // Double-buffer the MDI client so watermark painting does not flicker while the window moves
+        SetDoubleBuffered(_mdiClient);
+
         _mdiClient.Paint      += MdiClient_Paint;
-        _mdiClient.Resize     += (_, _) => _mdiClient.Invalidate();
+        // Recompute layout only when the size actually changes, and only invalidate then
+        _mdiClient.SizeChanged += MdiClient_SizeChanged;
         _mdiClient.MouseClick += MdiClient_MouseClick;
+    }
+
+    private void MdiClient_SizeChanged(object? sender, EventArgs e)
+    {
+        if (_mdiClient is null) return;
+        // Invalidating the watermark is only needed when the client area really changed.
+        // The previous Resize handler fired on every move-driven layout cycle and caused dragging stutter.
+        if (_mdiClient.ClientSize != _watermarkLayoutForClientSize)
+            _mdiClient.Invalidate();
     }
 
     private void MdiClient_Paint(object? sender, PaintEventArgs e)
@@ -1469,22 +1549,29 @@ internal partial class MainMDIForm : Form
         if (_mdiClient is null) return;
         var g = e.Graphics;
 
-        var cw = _mdiClient.ClientSize.Width;
-        var ch = _mdiClient.ClientSize.Height;
+        var clientSize = _mdiClient.ClientSize;
+        if (clientSize != _watermarkLayoutForClientSize)
+        {
+            // Recompute the (expensive) text metrics only when the client size actually changes.
+            _sAssistCached = TextRenderer.MeasureText(g, "Assist", WatermarkLargeFont);
+            _sByCached     = TextRenderer.MeasureText(g, "By",     WatermarkSmallFont);
+            _sOzCached     = TextRenderer.MeasureText(g, "Oz",     WatermarkLargeFont);
 
-        var sAssist = TextRenderer.MeasureText(g, "Assist", WatermarkLargeFont);
-        var sBy     = TextRenderer.MeasureText(g, "By",     WatermarkSmallFont);
-        var sOz     = TextRenderer.MeasureText(g, "Oz",     WatermarkLargeFont);
+            var totalWidth = _sAssistCached.Width + _sByCached.Width + _sOzCached.Width + 8;
+            var maxHeight  = Math.Max(_sAssistCached.Height, Math.Max(_sByCached.Height, _sOzCached.Height));
 
-        var totalWidth = sAssist.Width + sBy.Width + sOz.Width + 8;
-        var maxHeight  = Math.Max(sAssist.Height, Math.Max(sBy.Height, sOz.Height));
+            var startX  = (clientSize.Width  - totalWidth) / 2;
+            var centerY = (clientSize.Height - maxHeight)  / 2;
 
-        var startX  = (cw - totalWidth) / 2;
-        var centerY = (ch - maxHeight)  / 2;
+            _rcAssist = new Rectangle(startX, centerY, _sAssistCached.Width, _sAssistCached.Height);
+            _rcBy     = new Rectangle(startX + _sAssistCached.Width + 4,
+                                      centerY + _sAssistCached.Height - _sByCached.Height,
+                                      _sByCached.Width, _sByCached.Height);
+            _rcOz     = new Rectangle(startX + _sAssistCached.Width + _sByCached.Width + 8,
+                                      centerY, _sOzCached.Width, _sOzCached.Height);
 
-        _rcAssist = new Rectangle(startX, centerY, sAssist.Width, sAssist.Height);
-        _rcBy     = new Rectangle(startX + sAssist.Width + 4, centerY + sAssist.Height - sBy.Height, sBy.Width, sBy.Height);
-        _rcOz     = new Rectangle(startX + sAssist.Width + sBy.Width + 8, centerY, sOz.Width, sOz.Height);
+            _watermarkLayoutForClientSize = clientSize;
+        }
 
         TextRenderer.DrawText(g, "Assist", WatermarkLargeFont, _rcAssist.Location, _watermarkAccent);
         TextRenderer.DrawText(g, "By",     WatermarkSmallFont, _rcBy.Location,     _watermarkMuted);
@@ -1504,6 +1591,8 @@ internal partial class MainMDIForm : Form
         _mdiClient.BackColor = p.Back;
         _watermarkAccent = BlendColor(p.Accent, p.Back, 0.12);
         _watermarkMuted  = BlendColor(p.Muted,  p.Back, 0.08);
+        // Force a layout recompute on next paint in case the palette implies different metrics
+        _watermarkLayoutForClientSize = Size.Empty;
         _mdiClient.Invalidate();
     }
 

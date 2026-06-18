@@ -31,10 +31,15 @@ internal sealed class ConnectionMonitorForm : Form
     // ── Matrix rain ──
     private readonly System.Windows.Forms.Timer _rainTimer;
     private readonly System.Windows.Forms.Timer _pingTimer;
-    private readonly System.Windows.Forms.Timer _topmostTimer;
     private readonly Random _rng = new();
     private int[]? _drops;
     private Bitmap? _buffer;
+
+    // Track Windows modal move/size loop so the rain animation doesn't fight the drag thread
+    private const int WM_ENTERSIZEMOVE = 0x0231;
+    private const int WM_EXITSIZEMOVE = 0x0232;
+    private bool _isInSizeMove;
+    private bool _rainTimerWasRunning;
 
     private const string MatrixChars =
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%&*ﾊﾐﾋｰｳｼﾅﾓﾆｻﾜﾂｵﾘｱﾎﾃﾏｹﾒｴｶｷﾑﾕﾗｾﾈｽﾀﾇﾍ";
@@ -248,7 +253,10 @@ internal sealed class ConnectionMonitorForm : Form
         Controls.Add(borderPanel);
 
         // ── Timers ──
-        _rainTimer = new System.Windows.Forms.Timer { Interval = 80 };
+        // The matrix rain animation needs to repaint frequently. 80 ms (~12 fps) was the original
+        // rate; 120 ms (~8 fps) is still visually fluid for the trail effect but cuts the per-second
+        // GDI workload by ~33% which is helpful when this form runs alongside the main MDI.
+        _rainTimer = new System.Windows.Forms.Timer { Interval = 120 };
         _rainTimer.Tick += RainTick;
         _rainTimer.Start();
 
@@ -256,15 +264,10 @@ internal sealed class ConnectionMonitorForm : Form
         _pingTimer.Tick += async (_, _) => await CheckConnectivityAsync();
         _pingTimer.Start();
 
-        // Force TopMost periodically to ensure it stays on top
-        _topmostTimer = new System.Windows.Forms.Timer { Interval = 500 };
-        _topmostTimer.Tick += (_, _) =>
-        {
-            if (!TopMost)
-                TopMost = true;
-            SetWindowPos(Handle, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
-        };
-        _topmostTimer.Start();
+        // Note: the previous version polled SetWindowPos every 500 ms forever to "force"
+        // TopMost. That is unnecessary — TopMost stays sticky once set, and Activated/Deactivated
+        // handlers already re-apply it. The continuous timer was wasting CPU and competing with
+        // the MDI shell for paint cycles, contributing to the drag-stutter the user reported.
 
         _ = CheckConnectivityAsync();
 
@@ -273,6 +276,34 @@ internal sealed class ConnectionMonitorForm : Form
         Deactivate += OnDeactivate;
         Load += OnLoad;
         InitDrops();
+    }
+
+    /// <summary>
+    /// Pause the matrix-rain timer during the modal move/size loop so dragging stays smooth.
+    /// </summary>
+    protected override void WndProc(ref Message m)
+    {
+        switch (m.Msg)
+        {
+            case WM_ENTERSIZEMOVE:
+                if (!_isInSizeMove)
+                {
+                    _isInSizeMove = true;
+                    _rainTimerWasRunning = _rainTimer.Enabled;
+                    _rainTimer.Stop();
+                }
+                break;
+
+            case WM_EXITSIZEMOVE:
+                if (_isInSizeMove)
+                {
+                    _isInSizeMove = false;
+                    if (_rainTimerWasRunning) _rainTimer.Start();
+                }
+                break;
+        }
+
+        base.WndProc(ref m);
     }
 
     /// <summary>
@@ -325,8 +356,6 @@ internal sealed class ConnectionMonitorForm : Form
         _rainTimer.Dispose();
         _pingTimer.Stop();
         _pingTimer.Dispose();
-        _topmostTimer.Stop();
-        _topmostTimer.Dispose();
         _buffer?.Dispose();
         _fadeBrush.Dispose();
         _greenBrush.Dispose();

@@ -27,6 +27,22 @@ internal sealed class PerformanceMonitorForm : Form
     private readonly List<PerformanceCounter> _gpuCounters = [];
     private readonly Microsoft.VisualBasic.Devices.ComputerInfo _sysInfo = new();
 
+    // ── Details refresh throttling ──
+    // The details panel renders a large multi-line block. Rebuilding it on every
+    // gauge tick (every ~700 ms) is expensive and wastes paint cycles, so we
+    // refresh it on a longer cadence and cache the drive enumeration too.
+    private DateTime _lastDetailsRefresh = DateTime.MinValue;
+    private string _cachedDrivesBlock = string.Empty;
+    private DateTime _lastDrivesRefresh = DateTime.MinValue;
+    private static readonly TimeSpan DetailsRefreshInterval = TimeSpan.FromSeconds(2);
+    private static readonly TimeSpan DrivesRefreshInterval = TimeSpan.FromSeconds(10);
+
+    // Track Windows modal move/size loop so we don't fight with the drag thread
+    private const int WM_ENTERSIZEMOVE = 0x0231;
+    private const int WM_EXITSIZEMOVE = 0x0232;
+    private bool _isInSizeMove;
+    private bool _timerWasRunning;
+
     // ── Colors ──
     private static readonly Color BgColor   = Color.FromArgb(8,  10,  20);
     private static readonly Color CpuColor  = Color.FromArgb(0,  210, 255);
@@ -132,10 +148,41 @@ internal sealed class PerformanceMonitorForm : Form
 
         InitCounters();
 
-        _timer = new System.Windows.Forms.Timer { Interval = 450 };
+        // 700 ms keeps the gauges responsive without painting at near-15 fps. Custom-painted gauges
+        // with glow/gradient passes are surprisingly expensive — at 450 ms they kept the UI thread
+        // busy continuously while still smooth at 700 ms.
+        _timer = new System.Windows.Forms.Timer { Interval = 700 };
         _timer.Tick += (_, _) => Tick();
         _timer.Start();
         Tick();
+    }
+
+    /// <summary>
+    /// Pause the gauge refresh timer while the window is being moved or resized; resume on exit.
+    /// </summary>
+    protected override void WndProc(ref Message m)
+    {
+        switch (m.Msg)
+        {
+            case WM_ENTERSIZEMOVE:
+                if (!_isInSizeMove)
+                {
+                    _isInSizeMove = true;
+                    _timerWasRunning = _timer is { Enabled: true };
+                    _timer?.Stop();
+                }
+                break;
+
+            case WM_EXITSIZEMOVE:
+                if (_isInSizeMove)
+                {
+                    _isInSizeMove = false;
+                    if (_timerWasRunning) _timer?.Start();
+                }
+                break;
+        }
+
+        base.WndProc(ref m);
     }
 
     private void InitCounters()
@@ -235,20 +282,39 @@ internal sealed class PerformanceMonitorForm : Form
 
     private void UpdateDetails(float cpu, long usedMem, long totalMem, long availMem, float disk, float gpu)
     {
+        var now = DateTime.UtcNow;
+        if (now - _lastDetailsRefresh < DetailsRefreshInterval)
+            return;
+        _lastDetailsRefresh = now;
+
         var usedGB  = usedMem  / 1073741824.0;
         var totalGB = totalMem / 1073741824.0;
         var availGB = availMem / 1073741824.0;
         var ramPct  = totalMem > 0 ? usedMem * 100.0 / totalMem : 0;
         var uptime  = TimeSpan.FromMilliseconds(Environment.TickCount64);
 
-        var drives = new System.Text.StringBuilder();
-        foreach (var d in DriveInfo.GetDrives())
+        // DriveInfo.GetDrives() touches every mounted volume (including spun-down or network ones)
+        // which can take hundreds of milliseconds. Cache the rendered block for 10 s.
+        if (now - _lastDrivesRefresh >= DrivesRefreshInterval || string.IsNullOrEmpty(_cachedDrivesBlock))
         {
-            if (!d.IsReady) continue;
-            var free = d.TotalFreeSpace / 1073741824.0;
-            var tot  = d.TotalSize      / 1073741824.0;
-            var pct  = (int)((1.0 - (double)d.TotalFreeSpace / d.TotalSize) * 100);
-            drives.AppendLine($"  {d.Name,-6} {pct,3}%  [{free:F0} GB boş / {tot:F0} GB]");
+            var drives = new System.Text.StringBuilder();
+            try
+            {
+                foreach (var d in DriveInfo.GetDrives())
+                {
+                    if (!d.IsReady) continue;
+                    var free = d.TotalFreeSpace / 1073741824.0;
+                    var tot  = d.TotalSize      / 1073741824.0;
+                    var pct  = (int)((1.0 - (double)d.TotalFreeSpace / d.TotalSize) * 100);
+                    drives.AppendLine($"  {d.Name,-6} {pct,3}%  [{free:F0} GB boş / {tot:F0} GB]");
+                }
+            }
+            catch
+            {
+                // If a removable/network drive throws, keep whatever we have so far
+            }
+            _cachedDrivesBlock = drives.ToString();
+            _lastDrivesRefresh = now;
         }
 
         var newText =
@@ -264,7 +330,7 @@ internal sealed class PerformanceMonitorForm : Form
             $"  │  Sistem Uptime   :  {uptime.Days}g {uptime.Hours:D2}:{uptime.Minutes:D2}:{uptime.Seconds:D2}\r\n" +
             $"  │  .NET Sürümü     :  {Environment.Version}\r\n" +
             $"  ├────────────────────────────────────────────────────────────────────────────┤\r\n" +
-            $"  │  Sürücüler:\r\n{drives}" +
+            $"  │  Sürücüler:\r\n{_cachedDrivesBlock}" +
             $"  └────────────────────────────────────────────────────────────────────────────┘\r\n" +
             $"    Güncelleme: {DateTime.Now:HH:mm:ss}";
 
@@ -345,8 +411,15 @@ internal sealed class PerformanceMonitorForm : Form
         private readonly Color  _color;
         private readonly string _label;
         private float  _smooth;
+        private float  _lastDrawnSmooth = -1f;
         private string _mainText = "0%";
         private string _subText  = "";
+        private string _lastDrawnMainText = string.Empty;
+        private string _lastDrawnSubText = string.Empty;
+
+        // Cached dot-grid background bitmap; rebuilt only when the panel size changes
+        private Bitmap? _backgroundCache;
+        private Size _backgroundCacheSize = Size.Empty;
 
         private static readonly Font LabelFont = new("Consolas", 11, FontStyle.Bold);
         private static readonly Font SubFont   = new("Consolas",  8);
@@ -359,25 +432,79 @@ internal sealed class PerformanceMonitorForm : Form
             _color         = color;
             DoubleBuffered = true;
             BackColor      = Color.FromArgb(10, 12, 22);
+            SetStyle(ControlStyles.OptimizedDoubleBuffer
+                   | ControlStyles.AllPaintingInWmPaint
+                   | ControlStyles.UserPaint, true);
+            UpdateStyles();
         }
 
         public void SetValue(float value, string mainText, string subText)
         {
             var clamped = Math.Max(0, Math.Min(100, value));
-            _smooth    += (clamped - _smooth) * 0.35f;
-            _mainText   = mainText;
-            _subText    = subText;
-            Invalidate();
+            var newSmooth = _smooth + (clamped - _smooth) * 0.35f;
+
+            // Skip the repaint entirely when nothing visible would change.
+            // Snap to the final value once we're within rounding distance to stop the
+            // perpetual easing animation that otherwise repaints forever.
+            var diff = Math.Abs(newSmooth - _lastDrawnSmooth);
+            if (diff < 0.05f) newSmooth = clamped;
+
+            var willRepaint =
+                Math.Abs(newSmooth - _lastDrawnSmooth) >= 0.05f
+                || !string.Equals(mainText, _lastDrawnMainText, StringComparison.Ordinal)
+                || !string.Equals(subText, _lastDrawnSubText, StringComparison.Ordinal);
+
+            _smooth   = newSmooth;
+            _mainText = mainText;
+            _subText  = subText;
+
+            if (willRepaint) Invalidate();
         }
 
         protected override void OnPaintBackground(PaintEventArgs e)
         {
-            base.OnPaintBackground(e);
-            var g = e.Graphics;
-            using var dotBrush = new SolidBrush(Color.FromArgb(22, 140, 200, 255));
-            for (var x = DotSpacing / 2; x < Width; x += DotSpacing)
-                for (var y = DotSpacing / 2; y < Height; y += DotSpacing)
-                    g.FillEllipse(dotBrush, x - 1, y - 1, 2, 2);
+            if (Width <= 0 || Height <= 0)
+            {
+                base.OnPaintBackground(e);
+                return;
+            }
+
+            // Rebuild the dot-grid cache only when the panel size changes
+            if (_backgroundCache is null || _backgroundCacheSize != Size)
+            {
+                _backgroundCache?.Dispose();
+                _backgroundCache = new Bitmap(Width, Height);
+                using (var bg = Graphics.FromImage(_backgroundCache))
+                {
+                    bg.Clear(BackColor);
+                    using var dotBrush = new SolidBrush(Color.FromArgb(22, 140, 200, 255));
+                    for (var x = DotSpacing / 2; x < Width; x += DotSpacing)
+                        for (var y = DotSpacing / 2; y < Height; y += DotSpacing)
+                            bg.FillEllipse(dotBrush, x - 1, y - 1, 2, 2);
+                }
+                _backgroundCacheSize = Size;
+            }
+
+            e.Graphics.DrawImageUnscaled(_backgroundCache, 0, 0);
+        }
+
+        protected override void OnResize(EventArgs e)
+        {
+            base.OnResize(e);
+            // Invalidate the cached background so it is regenerated at the new size
+            _backgroundCache?.Dispose();
+            _backgroundCache = null;
+            _backgroundCacheSize = Size.Empty;
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _backgroundCache?.Dispose();
+                _backgroundCache = null;
+            }
+            base.Dispose(disposing);
         }
 
         protected override void OnPaint(PaintEventArgs e)
@@ -476,6 +603,11 @@ internal sealed class PerformanceMonitorForm : Form
                     _color, LinearGradientMode.Horizontal);
                 g.FillRectangle(gr, barX, barY, fw, 5);
             }
+
+            // Record what was actually drawn so SetValue can skip redundant repaints
+            _lastDrawnSmooth = _smooth;
+            _lastDrawnMainText = _mainText;
+            _lastDrawnSubText = _subText;
         }
 
         private void DrawTickLabel(Graphics g, string text, float angleDeg, float cx, float cy, float r)
