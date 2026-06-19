@@ -312,6 +312,7 @@ internal partial class MainMDIForm : Form
         var monitoring = new ToolStripMenuItem("📊 İzleme");
         monitoring.DropDownItems.Add(CreateMenuItem("Sistem Bilgisi", () => ShowMdiChild(new SystemInfoForm())));
         monitoring.DropDownItems.Add(CreateMenuItem("Performance Monitor", () => ShowMdiChild(new PerformanceMonitorForm())));
+        monitoring.DropDownItems.Add(CreateMenuItem("NoSleep Guardian", () => ShowMdiChild(new NoSleepGuardianForm())));
         monitoring.DropDownItems.Add(CreateMenuItem("Bağlantı Monitörü", () =>
         {
             var existing = Application.OpenForms.OfType<ConnectionMonitorForm>().FirstOrDefault();
@@ -671,6 +672,7 @@ internal partial class MainMDIForm : Form
         [nameof(TodoForm)] = () => new TodoForm(),
         [nameof(SystemInfoForm)] = () => new SystemInfoForm(),
         [nameof(PerformanceMonitorForm)] = () => new PerformanceMonitorForm(),
+        [nameof(NoSleepGuardianForm)] = () => new NoSleepGuardianForm(),
         [nameof(StartupManagerForm)] = () => new StartupManagerForm(),
         [nameof(DiskCleanerForm)] = () => new DiskCleanerForm(),
         [nameof(HostsFileEditorForm)] = () => new HostsFileEditorForm(),
@@ -720,6 +722,7 @@ internal partial class MainMDIForm : Form
             new("Pano Geçmişi", "Pano", "clipboard pano geçmiş", ShowClipboardHistory),
             Open("Sistem Bilgisi", "Sistem", "system info hardware", nameof(SystemInfoForm)),
             Open("Performance Monitor", "Sistem", "cpu ram disk monitor performans", nameof(PerformanceMonitorForm)),
+            Open("NoSleep Guardian", "Sistem", "nosleep guardian sleep power heartbeat bildirim uyku güç", nameof(NoSleepGuardianForm)),
             Open("Startup Manager", "Sistem", "başlangıç startup process", nameof(StartupManagerForm)),
             Open("Disk Temizleyici", "Sistem", "disk cleaner temp temizle", nameof(DiskCleanerForm)),
             Open("Speed Test", "Ağ", "internet speed hız ping", nameof(SpeedTestForm)),
