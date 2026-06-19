@@ -18,7 +18,7 @@ internal sealed class NoSleepGuardianForm : Form
     private readonly System.Windows.Forms.Timer _heartbeatTimer = new();
     private readonly System.Windows.Forms.Timer _countdownTimer = new() { Interval = 1000 };
 
-    private readonly Button _btnGuardToggle = new();
+    private readonly CheckBox _toggleGuard = new();
     private readonly Button _btnApplyPersistent = new();
     private readonly Button _btnRestore = new();
     private readonly Button _btnTestNotification = new();
@@ -26,6 +26,8 @@ internal sealed class NoSleepGuardianForm : Form
     private readonly Button _btnDimScreens = new();
     private readonly NumericUpDown _numDurationDays = new();
     private readonly Label _lblCountdown = new();
+    private readonly Label _lblGuardBadge = new();
+    private readonly Label _lblPersistentBadge = new();
 
     private readonly Label _lblGuard = new();
     private readonly Label _lblPower = new();
@@ -43,6 +45,7 @@ internal sealed class NoSleepGuardianForm : Form
     private bool _refreshInProgress;
     private bool _heartbeatInProgress;
     private bool _isBusy;
+    private bool _lastPersistentNoSleep;
     private DateTime? _guardEndsAtUtc;
 
     public NoSleepGuardianForm()
@@ -74,19 +77,13 @@ internal sealed class NoSleepGuardianForm : Form
             ColumnCount = 1,
             RowCount = 5,
         };
-        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 44));
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 52));
         root.RowStyles.Add(new RowStyle(SizeType.Absolute, 132));
         root.RowStyles.Add(new RowStyle(SizeType.Absolute, 304));
         root.RowStyles.Add(new RowStyle(SizeType.Absolute, 38));
         root.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
 
-        var title = new Label
-        {
-            Text = "NoSleep Guardian",
-            Dock = DockStyle.Fill,
-            Font = new Font("Consolas", 15, FontStyle.Bold),
-            TextAlign = ContentAlignment.MiddleLeft,
-        };
+        var header = BuildHeaderPanel();
 
         var controls = BuildControlsPanel();
         var statusGrid = BuildStatusGrid();
@@ -101,12 +98,43 @@ internal sealed class NoSleepGuardianForm : Form
         _txtEvents.ScrollBars = ScrollBars.Vertical;
         _txtEvents.BorderStyle = BorderStyle.FixedSingle;
 
-        root.Controls.Add(title, 0, 0);
+        root.Controls.Add(header, 0, 0);
         root.Controls.Add(controls, 0, 1);
         root.Controls.Add(statusGrid, 0, 2);
         root.Controls.Add(_lblActionStatus, 0, 3);
         root.Controls.Add(_txtEvents, 0, 4);
         Controls.Add(root);
+    }
+
+    private TableLayoutPanel BuildHeaderPanel()
+    {
+        var header = new TableLayoutPanel
+        {
+            Dock = DockStyle.Fill,
+            ColumnCount = 3,
+            RowCount = 1,
+        };
+        header.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 260));
+        header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 240));
+
+        var title = new Label
+        {
+            Text = "NoSleep Guardian",
+            Dock = DockStyle.Fill,
+            Font = new Font("Consolas", 15, FontStyle.Bold),
+            TextAlign = ContentAlignment.MiddleLeft,
+        };
+
+        ConfigureBadge(_lblGuardBadge);
+        ConfigureBadge(_lblPersistentBadge);
+        _lblGuardBadge.Text = "NoSleep Guard: KAPALI";
+        _lblPersistentBadge.Text = "Kalıcı Mod: KAPALI";
+
+        header.Controls.Add(title, 0, 0);
+        header.Controls.Add(_lblGuardBadge, 1, 0);
+        header.Controls.Add(_lblPersistentBadge, 2, 0);
+        return header;
     }
 
     private TableLayoutPanel BuildControlsPanel()
@@ -127,7 +155,7 @@ internal sealed class NoSleepGuardianForm : Form
             WrapContents = true,
         };
 
-        ConfigureButton(_btnGuardToggle, "Guard: OFF", 150);
+        ConfigureToggle(_toggleGuard, "NoSleep Guard: KAPALI", 230);
         ConfigureButton(_btnApplyPersistent, "Kalıcı uykusuz mod uygula", 230);
         ConfigureButton(_btnRestore, "Ayarları geri al", 190);
         ConfigureButton(_btnTestNotification, "Test bildirimi gönder", 190);
@@ -135,7 +163,7 @@ internal sealed class NoSleepGuardianForm : Form
         ConfigureButton(_btnDimScreens, "Ekranları karart", 160);
         _btnDimScreens.Visible = false;
         buttons.Controls.AddRange([
-            _btnGuardToggle,
+            _toggleGuard,
             _btnApplyPersistent,
             _btnRestore,
             _btnTestNotification,
@@ -209,6 +237,30 @@ internal sealed class NoSleepGuardianForm : Form
         button.Cursor = Cursors.Hand;
     }
 
+    private static void ConfigureToggle(CheckBox toggle, string text, int width)
+    {
+        toggle.Text = text;
+        toggle.Appearance = Appearance.Button;
+        toggle.Width = width;
+        toggle.Height = 34;
+        toggle.Margin = new Padding(0, 4, 8, 4);
+        toggle.Cursor = Cursors.Hand;
+        toggle.TextAlign = ContentAlignment.MiddleCenter;
+        toggle.FlatStyle = FlatStyle.Flat;
+        toggle.UseVisualStyleBackColor = false;
+    }
+
+    private static void ConfigureBadge(Label label)
+    {
+        label.Dock = DockStyle.Fill;
+        label.AutoSize = false;
+        label.TextAlign = ContentAlignment.MiddleCenter;
+        label.Margin = new Padding(8, 6, 0, 8);
+        label.Padding = new Padding(8, 0, 8, 0);
+        label.Font = new Font("Consolas", 10, FontStyle.Bold);
+        label.BorderStyle = BorderStyle.FixedSingle;
+    }
+
     private static void AddStatusRow(TableLayoutPanel grid, int row, string name, Label valueLabel)
     {
         grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 29));
@@ -234,7 +286,7 @@ internal sealed class NoSleepGuardianForm : Form
 
     private void WireEvents()
     {
-        _btnGuardToggle.Click += async (_, _) => await ToggleGuardAsync();
+        _toggleGuard.Click += async (_, _) => await ToggleGuardAsync();
         _btnApplyPersistent.Click += async (_, _) => await ApplyPersistentModeAsync();
         _btnRestore.Click += async (_, _) => await RestoreSettingsAsync();
         _btnTestNotification.Click += async (_, _) => await SendTestNotificationAsync();
@@ -274,6 +326,7 @@ internal sealed class NoSleepGuardianForm : Form
 
         if (!_powerGuardService.Start())
         {
+            UpdateGuardToggleAppearance(active: false);
             SetActionStatus("Guard başlatılamadı. Log dosyasını kontrol edin.", isError: true);
             return;
         }
@@ -513,7 +566,10 @@ internal sealed class NoSleepGuardianForm : Form
         SetValue(_lblRemoteConfig, _configService.GetMaskedRemoteSummary(), ValueState.Neutral);
         UpdateGuardToggleAppearance(snapshot.GuardActive);
         UpdateCountdownDisplay();
-        SetDimScreensButtonVisible(IsAllProfilesNoSleep(snapshot.PowerSettings));
+        var persistentNoSleep = IsAllProfilesNoSleep(snapshot.PowerSettings);
+        _lastPersistentNoSleep = persistentNoSleep;
+        UpdatePersistentBadge(persistentNoSleep);
+        SetDimScreensButtonVisible(persistentNoSleep);
     }
 
     private bool EnsureAdministrator()
@@ -555,17 +611,29 @@ internal sealed class NoSleepGuardianForm : Form
         _btnRestore.Enabled = !busy;
         _btnTestNotification.Enabled = !busy;
         _btnRefresh.Enabled = !busy;
-        _btnGuardToggle.Enabled = !busy;
+        _toggleGuard.Enabled = !busy;
         _btnDimScreens.Enabled = !busy;
         Cursor = busy ? Cursors.WaitCursor : Cursors.Default;
     }
 
     private void UpdateGuardToggleAppearance(bool active)
     {
-        _btnGuardToggle.Text = active ? "Guard: ON" : "Guard: OFF";
-        _btnGuardToggle.BackColor = active ? Color.FromArgb(70, 24, 24) : UITheme.Palette.Surface2;
-        _btnGuardToggle.ForeColor = active ? Color.White : UITheme.Palette.Text;
-        _btnGuardToggle.FlatAppearance.BorderColor = active ? UITheme.Palette.Negative : UITheme.Palette.Accent;
+        _toggleGuard.Checked = active;
+        _toggleGuard.Text = active ? "NoSleep Guard: AÇIK" : "NoSleep Guard: KAPALI";
+        _toggleGuard.BackColor = active ? Color.FromArgb(24, 92, 42) : Color.FromArgb(72, 24, 24);
+        _toggleGuard.ForeColor = Color.White;
+        _toggleGuard.FlatAppearance.BorderColor = active ? UITheme.Palette.Positive : UITheme.Palette.Negative;
+
+        _lblGuardBadge.Text = active ? "NoSleep Guard: AÇIK" : "NoSleep Guard: KAPALI";
+        _lblGuardBadge.BackColor = active ? Color.FromArgb(12, 70, 30) : Color.FromArgb(58, 16, 16);
+        _lblGuardBadge.ForeColor = Color.White;
+    }
+
+    private void UpdatePersistentBadge(bool active)
+    {
+        _lblPersistentBadge.Text = active ? "Kalıcı Mod: AÇIK" : "Kalıcı Mod: KAPALI";
+        _lblPersistentBadge.BackColor = active ? Color.FromArgb(12, 70, 30) : Color.FromArgb(58, 16, 16);
+        _lblPersistentBadge.ForeColor = Color.White;
     }
 
     private void UpdateCountdownDisplay()
@@ -621,9 +689,10 @@ internal sealed class NoSleepGuardianForm : Form
         _txtEvents.BackColor = p.Surface;
         _txtEvents.ForeColor = p.Text;
         _lblActionStatus.ForeColor = p.Muted;
-        foreach (var button in new[] { _btnGuardToggle, _btnApplyPersistent, _btnRestore, _btnTestNotification, _btnRefresh, _btnDimScreens })
-            UITheme.Apply(button);
+        foreach (Control control in new Control[] { _toggleGuard, _btnApplyPersistent, _btnRestore, _btnTestNotification, _btnRefresh, _btnDimScreens })
+            UITheme.Apply(control);
         UpdateGuardToggleAppearance(_powerGuardService.IsActive);
+        UpdatePersistentBadge(_lastPersistentNoSleep);
         _lblCountdown.ForeColor = p.Text;
     }
 
