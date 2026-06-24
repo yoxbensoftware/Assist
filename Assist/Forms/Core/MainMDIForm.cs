@@ -54,8 +54,10 @@ internal partial class MainMDIForm : Form
     private System.Windows.Forms.Timer? _mediumTimer;  // 30s — disk, battery, uptime, ping, app stats
     private System.Windows.Forms.Timer? _slowTimer;    // 5min — weather, currency, crypto, IP
     private bool _isClosing;
+    private int _fastRefreshInProgress;
     private int _mediumRefreshInProgress;
     private int _slowRefreshInProgress;
+    private bool _ozLauncherInProgress;
 
     // Current-process monitor
     private readonly Process _selfProcess = Process.GetCurrentProcess();
@@ -181,7 +183,7 @@ internal partial class MainMDIForm : Form
                     // Single catch-up refresh so the dashboard looks current immediately after the drag ends
                     if (!_isClosing && !IsDisposed && AppSettingsService.Current.DashboardEnabled)
                     {
-                        try { RefreshFast(); }
+                        try { _ = RunFastRefreshAsync(); }
                         catch { /* refresh on resume is best-effort */ }
                     }
                 }
@@ -361,8 +363,8 @@ internal partial class MainMDIForm : Form
         // ── 📰 Haberler ──────────────────────────────
         var news = new ToolStripMenuItem("📰 Haberler");
         news.DropDownItems.Add(CreateAsyncMenuItem("TR - Top 30", () => ShowNewsAsync(() => new NewsService().GetTopTrAsync(30), "TR - En Önemli Haberler (Top 30)")));
-        news.DropDownItems.Add(CreateAsyncMenuItem("Global - Top 30 (Türkçe)", () => ShowNewsAsync(() => new NewsService().GetTopGlobalAsync(30), "Global - Top 30 (Türkçe)")));
-        news.DropDownItems.Add(CreateAsyncMenuItem("Teknoloji - Top 30", () => ShowNewsAsync(() => new NewsService().GetTopTechAsync(30), "Teknoloji - Top 30 (Türkçe)")));
+        news.DropDownItems.Add(CreateAsyncMenuItem("Global - Top 30 (Türkçe)", () => ShowNewsAsync(() => new NewsService().GetTopGlobalAsync(30), "Global - Top 30 (Türkçe)", translateToTurkish: true)));
+        news.DropDownItems.Add(CreateAsyncMenuItem("Teknoloji - Top 30", () => ShowNewsAsync(() => new NewsService().GetTopTechAsync(30), "Teknoloji - Top 30 (Türkçe)", translateToTurkish: true)));
         menu.DropDownItems.Add(news);
 
         // ── 📚 Sözlükler & Referans ──────────────────
@@ -654,7 +656,7 @@ internal partial class MainMDIForm : Form
 
         _dashboardPanel.Visible = true;
         StartDashboardTimers();
-        RefreshFast();
+        _ = RunFastRefreshAsync();
         _ = RunMediumRefreshAsync();
         _ = RunSlowRefreshAsync();
     }
@@ -904,20 +906,18 @@ internal partial class MainMDIForm : Form
         child.Show();
     }
 
-    private async Task ShowNewsAsync(Func<Task<List<NewsItem>>> fetcher, string title, bool openNormal = false)
+    private async Task ShowNewsAsync(
+        Func<Task<List<NewsItem>>> fetcher,
+        string title,
+        bool openNormal = false,
+        bool translateToTurkish = false)
     {
         await Loading.RunAsync(this, async () =>
         {
             var items = await fetcher();
 
-            foreach (var item in items)
-            {
-                item.Title = await TranslationService.TranslateAsync(item.Title, "tr");
-                if (!string.IsNullOrEmpty(item.Summary))
-                {
-                    item.Summary = await TranslationService.TranslateAsync(item.Summary, "tr");
-                }
-            }
+            if (translateToTurkish)
+                await TranslateNewsTitlesAsync(items);
 
             // Reuse existing NewsForm if open
             var existing = MdiChildren.OfType<NewsForm>().FirstOrDefault();
@@ -936,6 +936,31 @@ internal partial class MainMDIForm : Form
             if (openNormal) ShowMdiChildNormal(newsForm);
             else ShowMdiChild(newsForm);
         }, "Haberler yükleniyor...");
+    }
+
+    private static async Task TranslateNewsTitlesAsync(IReadOnlyList<NewsItem> items)
+    {
+        using var throttler = new SemaphoreSlim(3);
+        var tasks = items
+            .Where(item => !string.IsNullOrWhiteSpace(item.Title))
+            .Select(async item =>
+            {
+                await throttler.WaitAsync().ConfigureAwait(false);
+                try
+                {
+                    item.Title = await TranslationService.TranslateAsync(item.Title, "tr").ConfigureAwait(false);
+                }
+                catch
+                {
+                    // Keep the original title when translation fails.
+                }
+                finally
+                {
+                    throttler.Release();
+                }
+            });
+
+        await Task.WhenAll(tasks).ConfigureAwait(false);
     }
 
     private async Task RunDnsResetAsync()
@@ -1218,7 +1243,7 @@ internal partial class MainMDIForm : Form
         Controls.Add(_dashboardPanel);
 
         _fastTimer = new System.Windows.Forms.Timer { Interval = (int)AppSettingsService.FastDashboardInterval.TotalMilliseconds };
-        _fastTimer.Tick += (_, _) => RefreshFast();
+        _fastTimer.Tick += async (_, _) => await RunFastRefreshAsync();
 
         _mediumTimer = new System.Windows.Forms.Timer { Interval = (int)AppSettingsService.MediumDashboardInterval.TotalMilliseconds };
         _mediumTimer.Tick += async (_, _) => await RunMediumRefreshAsync();
@@ -1229,7 +1254,7 @@ internal partial class MainMDIForm : Form
         StartDashboardTimers();
 
         // Initial load
-        RefreshFast();
+        _ = RunFastRefreshAsync();
         _ = RunMediumRefreshAsync();
         _ = RunSlowRefreshAsync();
         ApplyDashboardTheme();
@@ -1356,37 +1381,63 @@ internal partial class MainMDIForm : Form
         }
     }
 
-    /// <summary>Clock + CPU/RAM — every 2 seconds.</summary>
-    private void RefreshFast()
+    private async Task RunFastRefreshAsync()
     {
         if (_isClosing || IsDisposed || !AppSettingsService.Current.DashboardEnabled) return;
-        // Belt-and-braces: even if WndProc somehow misses pausing the timer (e.g. the tick was
-        // already queued before the move began), do not run any of the WMI/process work mid-drag.
         if (_isInSizeMove) return;
+        if (Interlocked.Exchange(ref _fastRefreshInProgress, 1) == 1)
+            return;
 
-        if (_lblClock is not null)
+        try
         {
-            var clockText = $"⏰ {DateTime.Now:HH:mm:ss}  📅 {DateTime.Now:dddd, dd MMMM yyyy}";
-            if (_lblClock.Text != clockText)
-                _lblClock.Text = clockText;
-        }
+            UpdateClockLabel();
 
-        if (_lblCpuRam is not null)
+            var includeProcessBar = _lblProcBar is not null;
+            var snapshot = await Task.Run(() => CaptureFastDashboardSnapshot(includeProcessBar)).ConfigureAwait(false);
+
+            PostToUi(() =>
+            {
+                if (_lblCpuRam is not null && _lblCpuRam.Text != snapshot.CpuRamText)
+                    _lblCpuRam.Text = snapshot.CpuRamText;
+
+                if (_lblProcBar is not null &&
+                    !string.IsNullOrWhiteSpace(snapshot.ProcessBarText) &&
+                    _lblProcBar.Text != snapshot.ProcessBarText)
+                {
+                    _lblProcBar.Text = snapshot.ProcessBarText;
+                }
+            });
+        }
+        catch (ObjectDisposedException) { }
+        catch (Exception ex)
         {
-            var cpuRamText = DashboardService.GetCpuRam();
-            if (_lblCpuRam.Text != cpuRamText)
-                _lblCpuRam.Text = cpuRamText;
+            System.Diagnostics.Debug.WriteLine($"[Dashboard] Fast refresh failed: {ex.Message}");
         }
-
-        RefreshProcessBar();
+        finally
+        {
+            Volatile.Write(ref _fastRefreshInProgress, 0);
+        }
     }
 
-    private void RefreshProcessBar()
+    private void UpdateClockLabel()
     {
-        if (_lblProcBar is null || !AppSettingsService.Current.DashboardEnabled) return;
-        // Skip the heavier samplers while the user is moving/sizing the window — keeps the
-        // drag loop responsive even though the timers should already be paused.
-        if (_isInSizeMove) return;
+        if (_lblClock is null)
+            return;
+
+        var clockText = $"⏰ {DateTime.Now:HH:mm:ss}  📅 {DateTime.Now:dddd, dd MMMM yyyy}";
+        if (_lblClock.Text != clockText)
+            _lblClock.Text = clockText;
+    }
+
+    private FastDashboardSnapshot CaptureFastDashboardSnapshot(bool includeProcessBar)
+    {
+        var cpuRamText = DashboardService.GetCpuRam();
+        var processBarText = includeProcessBar ? CaptureProcessBarText() : string.Empty;
+        return new FastDashboardSnapshot(cpuRamText, processBarText);
+    }
+
+    private string CaptureProcessBarText()
+    {
         try
         {
             _selfProcess.Refresh();
@@ -1439,14 +1490,17 @@ internal partial class MainMDIForm : Form
                 $"  |  \ud83d\udda5 CPU: {cpu:F1}%" +
                 $"  |  \ud83d\udd00 Threads: {_cachedThreadCount}" +
                 $"  |  \ud83c\udf10 \u2193 {_cachedRxKbPerSec:F0} KB/s  \u2191 {_cachedTxKbPerSec:F0} KB/s";
-            if (_lblProcBar.Text != procText)
-                _lblProcBar.Text = procText;
+            return procText;
         }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"[ProcBar] Refresh failed: {ex.Message}");
+            return string.Empty;
         }
     }
+
+    private readonly record struct FastDashboardSnapshot(string CpuRamText, string ProcessBarText);
+
     private async Task RefreshMediumAsync()
     {
         if (_isClosing || IsDisposed || !AppSettingsService.Current.DashboardEnabled) return;
@@ -1498,13 +1552,16 @@ internal partial class MainMDIForm : Form
             var cryptoTask = DashboardService.GetCryptoAsync();
 
             await Task.WhenAll(weatherTask, currencyTask, cryptoTask).ConfigureAwait(false);
+            var weather = await weatherTask.ConfigureAwait(false);
+            var currency = await currencyTask.ConfigureAwait(false);
+            var crypto = await cryptoTask.ConfigureAwait(false);
 
             void Update()
             {
                 if (_lblIpInfo is not null) _lblIpInfo.Text = ipResult;
-                if (_lblWeather is not null) _lblWeather.Text = weatherTask.Result;
-                if (_lblCurrency is not null) _lblCurrency.Text = currencyTask.Result;
-                if (_lblCrypto is not null) _lblCrypto.Text = cryptoTask.Result;
+                if (_lblWeather is not null) _lblWeather.Text = weather;
+                if (_lblCurrency is not null) _lblCurrency.Text = currency;
+                if (_lblCrypto is not null) _lblCrypto.Text = crypto;
             }
 
             PostToUi(Update);
@@ -1611,19 +1668,43 @@ internal partial class MainMDIForm : Form
 
     private async void OnOzClick()
     {
-        await ShowNewsAsync(() => new NewsService().GetTopTrAsync(30), "TR - En Önemli Haberler (Top 30)", openNormal: true);
+        if (_ozLauncherInProgress)
+            return;
 
-        // ── MDI çocukları — Normal (Maximized değil) açılır, sonra tile edilir ─
-        ShowMdiChildNormal(new PerformanceMonitorForm());
-        ShowMdiChildNormal(new TodoForm());
+        _ozLauncherInProgress = true;
+        try
+        {
+            ShowMdiChildNormal(new PerformanceMonitorForm());
+            ShowMdiChildNormal(new TodoForm());
+            TileMdiChildrenSoon();
 
-        // Formlar tam göründükten sonra Dikey Döşe uygula
+            await ShowNewsAsync(
+                () => new NewsService().GetTopTrAsync(15),
+                "TR - En Önemli Haberler",
+                openNormal: true);
+
+            TileMdiChildrenSoon();
+
+            if (!Application.OpenForms.OfType<ConnectionMonitorForm>().Any())
+                new ConnectionMonitorForm().Show();
+
+            if (!Application.OpenForms.OfType<WiggleMouseForm>().Any())
+                new WiggleMouseForm().Show();
+        }
+        finally
+        {
+            _ozLauncherInProgress = false;
+        }
+    }
+
+    private void TileMdiChildrenSoon()
+    {
         BeginInvoke(() =>
         {
             foreach (var child in MdiChildren)
                 child.WindowState = FormWindowState.Normal;
 
-            var tileTimer = new System.Windows.Forms.Timer { Interval = 180 };
+            var tileTimer = new System.Windows.Forms.Timer { Interval = 160 };
             tileTimer.Tick += (_, _) =>
             {
                 tileTimer.Stop();
@@ -1632,13 +1713,6 @@ internal partial class MainMDIForm : Form
             };
             tileTimer.Start();
         });
-
-        // ── Bağımsız pencereler ───────────────────────────────────────────
-        if (!Application.OpenForms.OfType<ConnectionMonitorForm>().Any())
-            new ConnectionMonitorForm().Show();
-
-        if (!Application.OpenForms.OfType<WiggleMouseForm>().Any())
-            new WiggleMouseForm().Show();
     }
 
     /// <summary>MDI child'ı Normal (tile'a uygun) boyutta açar, zaten açıksa aktive eder.</summary>

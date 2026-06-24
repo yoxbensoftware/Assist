@@ -77,8 +77,8 @@ internal sealed class NoSleepGuardianForm : Form
             ColumnCount = 1,
             RowCount = 5,
         };
-        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 52));
-        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 132));
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 82));
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 140));
         root.RowStyles.Add(new RowStyle(SizeType.Absolute, 304));
         root.RowStyles.Add(new RowStyle(SizeType.Absolute, 38));
         root.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
@@ -111,12 +111,11 @@ internal sealed class NoSleepGuardianForm : Form
         var header = new TableLayoutPanel
         {
             Dock = DockStyle.Fill,
-            ColumnCount = 3,
-            RowCount = 1,
+            ColumnCount = 1,
+            RowCount = 2,
         };
-        header.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-        header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 260));
-        header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 240));
+        header.RowStyles.Add(new RowStyle(SizeType.Absolute, 42));
+        header.RowStyles.Add(new RowStyle(SizeType.Absolute, 36));
 
         var title = new Label
         {
@@ -126,14 +125,24 @@ internal sealed class NoSleepGuardianForm : Form
             TextAlign = ContentAlignment.MiddleLeft,
         };
 
-        ConfigureBadge(_lblGuardBadge);
-        ConfigureBadge(_lblPersistentBadge);
+        var badges = new FlowLayoutPanel
+        {
+            Dock = DockStyle.Fill,
+            FlowDirection = FlowDirection.LeftToRight,
+            WrapContents = false,
+            Margin = Padding.Empty,
+            Padding = Padding.Empty,
+        };
+
+        ConfigureBadge(_lblGuardBadge, 310);
+        ConfigureBadge(_lblPersistentBadge, 260);
         _lblGuardBadge.Text = "NoSleep Guard: KAPALI";
         _lblPersistentBadge.Text = "Kalıcı Mod: KAPALI";
+        badges.Controls.Add(_lblGuardBadge);
+        badges.Controls.Add(_lblPersistentBadge);
 
         header.Controls.Add(title, 0, 0);
-        header.Controls.Add(_lblGuardBadge, 1, 0);
-        header.Controls.Add(_lblPersistentBadge, 2, 0);
+        header.Controls.Add(badges, 0, 1);
         return header;
     }
 
@@ -145,30 +154,35 @@ internal sealed class NoSleepGuardianForm : Form
             ColumnCount = 1,
             RowCount = 2,
         };
-        panel.RowStyles.Add(new RowStyle(SizeType.Absolute, 86));
+        panel.RowStyles.Add(new RowStyle(SizeType.Absolute, 92));
         panel.RowStyles.Add(new RowStyle(SizeType.Absolute, 42));
 
-        var buttons = new FlowLayoutPanel
+        var buttons = new TableLayoutPanel
         {
             Dock = DockStyle.Fill,
-            FlowDirection = FlowDirection.LeftToRight,
-            WrapContents = true,
+            ColumnCount = 3,
+            RowCount = 2,
+            Margin = Padding.Empty,
+            Padding = Padding.Empty,
         };
+        for (var column = 0; column < 3; column++)
+            buttons.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.333f));
+        buttons.RowStyles.Add(new RowStyle(SizeType.Absolute, 44));
+        buttons.RowStyles.Add(new RowStyle(SizeType.Absolute, 44));
 
-        ConfigureToggle(_toggleGuard, "NoSleep Guard: KAPALI", 230);
-        ConfigureButton(_btnApplyPersistent, "Kalıcı uykusuz mod uygula", 230);
-        ConfigureButton(_btnRestore, "Ayarları geri al", 190);
-        ConfigureButton(_btnTestNotification, "Test bildirimi gönder", 190);
-        ConfigureButton(_btnRefresh, "Durumu yenile", 140);
-        ConfigureButton(_btnDimScreens, "Ekranları karart", 160);
+        ConfigureToggle(_toggleGuard, "NoSleep Guard: KAPALI");
+        ConfigureButton(_btnApplyPersistent, "Kalıcı uykusuz mod uygula");
+        ConfigureButton(_btnRestore, "Ayarları geri al");
+        ConfigureButton(_btnTestNotification, "Test bildirimi gönder");
+        ConfigureButton(_btnRefresh, "Durumu yenile");
+        ConfigureButton(_btnDimScreens, "Ekranları karart");
         _btnDimScreens.Visible = false;
-        buttons.Controls.AddRange([
-            _toggleGuard,
-            _btnApplyPersistent,
-            _btnRestore,
-            _btnTestNotification,
-            _btnRefresh,
-            _btnDimScreens]);
+        buttons.Controls.Add(_toggleGuard, 0, 0);
+        buttons.Controls.Add(_btnApplyPersistent, 1, 0);
+        buttons.Controls.Add(_btnRestore, 2, 0);
+        buttons.Controls.Add(_btnTestNotification, 0, 1);
+        buttons.Controls.Add(_btnRefresh, 1, 1);
+        buttons.Controls.Add(_btnDimScreens, 2, 1);
 
         var durationPanel = new FlowLayoutPanel
         {
@@ -228,36 +242,42 @@ internal sealed class NoSleepGuardianForm : Form
         return grid;
     }
 
-    private static void ConfigureButton(Button button, string text, int width)
+    private static void ConfigureButton(Button button, string text)
     {
         button.Text = text;
-        button.Width = width;
-        button.Height = 34;
-        button.Margin = new Padding(0, 4, 8, 4);
+        button.Dock = DockStyle.Fill;
+        button.Height = 36;
+        button.Margin = new Padding(4);
         button.Cursor = Cursors.Hand;
+        button.TextAlign = ContentAlignment.MiddleCenter;
+        button.AutoEllipsis = false;
+        button.Font = new Font("Consolas", 9, FontStyle.Bold);
     }
 
-    private static void ConfigureToggle(CheckBox toggle, string text, int width)
+    private static void ConfigureToggle(CheckBox toggle, string text)
     {
         toggle.Text = text;
         toggle.Appearance = Appearance.Button;
-        toggle.Width = width;
-        toggle.Height = 34;
-        toggle.Margin = new Padding(0, 4, 8, 4);
+        toggle.Dock = DockStyle.Fill;
+        toggle.Height = 36;
+        toggle.Margin = new Padding(4);
         toggle.Cursor = Cursors.Hand;
         toggle.TextAlign = ContentAlignment.MiddleCenter;
         toggle.FlatStyle = FlatStyle.Flat;
         toggle.UseVisualStyleBackColor = false;
+        toggle.AutoEllipsis = false;
+        toggle.Font = new Font("Consolas", 9, FontStyle.Bold);
     }
 
-    private static void ConfigureBadge(Label label)
+    private static void ConfigureBadge(Label label, int width)
     {
-        label.Dock = DockStyle.Fill;
         label.AutoSize = false;
+        label.Width = width;
+        label.Height = 28;
         label.TextAlign = ContentAlignment.MiddleCenter;
-        label.Margin = new Padding(8, 6, 0, 8);
+        label.Margin = new Padding(0, 2, 8, 4);
         label.Padding = new Padding(8, 0, 8, 0);
-        label.Font = new Font("Consolas", 10, FontStyle.Bold);
+        label.Font = new Font("Consolas", 9, FontStyle.Bold);
         label.BorderStyle = BorderStyle.FixedSingle;
     }
 

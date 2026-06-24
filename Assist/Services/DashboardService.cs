@@ -2,6 +2,7 @@ namespace Assist.Services;
 
 using System.Globalization;
 using System.Net.NetworkInformation;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 using Windows.Devices.Geolocation;
 
@@ -403,13 +404,16 @@ internal static class DashboardService
 
     #region Helpers
 
-    // Cached WMI CPU/RAM reading — avoids creating ManagementObjectSearcher on every fast timer tick
     private static int _lastCpuPercent;
     private static DateTime _lastCpuFetch;
+    private static ulong _previousIdleTime;
+    private static ulong _previousKernelTime;
+    private static ulong _previousUserTime;
+    private static bool _hasCpuSample;
     private static readonly TimeSpan CpuCacheDuration = TimeSpan.FromSeconds(4);
 
     /// <summary>
-    /// Reads current CPU usage percentage using Environment.ProcessorCount and kernel idle time (no WMI).
+    /// Reads current CPU usage percentage using kernel time counters.
     /// </summary>
     private static int GetCpuUsage()
     {
@@ -418,18 +422,39 @@ internal static class DashboardService
 
         try
         {
-            using var searcher = new System.Management.ManagementObjectSearcher(
-                "select PercentProcessorTime from Win32_PerfFormattedData_PerfOS_Processor where Name='_Total'");
-            foreach (var obj in searcher.Get())
+            if (!GetSystemTimes(out var idleTime, out var kernelTime, out var userTime))
+                return _lastCpuPercent;
+
+            var idle = ToUInt64(idleTime);
+            var kernel = ToUInt64(kernelTime);
+            var user = ToUInt64(userTime);
+
+            if (!_hasCpuSample)
             {
-                var val = obj["PercentProcessorTime"]?.ToString();
-                if (int.TryParse(val, out var cpu))
-                {
-                    _lastCpuPercent = cpu;
-                    _lastCpuFetch = DateTime.UtcNow;
-                    return cpu;
-                }
+                _previousIdleTime = idle;
+                _previousKernelTime = kernel;
+                _previousUserTime = user;
+                _hasCpuSample = true;
+                _lastCpuFetch = DateTime.UtcNow;
+                return _lastCpuPercent;
             }
+
+            var idleDelta = idle - _previousIdleTime;
+            var kernelDelta = kernel - _previousKernelTime;
+            var userDelta = user - _previousUserTime;
+            var totalDelta = kernelDelta + userDelta;
+
+            _previousIdleTime = idle;
+            _previousKernelTime = kernel;
+            _previousUserTime = user;
+            _lastCpuFetch = DateTime.UtcNow;
+
+            if (totalDelta == 0)
+                return _lastCpuPercent;
+
+            var busyDelta = totalDelta > idleDelta ? totalDelta - idleDelta : 0;
+            _lastCpuPercent = Math.Clamp((int)Math.Round(busyDelta * 100d / totalDelta), 0, 100);
+            return _lastCpuPercent;
         }
         catch { }
         return _lastCpuPercent;
@@ -440,9 +465,6 @@ internal static class DashboardService
     private static DateTime _lastRamFetch;
     private static readonly TimeSpan RamCacheDuration = TimeSpan.FromSeconds(5);
 
-    /// <summary>
-    /// Reads used and total physical memory via WMI with 5-second cache to reduce allocations.
-    /// </summary>
     private static string GetRamInfo()
     {
         if (DateTime.UtcNow - _lastRamFetch < RamCacheDuration)
@@ -450,26 +472,50 @@ internal static class DashboardService
 
         try
         {
-            using var searcher = new System.Management.ManagementObjectSearcher(
-                "select FreePhysicalMemory, TotalVisibleMemorySize from Win32_OperatingSystem");
-            foreach (var obj in searcher.Get())
+            var status = new MemoryStatusEx();
+            if (GlobalMemoryStatusEx(status))
             {
-                var freeKb = obj["FreePhysicalMemory"]?.ToString();
-                var totalKb = obj["TotalVisibleMemorySize"]?.ToString();
-                if (long.TryParse(freeKb, out var free) && long.TryParse(totalKb, out var total))
-                {
-                    var usedMb = (total - free) / 1024;
-                    var totalMb = total / 1024;
-                    var percent = (int)((1.0 - (double)free / total) * 100);
-                    _lastRamInfo = $"{usedMb:N0}/{totalMb:N0} MB ({percent}%)";
-                    _lastRamFetch = DateTime.UtcNow;
-                    return _lastRamInfo;
-                }
+                var usedBytes = status.TotalPhysicalMemory - status.AvailablePhysicalMemory;
+                var usedMb = usedBytes / 1024 / 1024;
+                var totalMb = status.TotalPhysicalMemory / 1024 / 1024;
+                _lastRamInfo = $"{usedMb:N0}/{totalMb:N0} MB ({status.MemoryLoad}%)";
+                _lastRamFetch = DateTime.UtcNow;
+                return _lastRamInfo;
             }
         }
         catch { }
         return _lastRamInfo;
     }
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern bool GetSystemTimes(out FileTime idleTime, out FileTime kernelTime, out FileTime userTime);
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+    private static extern bool GlobalMemoryStatusEx([In, Out] MemoryStatusEx lpBuffer);
+
+    [StructLayout(LayoutKind.Sequential)]
+    private readonly struct FileTime
+    {
+        public readonly uint LowDateTime;
+        public readonly uint HighDateTime;
+    }
+
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
+    private sealed class MemoryStatusEx
+    {
+        public uint Length = (uint)Marshal.SizeOf<MemoryStatusEx>();
+        public uint MemoryLoad;
+        public ulong TotalPhysicalMemory;
+        public ulong AvailablePhysicalMemory;
+        public ulong TotalPageFile;
+        public ulong AvailablePageFile;
+        public ulong TotalVirtual;
+        public ulong AvailableVirtual;
+        public ulong AvailableExtendedVirtual;
+    }
+
+    private static ulong ToUInt64(FileTime fileTime)
+        => ((ulong)fileTime.HighDateTime << 32) | fileTime.LowDateTime;
 
     #endregion
 }
